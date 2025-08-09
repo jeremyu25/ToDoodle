@@ -1,20 +1,31 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom';
 import '../styles/globals.css'
 import './Page.css'
 import NavBar from '../components/NavBar/NavBar'
 import todoodleImage from '../assets/todoodle_image_no_bg.png'
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
   const startTypewriter = (element: HTMLHeadingElement | null) => {
     if (!element) return;
 
-    const texts = ['Todo', 'In progress', 'Done'];
+    const texts = [
+      { text: 'Todo', color: 'var(--color-error)' },
+      { text: 'In progress', color: 'var(--color-highlight)' },
+      { text: 'Done', color: 'var(--color-primary)' }
+    ];
     let currentTextIndex = 0;
     let currentCharIndex = 0;
     let isDeleting = false;
 
     const typeEffect = () => {
-      const currentText = texts[currentTextIndex];
+      const currentItem = texts[currentTextIndex];
+      const currentText = currentItem.text;
+
+      // Update color for current text
+      element.style.color = currentItem.color;
 
       if (isDeleting) {
         element.textContent = currentText.substring(0, currentCharIndex - 1) + '|';
@@ -46,15 +57,20 @@ const HomePage = () => {
       <NavBar></NavBar>
       <div className="home-page">
         <div className="hero-section">
-          <div>
+          <div className="hero-content">
             <h1>Write it down!</h1>
-            <h2 ref={startTypewriter}></h2>
+            <h2 ref={startTypewriter} className="typewriter-text"></h2>
+            <p className="hero-subtitle">"Transform scattered thoughts into organized action"</p>
+            <div className="hero-buttons">
+              <button className="btn-secondary" onClick={() => navigate('/sign_up')}>Get Started</button>
+              <button className="btn-secondary" onClick={() => navigate('/about')}>Learn More</button>
+            </div>
           </div>
-          <img src={todoodleImage} alt="Todoodle Logo" style={{ width: '400px', height: 'auto' }} />
+          <img src={todoodleImage} alt="Todoodle Logo" className="hero-logo" />
         </div>
-        <p>This is just a fun small hobby between two developers with too much time on their hands.</p>
-        <p>We want to create a todo list application to keep our skills fresh but at the same time tune it to the needs of our users.</p>
-        <p>Feel free to give it a try. Who knows, you might just like it!</p>
+        <div className="hero-footer">
+          <p className="text-muted">"Join two friends in a wacky journey to discover clarity"</p>
+        </div>
       </div>
     </>
   )
