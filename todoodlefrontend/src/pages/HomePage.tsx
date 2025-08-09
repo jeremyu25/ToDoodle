@@ -44,7 +44,7 @@ const HomePage = () => {
   return (
     <>
       <NavBar></NavBar>
-      <div className="homePage">
+      <div className="home-page">
         <div className="hero-section">
           <div>
             <h1>Write it down!</h1>
