@@ -4,12 +4,14 @@ const router = express.Router()
 
 const authController = require('../controllers/auth.controller.js')
 
+const { verifyToken } = require('../utils/verify');
+
 router.post('/signup', authController.signUp)
 
 router.post('/signin', authController.signIn)
 
 router.post('/signout', authController.signOut)
 
-router.delete('/delete', authController.deleteUser)
+router.delete('/delete',[verifyToken], authController.deleteUser)
 
 module.exports = router

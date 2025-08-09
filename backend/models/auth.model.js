@@ -5,8 +5,8 @@ const signUp = async(username, passwordhash) => {
     return results.rows
 }
 
-const getUserPwd = async(username) => {
-    const validUser = await db.query(`select password_hash from users where username = $1`, [username])
+const getUser = async(username) => {
+    const validUser = await db.query(`select id, username, password_hash from users where username = $1`, [username])
     return validUser.rows
 }
 
@@ -15,4 +15,4 @@ const deleteUser = async(id) => {
     return deletedUser.rows
 }
 
-module.exports = { signUp, getUserPwd, deleteUser }
+module.exports = { signUp, getUser, deleteUser }
