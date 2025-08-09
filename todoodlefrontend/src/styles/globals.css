@@ -1,0 +1,103 @@
+:root {
+  /* Light mode (default) */
+  --color-bg-main: #F6F3EC;   /* Warm Parchment */
+  --color-bg-alt: #EAE7E0;    /* Mist Grey */
+  
+  --color-primary: #A8BBA0;   /* Sage Green */
+  --color-secondary: #C2B6A6; /* Dusty Taupe */
+  --color-highlight: #E3C98C; /* Pale Gold */
+  --color-error: #D98A7B;     /* Soft Coral */
+  
+  --color-text-primary: #3B3B3B; /* Charcoal */
+  --color-text-muted: #6D6D6D;   /* Cool Grey */
+}
+
+/* Dark mode via system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not(.dark):not(.light) {
+    /* Dark mode */
+    --color-bg-main: #2E2E2B;   /* Dark Charcoal */
+    --color-bg-alt: #3A3A36;    /* Warm Grey */
+    
+    --color-primary: #8FAF88;   /* Muted Sage Green */
+    --color-secondary: #A79B8E; /* Muted Taupe */
+    --color-highlight: #D1B77A; /* Soft Gold */
+    --color-error: #C97B6B;     /* Soft Coral (darker) */
+    
+    --color-text-primary: #EAE7E0; /* Mist White */
+    --color-text-muted: #B0ADA7;   /* Soft Grey */
+  }
+}
+
+/* Dark mode via manual toggle */
+:root.dark {
+  /* Dark mode */
+  --color-bg-main: #2E2E2B;   /* Dark Charcoal */
+  --color-bg-alt: #3A3A36;    /* Warm Grey */
+  
+  --color-primary: #8FAF88;   /* Muted Sage Green */
+  --color-secondary: #A79B8E; /* Muted Taupe */
+  --color-highlight: #D1B77A; /* Soft Gold */
+  --color-error: #C97B6B;     /* Soft Coral (darker) */
+  
+  --color-text-primary: #EAE7E0; /* Mist White */
+  --color-text-muted: #B0ADA7;   /* Soft Grey */
+}
+
+/* Light mode via manual toggle (overrides system preference) */
+:root.light {
+  /* Light mode (default) */
+  --color-bg-main: #F6F3EC;   /* Warm Parchment */
+  --color-bg-alt: #EAE7E0;    /* Mist Grey */
+  
+  --color-primary: #A8BBA0;   /* Sage Green */
+  --color-secondary: #C2B6A6; /* Dusty Taupe */
+  --color-highlight: #E3C98C; /* Pale Gold */
+  --color-error: #D98A7B;     /* Soft Coral */
+  
+  --color-text-primary: #3B3B3B; /* Charcoal */
+  --color-text-muted: #6D6D6D;   /* Cool Grey */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+.card {
+  background-color: var(--color-bg-alt);
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+button {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--color-highlight);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.alert {
+  background-color: var(--color-error);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
