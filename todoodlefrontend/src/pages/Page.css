@@ -1,0 +1,27 @@
+p {
+    padding: 10px;
+    text-align: left;
+}
+
+.homePage {
+    padding: 20px;
+    text-align: left;
+}
+
+.hero-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 60px 40px 40px 40px;
+    text-align: left;
+    gap: clamp(100px, 2vw, 200px);
+    /* display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row; */
+}
+
+.hero-section h1 {
+    margin-bottom: 20px;
+    font-size: 4em;
+}
