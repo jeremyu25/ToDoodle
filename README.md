@@ -30,6 +30,12 @@ npm install
 ```
 
 Navigate to the backend folder and install npm packages for the backend.
+```sh
+cd backend
+npm install
+```
+
+Note that for now, we are using local postgresql database hosted on docker for development. Set up instructions TBD as we may migrate to cloud database.
 
 ### Running in development
 
@@ -37,14 +43,24 @@ We need to run the frontend and backend separately.
 
 To run the frontend
 ```sh
-cd todoodle
+cd todoodlefrontend
 ```
 Run this command to start the frontend server
 ```sh
 npm run dev
 ```
 
-TBD for backend
+To run the backend
+```sh
+cd backend
+```
+
+Run this command to start the backend server
+```sh
+npm start dev
+```
+
+Remember to start up your local postgres database as per your configuration.
 
 ## Configurations used
 
@@ -53,9 +69,9 @@ Add a .env file in the frontend and backend folder respectively.
 
 ## Tech stack
 
-ReactJS Typescript - frontend
-ExpressJS NodeJS - backend
-Postgresql - backend
+ReactJS Typescript - frontend  
+ExpressJS NodeJS - backend  
+Postgresql - backend  
 
 ## License
 
