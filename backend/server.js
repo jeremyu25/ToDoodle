@@ -2,6 +2,8 @@ require("dotenv").config();
 
 const express = require("express")
 
+const cors = require("cors")
+
 const app = express()
 
 var cookies = require("cookie-parser");
@@ -10,6 +12,7 @@ const folderRoutes = require('./routes/folder.route')
 const noteRoutes = require('./routes/note.route')
 const userRoutes = require('./routes/auth.route')
 
+app.use(cors({credentials:true, origin: "http://localhost:5173", methods: "GET,HEAD,PUT,PATCH,POST,DELETE"}))
 app.use(express.json())
 app.use(cookies())
 app.use("/api/v1/folder", folderRoutes)
