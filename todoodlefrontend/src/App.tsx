@@ -1,3 +1,4 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './App.css'
 import HomePage from './pages/HomePage'
 import AboutPage from './pages/AboutPage'
@@ -5,7 +6,6 @@ import UserSignUpPage from './pages/UserSignUpPage'
 import UserSignInPage from './pages/UserSignInPage'
 import FeedBackPage from './pages/FeedBackPage'
 import UserProfilePage from './pages/UserProfilePage'
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 function App() {
   return (
