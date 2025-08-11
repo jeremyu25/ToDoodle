@@ -31,13 +31,16 @@ const signIn = async (req, res) => {
         if (!validPassword) {
             return res.status(401).json({message: "Wrong Password entered"})
         }
-        const token = jwt.sign({id: validUser.id}, process.env.JWT_SECRET)
-        const {password: password_hash, ...rest} = validUser
+        const token = jwt.sign({id: validUser[0].id}, process.env.JWT_SECRET)
+        const {password_hash, ...rest} = validUser[0]
         const expiryDate = new Date(Date.now() + 10800000)
         return res
             .cookie('access_token', token, {httpOnly: true, expires: expiryDate})
             .status(200)
-            .json(rest)
+            .json({
+                success: true,
+                user: rest
+            })
     }
     catch (error) {
         return res.status(500).json({ message: error.message });

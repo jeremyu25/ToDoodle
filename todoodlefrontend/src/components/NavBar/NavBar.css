@@ -33,3 +33,26 @@
     /* Pale Gold */
     padding-bottom: 0.25rem;
 }
+
+.user-welcome {
+    color: var(--color-text-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin: 0 1rem;
+}
+
+.logout-btn {
+    background-color: var(--color-secondary);
+    color: var(--color-text-primary);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+    background-color: var(--color-primary);
+    color: white;
+}

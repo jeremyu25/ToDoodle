@@ -1,12 +1,15 @@
 import React from "react"
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate, Link, useLocation } from "react-router-dom"
 import "../styles/globals.css"
 import NavBar from "../components/NavBar/NavBar"
 import logo from "../assets/virtual-learning-background-with-design-space.png"
+import { useAuth } from "../hooks/useAuth"
 
 const UserSignInPage = () => {
 	const navigate = useNavigate()
+	const location = useLocation()
+	const { login } = useAuth()
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const [errors, setErrors] = useState<string[]>([])
@@ -76,6 +79,13 @@ const UserSignInPage = () => {
 			.then((response) => response.json())
 			.then((data) => {
 				console.log(data)
+				if (data.success) {
+					login(data.user)
+					const from = location.state?.from?.pathname || "/"
+					navigate(from, { replace: true })
+				} else {
+					setErrors([data.message || "Login failed"])
+				}
 			})
 			.catch((error) => {
         setErrors([...errors, error.message])
@@ -84,8 +94,6 @@ const UserSignInPage = () => {
 			.finally(() => {
 				setIsSubmitting(false)
 			})
-
-		navigate("/")
 	}
 
 	return (
