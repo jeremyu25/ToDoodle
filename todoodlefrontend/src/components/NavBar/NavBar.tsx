@@ -17,6 +17,7 @@ const NavBar = () => {
 					<>
 						<Link to="/profile">Profile</Link>
 						<Link to="/feedback">Feedback</Link>
+						<Link to="/todo">Todo</Link>
 						<span className="user-welcome">Welcome, {user?.username}!</span>
 						<button onClick={logout} className="logout-btn">
 							Logout

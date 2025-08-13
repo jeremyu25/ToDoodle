@@ -7,6 +7,7 @@ import UserSignUpPage from './pages/UserSignUpPage'
 import UserSignInPage from './pages/UserSignInPage'
 import FeedBackPage from './pages/FeedBackPage'
 import UserProfilePage from './pages/UserProfilePage'
+import TodoPage from './pages/TodoPage'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 
@@ -37,6 +38,14 @@ function App() {
           element={
             <ProtectedRoute>
               <UserProfilePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/todo" 
+          element={
+            <ProtectedRoute>
+              <TodoPage />
             </ProtectedRoute>
           } 
         />
