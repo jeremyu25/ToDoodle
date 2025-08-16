@@ -10,16 +10,21 @@ const getAllFolders = async(user_id) => {
     return results.rows
 }
 
-const createFolder = async (user_id, name) => {
+const createFolder = async (user_id, name, description) => {
   const res = await db.query(
-    'INSERT INTO folders (user_id, name) VALUES ($1, $2) RETURNING *',
-    [user_id, name]
+    'INSERT INTO folders (user_id, name, description) VALUES ($1, $2, $3) RETURNING *',
+    [user_id, name, description]
   );
   return res.rows[0];
 };
 
-const updateFolder = async(id, name) => {
+const updateFolderName = async(id, name) => {
     const results = await db.query(`UPDATE folders SET name = $1 WHERE id = $2 RETURNING *`, [name, id])
+    return results.rows
+}
+
+const updateFolderDescription = async(id, description) => {
+    const results = await db.query(`UPDATE folders SET description = $1 WHERE id = $2 RETURNING *`, [description, id])
     return results.rows
 }
 
@@ -37,7 +42,8 @@ module.exports = {
     getFolderById,
     getAllFolders,
     createFolder,
-    updateFolder,
+    updateFolderName,
+    updateFolderDescription,
     deleteFolder,
     deleteAllFolders
 }

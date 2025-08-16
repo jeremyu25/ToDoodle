@@ -10,9 +10,11 @@ router.get('/all', noteController.getAllNotes)
 
 router.post('/', noteController.createNote)
 
-router.put('/content', noteController.updateNoteContent)
+router.patch('/content', noteController.updateNoteContent)
 
-router.put('/title', noteController.updateNoteTitle)
+router.patch('/title', noteController.updateNoteTitle)
+
+router.patch('/status', noteController.updateNoteStatus)
 
 router.delete('/', noteController.deleteNote)
 

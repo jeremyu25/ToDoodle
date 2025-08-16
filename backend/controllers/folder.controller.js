@@ -20,7 +20,7 @@ const getFolder = async(req, res) => {
 const getAllFolders = async(req, res) => {
     try{
         const folders = await FolderModel.getAllFolders(req.query.user_id)
-        console.log(folders)
+
         res.status(200).json({
         status: "success",
         results_length: folders,
@@ -36,7 +36,7 @@ const getAllFolders = async(req, res) => {
 
 const createFolder = async(req, res) => {
     try{
-        const folder = await FolderModel.createFolder(req.query.user_id, req.query.name)
+        const folder = await FolderModel.createFolder(req.query.user_id, req.query.name, req.query.description)
         res.status(200).json({
             results_length: folder.length,
             data: {
@@ -49,9 +49,29 @@ const createFolder = async(req, res) => {
     }
 }
 
-const updateFolder = async(req, res) => {
+const updateFolderName = async(req, res) => {
     try{
-        const folder = await FolderModel.updateFolder(req.query.id, req.query.name)
+        const folder = await FolderModel.updateFolderName(req.query.id, req.query.name)
+        if (!folder) {
+            res.status(404).json({
+                message: "User folder not found."
+            })
+        }
+        res.status(200).json({
+            results_length: folder.length,
+            data: {
+                folderdata: folder
+            }
+        })
+    }
+    catch(err){
+        res.status(500).json({message:err.message})
+    }
+}
+
+const updateFolderDescription = async(req, res) => {
+    try{
+        const folder = await FolderModel.updateFolderDescription(req.query.id, req.query.description)
         if (!folder) {
             res.status(404).json({
                 message: "User folder not found."
@@ -112,7 +132,8 @@ module.exports = {
     getFolder,
     getAllFolders,
     createFolder,
-    updateFolder,
+    updateFolderName,
+    updateFolderDescription,
     deleteFolder,
     deleteAllFolders
 }

@@ -10,7 +10,9 @@ router.get('/all', folderController.getAllFolders)
 
 router.post('/', folderController.createFolder)
 
-router.put('/', folderController.updateFolder)
+router.patch('/name', folderController.updateFolderName)
+
+router.patch('/description', folderController.updateFolderDescription)
 
 router.delete('/', folderController.deleteFolder)
 
