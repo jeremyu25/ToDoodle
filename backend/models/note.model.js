@@ -28,6 +28,11 @@ const updateNoteTitle = async(id, title) => {
     return results.rows
 }
 
+const updateNoteStatus = async(id, status) => {
+    const results = await db.query(`UPDATE notes SET status = $1 WHERE id = $2 RETURNING *`, [status, id])
+    return results.rows
+}
+
 const deleteNote = async(id) => {
     const results = await db.query(`DELETE FROM notes WHERE id = $1 RETURNING *`, [id])
     return results.rows
@@ -46,6 +51,7 @@ module.exports = {
     createNote,
     updateNoteContent,
     updateNoteTitle,
+    updateNoteStatus,
     deleteAllNotes,
     deleteNote
 }

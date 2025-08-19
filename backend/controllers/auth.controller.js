@@ -19,20 +19,18 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log(username)
-        console.log(password)
+
         const validUser = await AuthModel.getUser(username)
         if (!validUser) {
             return res.status(404).json({message: "Username not found"})
         }
         const validPassword = bcryptjs.compareSync(password, validUser[0].password_hash)
-        console.log(validPassword)
-        console.log(validUser[0].password_hash)
+
         if (!validPassword) {
             return res.status(401).json({message: "Wrong Password entered"})
         }
-        const token = jwt.sign({id: validUser.id}, process.env.JWT_SECRET)
-        const {password: password_hash, ...rest} = validUser
+        const token = jwt.sign({id: validUser[0].id}, process.env.JWT_SECRET)
+        const {password: password_hash, ...rest} = validUser[0]
         const expiryDate = new Date(Date.now() + 10800000)
         return res
             .cookie('access_token', token, {httpOnly: true, expires: expiryDate})
@@ -45,8 +43,28 @@ const signIn = async (req, res) => {
 }
 
 const signOut = async (req, res) => {
-    res.clearCookie("access_token").status(200).json({message: "Sign out successful"})
+    try {
+        res.clearCookie('access_token')
+        res.status(200).json({ message: "User signed out successfully" })
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 }
+
+const verifyUser = async (req, res) => {
+    try {
+        // The verifyToken middleware already verified the token and set req.user
+        // We just need to return success
+        res.status(200).json({ 
+            success: true, 
+            message: "User is authenticated",
+            user: req.user
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
 
 const deleteUser = async (req, res) => {
     if (req.user.id !== req.query.id) {
@@ -66,5 +84,6 @@ module.exports = {
     signUp,
     signIn,
     signOut,
-    deleteUser
+    deleteUser,
+    verifyUser
 }
