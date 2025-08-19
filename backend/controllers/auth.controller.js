@@ -36,8 +36,7 @@ const signIn = async (req, res) => {
             .cookie('access_token', token, {httpOnly: true, expires: expiryDate})
             .status(200)
             .json(rest)
-    }
-    catch (error) {
+    } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 }
@@ -74,8 +73,7 @@ const deleteUser = async (req, res) => {
         await AuthModel.deleteUser(req.query.id)
         console.log(req.query.id)
         return res.status(200).json({message: "User deleted successfully"})
-    }
-    catch (error) {
+    } catch (error) {
         return res.status(500).json({ message: error.message });
     }
 }
