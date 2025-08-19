@@ -19,7 +19,7 @@ const getAllFolders = async(user_id) => {
            const results = await db.query(`select * from folders where user_id = $1`, [user_id])
         
             if (results.rows.length === 0){
-                throw new Error("Folder not found or user has no folders.")
+                throw new Error("User ID not found or user has no folders.")
         }
         return results.rows
         } catch(error){
@@ -97,7 +97,7 @@ const deleteAllFolders = async(user_id) => {
             const results = await db.query(`DELETE FROM folders WHERE user_id = $1 RETURNING *`, [user_id])
     
             if (results.rows.length === 0){
-                throw new Error("User ID not found, nothing deleted.")
+                throw new Error("User ID not found or user has no folders, nothing deleted.")
         }
         return results.rows
         } catch(error){

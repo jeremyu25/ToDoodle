@@ -104,7 +104,7 @@ const deleteAllNotes = async(user_id) => {
         const results = await db.query(`DELETE FROM notes WHERE user_id = $1 RETURNING *`, [user_id])
     
         if (results.rows.length === 0){
-            throw new Error("User ID not found, nothing deleted.")
+            throw new Error("User ID not found or user has no notes, nothing deleted.")
     }
     return results.rows
     } catch(error){
