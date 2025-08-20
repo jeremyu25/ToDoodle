@@ -1,42 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// Helper function to get cookie value by name
-const getCookie = (name: string): string | null => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
-  return null;
-};
-
-// Helper function to decode JWT token (without verification)
-const decodeJWT = (token: string): any => {
-  try {
-    const base64Url = token.split('.')[1];
-    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-      return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    return null;
-  }
-};
-
-// Helper function to check if JWT token is expired
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const decoded = decodeJWT(token);
-    if (!decoded || !decoded.exp) return true;
-    
-    // exp is in seconds, Date.now() is in milliseconds
-    const currentTime = Math.floor(Date.now() / 1000);
-    return decoded.exp < currentTime;
-  } catch (error) {
-    return true;
-  }
-};
-
 interface User {
   id: string;
   username: string;
@@ -51,7 +15,6 @@ interface AuthState {
   logout: () => void;
   setLoading: (loading: boolean) => void;
   checkAuthStatus: () => Promise<void>;
-  isTokenValid: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -62,14 +25,11 @@ export const useAuthStore = create<AuthState>()(
       isLoading: true,
 
       login: (userData: User) => {
-        set({ user: userData, isAuthenticated: true });
+        set({ user: userData, isAuthenticated: true, isLoading: false });
       },
 
       logout: () => {
-        set({ user: null, isAuthenticated: false });
-        
-        // Clear the cookie by setting it to expire in the past
-        document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        set({ user: null, isAuthenticated: false, isLoading: false });
       },
 
       setLoading: (loading: boolean) => {
@@ -80,51 +40,51 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true });
           
-          // Check if we have a valid JWT token in cookies
-          const token = getCookie('access_token');
-          
-          if (token && !isTokenExpired(token)) {
-            // Token exists and is not expired, check if we have user data stored
+          const currentState = get();
+
+          if (currentState.user && currentState.isAuthenticated) {
             try {
-              const decodedToken = decodeJWT(token);
-              if (decodedToken && decodedToken.id) {
-                const storedUser = localStorage.getItem('auth-storage');
-                if (storedUser) {
-                  const parsed = JSON.parse(storedUser);
-                  if (parsed.state?.user) {
-                    set({ 
-                      user: parsed.state.user, 
-                      isAuthenticated: true, 
-                      isLoading: false 
-                    });
-                    return;
-                  }
+              const response = await fetch('http://localhost:3001/api/v1/auth/verify', {
+                method: 'GET',
+                credentials: 'include', // This will send the HttpOnly cookie
+                headers: {
+                  'Content-Type': 'application/json',
                 }
+              });
+              
+              if (response.ok) {
+                set({ 
+                  isAuthenticated: true, 
+                  isLoading: false 
+                });
+                return;
+              } else {
+                console.log('User is not authenticated with the server');
               }
             } catch (error) {
-              console.log('Invalid token, clearing auth state');
+              console.log('Error in checking auth with server');
             }
-          } else if (token && isTokenExpired(token)) {
-            // Token is expired, clear it
-            document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
           }
-          
-          // No valid token or user data
+          // No user data or server verification failed
+          console.log('No valid authentication, clearing auth state');
           set({ user: null, isAuthenticated: false, isLoading: false });
         } catch (error) {
           console.error('Auth check failed:', error);
           set({ user: null, isAuthenticated: false, isLoading: false });
         }
       },
-
-      isTokenValid: () => {
-        const token = getCookie('access_token');
-        return token ? !isTokenExpired(token) : false;
-      },
     }),
     {
-      name: 'auth-storage', // unique name for localStorage key
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }), // only persist these fields
+      name: 'auth-storage',
+      partialize: (state) => ({ 
+        user: state.user, 
+        isAuthenticated: state.isAuthenticated,
+        isLoading: false
+      }),
+      onRehydrateStorage: () => (state) => {
+        console.log('Store rehydrated from localStorage:', state);
+        // After rehydration, we'll check auth status in checkAuthStatus
+      },
     }
   )
 );

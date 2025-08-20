@@ -48,7 +48,26 @@ const signIn = async (req, res) => {
 }
 
 const signOut = async (req, res) => {
-    res.clearCookie("access_token").status(200).json({message: "Sign out successful"})
+    try {
+        res.clearCookie('access_token')
+        res.status(200).json({ message: "User signed out successfully" })
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
+}
+
+const verifyUser = async (req, res) => {
+    try {
+        // The verifyToken middleware already verified the token and set req.user
+        // We just need to return success
+        res.status(200).json({ 
+            success: true, 
+            message: "User is authenticated",
+            user: req.user
+        });
+    } catch (error) {
+        return res.status(500).json({ message: error.message });
+    }
 }
 
 const deleteUser = async (req, res) => {
@@ -69,5 +88,6 @@ module.exports = {
     signUp,
     signIn,
     signOut,
+    verifyUser,
     deleteUser
 }

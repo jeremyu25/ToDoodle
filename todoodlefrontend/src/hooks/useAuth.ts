@@ -10,7 +10,6 @@ export const useAuth = () => {
     isLoading: store.isLoading,
     login: store.login,
     logout: store.logout,
-    checkAuthStatus: store.checkAuthStatus,
-    isTokenValid: store.isTokenValid,
+    checkAuthStatus: store.checkAuthStatus
   };
 };

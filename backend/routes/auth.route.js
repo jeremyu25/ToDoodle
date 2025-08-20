@@ -12,6 +12,8 @@ router.post('/signin', authController.signIn)
 
 router.post('/signout', authController.signOut)
 
+router.get('/verify', verifyToken, authController.verifyUser)
+
 router.delete('/delete',[verifyToken], authController.deleteUser)
 
 module.exports = router
