@@ -7,7 +7,7 @@ interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUpdate: (updatedTask: Task) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
   folders: Folder[];
 }
 

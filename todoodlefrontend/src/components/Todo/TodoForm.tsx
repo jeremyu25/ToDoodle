@@ -19,7 +19,7 @@ const TodoForm = ({ onSubmit, folders }: TodoFormProps) => {
 		const { id, value } = e.target
 		setFormData({
 			...formData,
-			[id]: id === 'folderId' ? (value === '' ? undefined : Number(value)) : value,
+			[id]: id === 'folderId' ? (value === '' ? undefined : value) : value,
 		})
 	}
 
