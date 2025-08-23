@@ -10,10 +10,10 @@ const getAllNotes = async(user_id) => {
     return results.rows
 }
 
-const createNote = async (user_id, folder_id, title, content) => {
+const createNote = async (user_id, folder_id, title, content, status) => {
   const res = await db.query(
-    'INSERT INTO notes(user_id, folder_id, title, content) VALUES($1, $2, $3, $4) RETURNING *',
-    [user_id,folder_id, title, content]
+    'INSERT INTO notes(user_id, folder_id, title, content, status) VALUES($1, $2, $3, $4, $5) RETURNING *',
+    [user_id, folder_id, title, content, status]
   );
   return res.rows[0];
 };
@@ -25,6 +25,11 @@ const updateNoteContent = async(id, content) => {
 
 const updateNoteTitle = async(id, title) => {
     const results = await db.query(`UPDATE notes SET title = $1 WHERE id = $2 RETURNING *`, [title, id])
+    return results.rows
+}
+
+const updateNoteStatus = async(id, status) => {
+    const results = await db.query(`UPDATE notes SET status = $1 WHERE id = $2 RETURNING *`, [status, id])
     return results.rows
 }
 
@@ -46,6 +51,7 @@ module.exports = {
     createNote,
     updateNoteContent,
     updateNoteTitle,
+    updateNoteStatus,
     deleteAllNotes,
     deleteNote
 }

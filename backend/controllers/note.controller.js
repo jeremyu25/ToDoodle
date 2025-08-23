@@ -37,7 +37,10 @@ const getAllNotes = async(req, res) => {
 
  const createNote = async(req, res) => {
     try{
-        const note = await NoteModel.createNote(req.query.user_id, req.query.folder_id, req.query.title, req.query.content)
+        const { user_id, folder_id, title, content, status } = req.query
+        const allowedStatuses = ['not_started', 'in_progress', 'completed']
+        const safeStatus = allowedStatuses.includes(status) ? status : 'not_started'
+        const note = await NoteModel.createNote(user_id, folder_id, title, content, safeStatus)
         res.status(200).json({
             results_length: note.length,
             data: {
@@ -108,6 +111,32 @@ const updateNoteTitle = async(req, res) => {
     }
 }
 
+const updateNoteStatus = async(req, res) => {
+    try{
+        const { id, status } = req.query
+        const allowedStatuses = ['not_started', 'in_progress', 'completed']
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({ message: 'Invalid status value' })
+        }
+        const note = await NoteModel.updateNoteStatus(id, status)
+        if (!note) {
+            res.status(404).json({
+                message: "User note not found."
+            })
+        }
+        res.status(200).json({
+            results_length: note.length,
+            data: {
+                notedata: note
+            }
+        })
+    }
+    catch(err){
+        console.log({message:err.message})
+        res.status(500).json({message:err.message})
+    }
+}
+
  const deleteAllNotes = async(req, res) => {
     try{
         const note = await NoteModel.deleteAllNotes(req.query.user_id)
@@ -134,6 +163,7 @@ module.exports = {
     createNote,
     updateNoteContent,
     updateNoteTitle,
+    updateNoteStatus,
     deleteAllNotes,
     deleteNote
 }

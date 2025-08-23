@@ -14,6 +14,8 @@ router.put('/content', noteController.updateNoteContent)
 
 router.put('/title', noteController.updateNoteTitle)
 
+router.put('/status', noteController.updateNoteStatus)
+
 router.delete('/', noteController.deleteNote)
 
 router.delete('/all', noteController.deleteAllNotes)
