@@ -28,8 +28,19 @@ export const useAuthStore = create<AuthState>()(
         set({ user: userData, isAuthenticated: true, isLoading: false });
       },
 
-      logout: () => {
-        set({ user: null, isAuthenticated: false, isLoading: false });
+      logout: async () => {
+        try {
+          await fetch('http://localhost:3001/api/v1/auth/signout', {
+            method: 'POST',
+            credentials: 'include',
+          });
+        }
+        catch (error) {
+          console.error('Error in logout:', error);
+        }
+        finally {
+          set({ user: null, isAuthenticated: false, isLoading: false });
+        }
       },
 
       setLoading: (loading: boolean) => {
