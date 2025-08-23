@@ -86,6 +86,7 @@ const UserSignInPage = () => {
 				} else {
 					setErrors([data.message || "Login failed"])
 				}
+				navigate("/todo")
 			})
 			.catch((error) => {
         setErrors([...errors, error.message])
