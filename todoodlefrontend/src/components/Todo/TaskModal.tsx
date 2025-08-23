@@ -112,8 +112,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
                   value={editedTask?.folderId || ''}
                   onChange={(e) => setEditedTask(prev => prev ? { 
                     ...prev, 
-                    folderId: e.target.value === '' ? undefined : Number(e.target.value),
-                    folder: e.target.value === '' ? undefined : folders.find(f => f.id === Number(e.target.value))
+                    folderId: e.target.value === '' ? undefined : e.target.value,
+                    folder: e.target.value === '' ? undefined : folders.find(f => f.id === e.target.value)
                   } : null)}
                   className="form-select"
                 >
