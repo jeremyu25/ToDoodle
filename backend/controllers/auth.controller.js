@@ -19,15 +19,11 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log(username)
-        console.log(password)
         const validUser = await AuthModel.getUser(username)
         if (!validUser) {
             return res.status(404).json({message: "Username not found"})
         }
         const validPassword = bcryptjs.compareSync(password, validUser[0].password_hash)
-        console.log(validPassword)
-        console.log(validUser[0].password_hash)
         if (!validPassword) {
             return res.status(401).json({message: "Wrong Password entered"})
         }
@@ -76,7 +72,6 @@ const deleteUser = async (req, res) => {
     }
     try {
         await AuthModel.deleteUser(req.query.id)
-        console.log(req.query.id)
         return res.status(200).json({message: "User deleted successfully"})
     }
     catch (error) {
