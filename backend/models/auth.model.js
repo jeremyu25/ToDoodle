@@ -1,4 +1,4 @@
-const db = require("../db/index.js");
+const db = require("../db/index.js")
 
 const signUp = async (username, passwordhash) => {
   try {
@@ -6,18 +6,18 @@ const signUp = async (username, passwordhash) => {
       `INSERT INTO users(username, password_hash) 
        VALUES($1, $2) RETURNING id, username`,
       [username, passwordhash]
-    );
+    )
 
     if (results.rows.length === 0) {
-      throw new Error("Unable to create user.");
+      throw new Error("Unable to create user.")
     }
 
-    return results.rows[0];
+    return results.rows[0]
   } catch (error) {
-    console.error("Error signing up user in database:", error.message);
-    throw new Error("DB error while creating user.");
+    console.error("Error signing up user in database:", error.message)
+    throw new Error("DB error while creating user.")
   }
-};
+}
 
 const getUser = async (username) => {
   try {
@@ -25,35 +25,35 @@ const getUser = async (username) => {
       `SELECT id, username, password_hash 
        FROM users WHERE username = $1`,
       [username]
-    );
+    )
 
     if (results.rows.length === 0) {
-      throw new Error("User not found.");
+      throw new Error("User not found.")
     }
 
-    return results.rows[0];
+    return results.rows[0]
   } catch (error) {
-    console.error("Error fetching user from database:", error.message);
-    throw new Error("DB error while fetching user.");
+    console.error("Error fetching user from database:", error.message)
+    throw new Error("DB error while fetching user.")
   }
-};
+}
 
 const deleteUser = async (id) => {
   try {
     const results = await db.query(
       `DELETE FROM users WHERE id = $1 RETURNING id, username`,
       [id]
-    );
+    )
 
     if (results.rows.length === 0) {
-      throw new Error("User not found.");
+      throw new Error("User not found.")
     }
 
-    return results.rows[0];
+    return results.rows[0]
   } catch (error) {
-    console.error("Error deleting user from database:", error.message);
-    throw new Error("DB error while deleting user.");
+    console.error("Error deleting user from database:", error.message)
+    throw new Error("DB error while deleting user.")
   }
-};
+}
 
-module.exports = { signUp, getUser, deleteUser };
+module.exports = { signUp, getUser, deleteUser }

@@ -47,7 +47,7 @@ cd todoodlefrontend
 ```
 Run this command to start the frontend server
 ```sh
-npm run dev
+npm start dev
 ```
 
 To run the backend

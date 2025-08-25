@@ -1,4 +1,4 @@
-const FolderModel =  require('../models/folder.model.js')
+const FolderModel =  require("../models/folder.model.js")
 
 const getFolder = async(req, res) => {
     try{

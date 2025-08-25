@@ -32,19 +32,19 @@ const createFolder = async (user_id, name, description) => {
   
     try {
             const res = await db.query(
-        'INSERT INTO folders (user_id, name, description) VALUES ($1, $2, $3) RETURNING *',
+        `INSERT INTO folders (user_id, name, description) VALUES ($1, $2, $3) RETURNING *`,
         [user_id, name, description]
-    );
+    )
     
           if (results.rows.length === 0){
               throw new Error("Unable to create new folder in DB.")
       }
-      return results.rows[0];
+      return results.rows[0]
       } catch(error){
           console.error("Error in creating folder in database:", error.message)
           throw new Error("DB error while creating folder.")
       }
-};
+}
 
 const updateFolderName = async(id, name) => {
     

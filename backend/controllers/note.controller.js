@@ -1,4 +1,4 @@
-const NoteModel = require('../models/note.model.js')
+const NoteModel = require("../models/note.model.js")
 
 const getNote = async(req, res) => {
     try{
@@ -11,8 +11,7 @@ const getNote = async(req, res) => {
             notedata: note
         }
     })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message: err.message})
     }
 }
@@ -27,23 +26,24 @@ const getAllNotes = async(req, res) => {
             notedata: notes
         }
     })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message: err.message})
     }
 }
 
  const createNote = async(req, res) => {
     try{
-        const note = await NoteModel.createNote(req.query.user_id, req.query.folder_id, req.query.title, req.query.content)
+        const { user_id, folder_id, title, content, status } = req.query
+        const allowedStatuses = ["not_started", "in_progress", "completed"]
+        const safeStatus = allowedStatuses.includes(status) ? status : "not_started"
+        const note = await NoteModel.createNote(user_id, folder_id, title, content, safeStatus)
         res.status(200).json({
             results_length: note.length,
             data: {
                 notedata: note
             }
         })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message: err.message})
     }
 }
@@ -62,8 +62,7 @@ const getAllNotes = async(req, res) => {
                 notedata: note
             }
         })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message:err.message})
     }
 }
@@ -81,8 +80,7 @@ const updateNoteTitle = async(req, res) => {
                 notedata: note
             }
         })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message:err.message})
     }
 }
@@ -92,7 +90,6 @@ const updateNoteStatus = async(req, res) => {
 
         const allowedStatuses = ["not_started", "in_progress", "completed"]
 
-        // Validate status
         if (!allowedStatuses.includes(req.query.status)) {
             return res.status(400).json({
                 message: `Invalid status value. Allowed values are: ${allowedStatuses.join(", ")}`
@@ -110,8 +107,7 @@ const updateNoteStatus = async(req, res) => {
                 notedata: note
             }
         })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message:err.message})
     }
 }
@@ -130,8 +126,7 @@ const updateNoteStatus = async(req, res) => {
                 notedata: note
             }
         })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message: err.message})
     }
 }
@@ -150,8 +145,7 @@ const updateNoteStatus = async(req, res) => {
                 notedata: note
             }
         })
-    }
-    catch(err){
+    } catch(err){
         res.status(500).json({message: err.message})
     }
 }
