@@ -47,7 +47,7 @@ export const notesApi = {
   // Update note content
   updateNoteContent: async (noteId: string, content: string) => {
     const response = await fetch(`${API_BASE_URL}/note/content?id=${noteId}&content=${encodeURIComponent(content)}`, {
-      method: 'PUT',
+      method: 'PATCH',
       ...getAuthHeaders(),
     });
     return handleResponse(response);
@@ -56,7 +56,7 @@ export const notesApi = {
   // Update note status
   updateNoteStatus: async (noteId: string, status: string) => {
     const response = await fetch(`${API_BASE_URL}/note/status/?id=${noteId}&status=${encodeURIComponent(status)}`, {
-      method: 'PUT',
+      method: 'PATCH',
       ...getAuthHeaders(),
     });
     return handleResponse(response);
@@ -65,7 +65,7 @@ export const notesApi = {
   // Update note title
   updateNoteTitle: async (noteId: string, title: string) => {
     const response = await fetch(`${API_BASE_URL}/note/title?id=${noteId}&title=${encodeURIComponent(title)}`, {
-      method: 'PUT',
+      method: 'PATCH',
       ...getAuthHeaders(),
     });
     return handleResponse(response);
@@ -122,7 +122,7 @@ export const foldersApi = {
   // Update folder name
   updateFolder: async (folderId: string, name: string) => {
     const response = await fetch(`${API_BASE_URL}/folder?id=${folderId}&name=${encodeURIComponent(name)}`, {
-      method: 'PUT',
+      method: 'PATCH',
       ...getAuthHeaders(),
     });
     return handleResponse(response);
