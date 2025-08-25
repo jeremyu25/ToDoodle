@@ -121,7 +121,7 @@ export const foldersApi = {
 
   // Update folder name
   updateFolder: async (folderId: string, name: string) => {
-    const response = await fetch(`${API_BASE_URL}/folder?id=${folderId}&name=${encodeURIComponent(name)}`, {
+    const response = await fetch(`${API_BASE_URL}/folder/name?id=${folderId}&name=${encodeURIComponent(name)}`, {
       method: 'PATCH',
       ...getAuthHeaders(),
     });
