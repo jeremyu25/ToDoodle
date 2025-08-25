@@ -1,5 +1,5 @@
-const express = require("express")
-const folderController = require("../controllers/folder.controller.js")
+import express from "express"
+import folderController from "../controllers/folder.controller.js"
 
 const router = express.Router()
 
@@ -11,4 +11,4 @@ router.patch("/description", folderController.updateFolderDescription)
 router.delete("/", folderController.deleteFolder)
 router.delete("/all", folderController.deleteAllFolders)
 
-module.exports = router
+export default router

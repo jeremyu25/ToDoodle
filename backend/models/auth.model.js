@@ -1,8 +1,8 @@
-const db = require("../db/index.js")
+import query from "../db/index.js"
 
 const signUp = async (username, passwordhash) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `INSERT INTO users(username, password_hash) 
        VALUES($1, $2) RETURNING id, username`,
       [username, passwordhash]
@@ -21,7 +21,7 @@ const signUp = async (username, passwordhash) => {
 
 const getUser = async (username) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `SELECT id, username, password_hash 
        FROM users WHERE username = $1`,
       [username]
@@ -40,7 +40,7 @@ const getUser = async (username) => {
 
 const deleteUser = async (id) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `DELETE FROM users WHERE id = $1 RETURNING id, username`,
       [id]
     )
@@ -56,4 +56,8 @@ const deleteUser = async (id) => {
   }
 }
 
-module.exports = { signUp, getUser, deleteUser }
+export default {
+  signUp,
+  getUser,
+  deleteUser
+}

@@ -1,4 +1,4 @@
-const NoteModel = require("../models/note.model.js")
+import NoteModel from "../models/note.model.js" 
 
 const getNote = async(req, res) => {
     try{
@@ -150,7 +150,7 @@ const updateNoteStatus = async(req, res) => {
     }
 }
 
-module.exports = {
+export default {
     getNote,
     getAllNotes,
     createNote,

@@ -5,4 +5,6 @@ const pool = new Pool({
 	ssl: { rejectUnauthorized: false },
 })
 
-export const query = (text, params) => pool.query(text, params)
+const query = (text, params) => pool.query(text, params)
+
+export default query

@@ -1,6 +1,6 @@
-const express = require("express")
-const authController = require("../controllers/auth.controller.js")
-const { verifyToken } = require("../utils/verify")
+import express from "express"
+import authController from "../controllers/auth.controller.js"
+import { verifyToken } from "../utils/verify.js"
 
 const router = express.Router()
 
@@ -12,5 +12,4 @@ router.delete("/delete", verifyToken, authController.deleteUser)
 
 router.get("/verify", verifyToken, authController.verifyUser)
 
-
-module.exports = router
+export default router

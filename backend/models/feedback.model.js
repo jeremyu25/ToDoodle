@@ -1,8 +1,8 @@
-const db = require("../db/index.js")
+import query from "../db/index.js"
 
 const getFeedbackById = async (id) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `SELECT * FROM feedback WHERE id = $1`,
       [id]
     )
@@ -20,7 +20,7 @@ const getFeedbackById = async (id) => {
 
 const getAllFeedback = async (user_id) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `SELECT * FROM feedback WHERE user_id = $1`,
       [user_id]
     )
@@ -36,7 +36,7 @@ const getAllFeedback = async (user_id) => {
 
 const createFeedback = async (user_id, title, description) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `INSERT INTO feedback (user_id, title, description) 
        VALUES ($1, $2, $3) RETURNING *`,
       [user_id, title, description]
@@ -55,7 +55,7 @@ const createFeedback = async (user_id, title, description) => {
 
 const updateFeedbackTitle = async (id, title) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `UPDATE feedback SET title = $1 WHERE id = $2 RETURNING *`,
       [title, id]
     )
@@ -73,7 +73,7 @@ const updateFeedbackTitle = async (id, title) => {
 
 const updateFeedbackDescription = async (id, description) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `UPDATE feedback SET description = $1 WHERE id = $2 RETURNING *`,
       [description, id]
     )
@@ -91,7 +91,7 @@ const updateFeedbackDescription = async (id, description) => {
 
 const deleteFeedback = async (id) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `DELETE FROM feedback WHERE id = $1 RETURNING *`,
       [id]
     )
@@ -109,7 +109,7 @@ const deleteFeedback = async (id) => {
 
 const deleteAllFeedback = async (user_id) => {
   try {
-    const results = await db.query(
+    const results = await query(
       `DELETE FROM feedback WHERE user_id = $1 RETURNING *`,
       [user_id]
     )
@@ -124,7 +124,7 @@ const deleteAllFeedback = async (user_id) => {
   }
 }
 
-module.exports = {
+export default {
   getFeedbackById,
   getAllFeedback,
   createFeedback,

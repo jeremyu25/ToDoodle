@@ -1,5 +1,5 @@
-const express = require("express")
-const noteController =  require("../controllers/note.controller.js")
+import express from "express"
+import noteController from "../controllers/note.controller.js"
 
 const router = express.Router()
 
@@ -12,4 +12,4 @@ router.patch("/status", noteController.updateNoteStatus)
 router.delete("/", noteController.deleteNote)
 router.delete("/all", noteController.deleteAllNotes)
 
-module.exports = router
+export default router

@@ -1,4 +1,4 @@
-const FeedbackModel =  require("../models/feedback.model.js")
+import FeedbackModel from "../models/feedback.model.js"
 
 const getFeedback = async(req, res) => {
     try{
@@ -128,7 +128,9 @@ const deleteAllFeedback = async(req, res) => {
         res.status(500).json({message: err.message})
     }
 }
-module.exports = {
+
+
+export default {
     getFeedback,
     getAllFeedback,
     createFeedback,

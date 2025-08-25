@@ -1,17 +1,20 @@
-require("dotenv").config()
+import "dotenv/config.js" // automatically loads .env
+import express from "express"
+import cors from "cors"
+import cookies from "cookie-parser"
 
-const express = require("express")
-const cors = require("cors")
-const cookies = require("cookie-parser")
-
-const folderRoutes = require("./routes/folder.route")
-const noteRoutes = require("./routes/note.route")
-const userRoutes = require("./routes/auth.route")
-const feedbackRoutes = require('./routes/feedback.route')
+import folderRoutes from "./routes/folder.route.js"
+import noteRoutes from "./routes/note.route.js"
+import userRoutes from "./routes/auth.route.js"
+import feedbackRoutes from "./routes/feedback.route.js"
 
 const app = express()
 
-app.use(cors({ credentials: true, origin: "http://localhost:5173", methods: "GET,HEAD,PUT,PATCH,POST,DELETE" }))
+app.use(cors({ 
+    credentials: true, 
+    origin: "http://localhost:5173", 
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE" 
+}))
 app.use(express.json())
 app.use(cookies())
 app.use("/api/v1/folder", folderRoutes)

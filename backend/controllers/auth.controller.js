@@ -1,6 +1,6 @@
-const AuthModel = require("../models/auth.model.js")
-const bcryptjs = require("bcryptjs")
-const jwt = require("jsonwebtoken")
+import AuthModel from "../models/auth.model.js"
+import bcryptjs from "bcryptjs"
+import jwt from "jsonwebtoken"
 
 const signUp = async (req, res) => {
     try {
@@ -23,12 +23,12 @@ const signIn = async (req, res) => {
         if (!validUser) {
             return res.status(404).json({message: "Username not found"})
         }
-        const validPassword = bcryptjs.compareSync(password, validUser[0].password_hash)
+        const validPassword = bcryptjs.compareSync(password, validUser.password_hash)
         if (!validPassword) {
             return res.status(401).json({message: "Wrong Password entered"})
         }
-        const token = jwt.sign({id: validUser[0].id}, process.env.JWT_SECRET)
-        const {password_hash, ...rest} = validUser[0]
+        const token = jwt.sign({id: validUser.id}, process.env.JWT_SECRET)
+        const {password_hash, ...rest} = validUser
         const expiryDate = new Date(Date.now() + 10800000)
         return res
             .cookie("access_token", token, {httpOnly: true, expires: expiryDate})
@@ -79,7 +79,7 @@ const deleteUser = async (req, res) => {
     }
 }
 
-module.exports = {
+export default {
     signUp,
     signIn,
     signOut,

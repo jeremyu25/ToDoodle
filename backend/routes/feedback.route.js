@@ -1,8 +1,7 @@
-const express = require("express")
+import express from "express"
+import feedbackController from "../controllers/feedback.controller.js"
 
 const router = express.Router()
-
-const feedbackController = require("../controllers/feedback.controller.js")
 
 router.get("/", feedbackController.getFeedback)
 router.get("/all", feedbackController.getAllFeedback)
@@ -12,4 +11,4 @@ router.patch("/description", feedbackController.updateFeedbackDescription)
 router.delete("/", feedbackController.deleteFeedback)
 router.delete("/all", feedbackController.deleteAllFeedback)
 
-module.exports = router
+export default router
