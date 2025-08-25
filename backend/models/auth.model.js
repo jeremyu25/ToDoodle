@@ -1,18 +1,63 @@
-const db = require("../db/index.js")
+import query from "../db/index.js"
 
-const signUp = async(username, passwordhash) => {
-    const results = await db.query(`INSERT INTO users(username, password_hash) VALUES($1, $2) RETURNING *`, [username, passwordhash])
-    return results.rows
+const signUp = async (username, passwordhash) => {
+  try {
+    const results = await query(
+      `INSERT INTO users(username, password_hash) 
+       VALUES($1, $2) RETURNING id, username`,
+      [username, passwordhash]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("Unable to create user.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error signing up user in database:", error.message)
+    throw new Error("DB error while creating user.")
+  }
 }
 
-const getUser = async(username) => {
-    const validUser = await db.query(`select id, username, password_hash from users where username = $1`, [username])
-    return validUser.rows
+const getUser = async (username) => {
+  try {
+    const results = await query(
+      `SELECT id, username, password_hash 
+       FROM users WHERE username = $1`,
+      [username]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("User not found.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error fetching user from database:", error.message)
+    throw new Error("DB error while fetching user.")
+  }
 }
 
-const deleteUser = async(id) => {
-    const deletedUser =await db.query(`DELETE FROM users where id = $1 RETURNING *`, [id])
-    return deletedUser.rows
+const deleteUser = async (id) => {
+  try {
+    const results = await query(
+      `DELETE FROM users WHERE id = $1 RETURNING id, username`,
+      [id]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("User not found.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error deleting user from database:", error.message)
+    throw new Error("DB error while deleting user.")
+  }
 }
 
-module.exports = { signUp, getUser, deleteUser }
+export default {
+  signUp,
+  getUser,
+  deleteUser
+}

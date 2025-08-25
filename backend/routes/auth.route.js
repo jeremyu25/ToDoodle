@@ -1,20 +1,15 @@
-const express = require("express")
+import express from "express"
+import authController from "../controllers/auth.controller.js"
+import { verifyToken } from "../utils/verify.js"
 
 const router = express.Router()
 
-const authController = require('../controllers/auth.controller.js')
+router.post("/signup", authController.signUp)
+router.post("/signin", authController.signIn)
+router.post("/signout", authController.signOut)
+router.get("/verify", verifyToken, authController.verifyUser)
+router.delete("/delete", verifyToken, authController.deleteUser)
 
-const { verifyToken } = require('../utils/verify');
+router.get("/verify", verifyToken, authController.verifyUser)
 
-router.post('/signup', authController.signUp)
-
-router.post('/signin', authController.signIn)
-
-router.post('/signout', authController.signOut)
-
-router.delete('/delete',[verifyToken], authController.deleteUser)
-
-router.get('/verify', verifyToken, authController.verifyUser)
-
-
-module.exports = router
+export default router

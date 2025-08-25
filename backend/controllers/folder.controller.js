@@ -1,4 +1,4 @@
-const FolderModel =  require('../models/folder.model.js')
+import FolderModel from "../models/folder.model.js"
 
 const getFolder = async(req, res) => {
     try{
@@ -128,7 +128,7 @@ const deleteAllFolders = async(req, res) => {
         res.status(500).json({message: err.message})
     }
 }
-module.exports = {
+export default {
     getFolder,
     getAllFolders,
     createFolder,

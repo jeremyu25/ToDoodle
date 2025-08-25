@@ -1,34 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import HomePage from './pages/HomePage'
+import AboutPage from './pages/AboutPage'
+import UserSignUpPage from './pages/UserSignUpPage'
+import UserSignInPage from './pages/UserSignInPage'
+import FeedBackPage from './pages/FeedBackPage'
+import UserProfilePage from './pages/UserProfilePage'
+import TodoPage from './pages/TodoPage'
+import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
+import { useAuth } from './hooks/useAuth'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const { checkAuthStatus } = useAuth();
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/sign_up" element={<UserSignUpPage />} />
+        <Route path="/sign_in" element={<UserSignInPage />} />
+        <Route 
+          path="/feedback" 
+          element={
+            <ProtectedRoute>
+              <FeedBackPage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute>
+              <UserProfilePage />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/todo" 
+          element={
+            <ProtectedRoute>
+              <TodoPage />
+            </ProtectedRoute>
+          } 
+        />
+      </Routes>
+    </BrowserRouter>
   )
 }
 

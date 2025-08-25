@@ -1,0 +1,58 @@
+.navbar {
+    background-color: var(--color-bg-alt);
+    /* Mist Grey */
+    border-bottom: 1px solid var(--color-secondary);
+    /* Dusty Taupe */
+    margin: 0;
+    padding: 0.75rem 1.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    max-width: 100vw;
+    gap: clamp(20px, 4vw, 100px);
+}
+
+.navbar a {
+    color: var(--color-text-primary);
+    /* Charcoal */
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.navbar a:hover,
+.navbar a.active {
+    color: var(--color-primary);
+    /* Sage Green */
+}
+
+.navbar a.active {
+    border-bottom: 2px solid var(--color-highlight);
+    /* Pale Gold */
+    padding-bottom: 0.25rem;
+}
+
+.user-welcome {
+    color: var(--color-text-primary);
+    font-weight: 500;
+    font-size: 0.9rem;
+    margin: 0 1rem;
+}
+
+.logout-btn {
+    background-color: var(--color-secondary);
+    color: var(--color-text-primary);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+    background-color: var(--color-primary);
+    color: white;
+}
