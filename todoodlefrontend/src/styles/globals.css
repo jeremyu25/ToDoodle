@@ -71,35 +71,8 @@ body {
   font-family: "Segoe UI", Tahoma, sans-serif;
 }
 
-.card {
-  background-color: var(--color-bg-alt);
-  padding: 1rem;
-  border-radius: 8px;
-}
-
-button {
-  background-color: var(--color-primary);
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
-button:hover {
-  background-color: var(--color-highlight);
-}
-
 .text-muted {
   color: var(--color-text-muted);
-}
-
-.alert {
-  background-color: var(--color-error);
-  color: white;
-  padding: 0.5rem;
-  border-radius: 6px;
 }
 
 .error-message {
@@ -137,40 +110,4 @@ button:hover {
   outline: none;
   border-color: var(--color-primary);
   box-shadow: 0 0 0 3px rgba(168, 187, 160, 0.2);
-}
-
-/* Success message variant */
-.success-message {
-  background-color: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-  box-shadow: 0 2px 8px rgba(168, 187, 160, 0.3);
-}
-
-.success-message::before {
-  content: "✅";
-}
-
-.success-message:hover {
-  background-color: #97a890;
-  border-color: #97a890;
-  box-shadow: 0 4px 12px rgba(168, 187, 160, 0.4);
-}
-
-/* Warning message variant */
-.warning-message {
-  background-color: var(--color-highlight);
-  color: var(--color-text-primary);
-  border-color: var(--color-highlight);
-  box-shadow: 0 2px 8px rgba(226, 182, 79, 0.3);
-}
-
-.warning-message::before {
-  content: "⚠️";
-}
-
-.warning-message:hover {
-  background-color: #d1b77a;
-  border-color: #d1b77a;
-  box-shadow: 0 4px 12px rgba(226, 182, 79, 0.4);
 }
