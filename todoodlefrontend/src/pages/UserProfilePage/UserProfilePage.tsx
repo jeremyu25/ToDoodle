@@ -1,6 +1,6 @@
-import React from 'react'
-import '../styles/globals.css'
-import NavBar from '../components/NavBar/NavBar'
+import '../../styles/globals.css'
+import '../Page.css'
+import NavBar from '../../components/NavBar/NavBar'
 
 const UserProfilePage = () => {
   return (
