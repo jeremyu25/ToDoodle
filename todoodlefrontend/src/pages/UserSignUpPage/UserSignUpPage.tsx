@@ -79,7 +79,11 @@ const UserSignUpPage = () => {
     })
       .then(response => response.json())
       .then(data => {
-        console.log(data)
+		if (data.success) {
+			navigate("/sign_in")
+		} else {
+			setErrors([data.message || "Sign up failed"])
+		}
       })
       .catch(error => {
         setErrors([...errors, error.message])
@@ -88,8 +92,6 @@ const UserSignUpPage = () => {
       .finally(() => {
         setIsSubmitting(false)
       })
-
-      navigate("/sign_in")
 	}
 
 	return (
