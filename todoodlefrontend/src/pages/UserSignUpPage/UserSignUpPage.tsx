@@ -79,6 +79,7 @@ const UserSignUpPage = () => {
     })
       .then(response => response.json())
       .then(data => {
+		setErrors([])
 		if (data.success) {
 			navigate("/sign_in")
 		} else {
