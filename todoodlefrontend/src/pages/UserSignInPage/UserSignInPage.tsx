@@ -89,7 +89,7 @@ const UserSignInPage = () => {
 				}
 			})
 			.catch((error) => {
-        setErrors([...errors, error.message])
+				setErrors([error.message])
 				console.error("Error:", error)
 			})
 			.finally(() => {
