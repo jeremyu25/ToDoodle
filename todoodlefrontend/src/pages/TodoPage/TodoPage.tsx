@@ -1,3 +1,6 @@
+import "../../styles/globals.css"
+import "../../styles/utilities.css"
+import "./TodoPage.css"
 import { useState, useEffect } from "react"
 import { useAuth } from "../../hooks/useAuth"
 import NavBar from "../../components/NavBar/NavBar"
@@ -6,7 +9,6 @@ import TaskModal from "../../components/Todo/TaskModal"
 import type { Task, Status, Folder } from "../../components/Todo/types"
 import { notesApi, foldersApi } from "../../services/api"
 import { noteToTask, taskToNote, addDefaultColors } from "../../utils/dataTransformers"
-import "../Page.css"
 
 type SortOption = 'title' | 'status' | 'folder' | 'createdAt' | 'priority';
 type SortDirection = 'asc' | 'desc';

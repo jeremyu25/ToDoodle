@@ -1,7 +1,8 @@
 import React from 'react';
+import '../../styles/globals.css'
+import '../../styles/utilities.css'
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import './ProtectedRoute.css';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (isLoading) {
     return (
       <div className="loading-container">
-        <div className="spinner"></div>
+        <div className="route-spinner"></div>
         <p>Loading...</p>
       </div>
     );

@@ -1,0 +1,255 @@
+p {
+    padding: 10px;
+    text-align: left;
+}
+
+/* About Page Styles */
+.about-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 90vh;
+    padding: 20px;
+}
+
+/* About Hero Section */
+.about-hero {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 60px;
+    gap: clamp(60px, 8vw, 200px);
+    width: 100%;
+    max-width: 1200px;
+    margin-bottom: 40px;
+}
+
+.about-hero-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.about-hero h1 {
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-weight: bold;
+    color: var(--color-text-primary);
+    margin-bottom: 10px;
+}
+
+.about-hero-subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.4rem);
+    color: var(--color-text-muted);
+    font-style: italic;
+    padding: 0;
+}
+
+.about-hero-logo {
+    width: clamp(350px, 25vw, 450px);
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.about-hero-logo:hover {
+    transform: scale(1.05);
+}
+
+/* Content Grid Sections (Story & Features) */
+.about-content-section {
+    width: 100%;
+    max-width: 1200px;
+    text-align: center;
+    margin-bottom: 60px;
+    padding: 0 20px;
+}
+
+.about-content-section h2 {
+    font-size: clamp(2rem, 4vw, 3rem);
+    color: var(--color-text-primary);
+    margin-bottom: 40px;
+    font-weight: 600;
+}
+
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+.content-card {
+    background-color: var(--color-bg-alt);
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.content-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(168, 187, 160, 0.15);
+    border-color: var(--color-primary);
+}
+
+.content-icon {
+    font-size: 2.8rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.content-card h3,
+.content-card h4 {
+    color: var(--color-primary);
+    font-size: 1.4rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.content-card p {
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    padding: 0;
+}
+
+/* Call to Action Section */
+.about-cta {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+    padding: 50px 40px;
+    border-radius: 16px;
+    text-align: center;
+    width: 100%;
+    max-width: 800px;
+    margin-bottom: 60px;
+}
+
+.cta-content h2 {
+    color: white;
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.cta-content p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.2rem;
+    margin-bottom: 30px;
+    padding: 0;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cta-buttons .btn-primary {
+    background-color: white;
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.cta-buttons .btn-primary:hover {
+    background-color: var(--color-bg-main);
+    transform: translateY(-2px);
+}
+
+.cta-buttons .btn-secondary {
+    background-color: transparent;
+    color: white;
+    border-color: white;
+}
+
+.cta-buttons .btn-secondary:hover {
+    background-color: white;
+    color: var(--color-primary);
+}
+
+/* Tech Stack Section */
+.about-tech {
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 40px;
+}
+
+.about-tech h3 {
+    color: var(--color-text-primary);
+    font-size: 1.5rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+.tech-stack {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.tech-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 15px;
+    background-color: var(--color-bg-alt);
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+    min-width: 80px;
+    cursor: pointer;
+}
+
+.tech-item:hover {
+    transform: translateY(-3px);
+}
+
+.tech-icon {
+    font-size: 2rem;
+}
+
+.tech-logo {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+}
+
+.tech-item span:last-child {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* Responsive Design for About Page */
+@media (max-width: 768px) {
+    .about-hero {
+        flex-direction: column;
+        text-align: center;
+        gap: 30px;
+        padding: 40px 20px;
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .about-cta {
+        padding: 40px 20px;
+    }
+
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .cta-buttons button {
+        width: 200px;
+    }
+
+    .tech-stack {
+        gap: 20px;
+    }
+}

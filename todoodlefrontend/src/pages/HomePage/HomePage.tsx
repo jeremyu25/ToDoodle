@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import '../../styles/globals.css'
-import '../Page.css'
+import '../../styles/utilities.css'
+import './HomePage.css'
 import NavBar from '../../components/NavBar/NavBar'
 import todoodleImage from '../../assets/todoodle_image_no_bg.png'
 

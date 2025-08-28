@@ -2,7 +2,8 @@ import React from "react"
 import { useState } from "react"
 import { useNavigate, Link, useLocation } from "react-router-dom"
 import "../../styles/globals.css"
-import "../Page.css"
+import "../../styles/utilities.css"
+import "./UserSignInPage.css"
 import NavBar from "../../components/NavBar/NavBar"
 import logo from "../../assets/virtual-learning-background-with-design-space.png"
 import { useAuth } from "../../hooks/useAuth"
@@ -101,15 +102,15 @@ const UserSignInPage = () => {
 	return (
 		<>
 			<NavBar />
-			<div className="signup-container">
-				<div className="signup-right-panel">
-					<div className="signup-form-container">
+			<div className="signin-container">
+				<div className="signin-left-panel">
+					<div className="signin-form-container">
 						<div className="form-header">
 							<h2 className="form-title">Sign into your Account</h2>
 							<p className="form-subtitle">Ready to tackle your tasks?</p>
 						</div>
 
-						<form className="signup-form" onSubmit={handleSubmit}>
+						<form className="signin-form" onSubmit={handleSubmit}>
 							<div className="form-group">
 								<label htmlFor="username" className="form-label">
 									Username
@@ -197,7 +198,7 @@ const UserSignInPage = () => {
 					</div>
 				</div>
 
-				<div className="signup-left-panel">
+				<div className="signin-right-panel">
 					<div className="welcome-content">
 						<h1 className="welcome-title">Welcome to ToDoodle!</h1>
 						<p className="welcome-subtitle">Your organized workspace awaits. Let's turn those tasks into accomplishments.</p>
@@ -217,7 +218,7 @@ const UserSignInPage = () => {
 						</div>
 					</div>
 					<div className="logo-container">
-						<img src={logo} alt="ToDoodle Logo" className="signup-logo" />
+						<img src={logo} alt="ToDoodle Logo" className="signin-logo" />
 					</div>
 				</div>
 			</div>

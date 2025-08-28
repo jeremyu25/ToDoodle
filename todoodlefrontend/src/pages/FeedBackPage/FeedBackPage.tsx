@@ -1,5 +1,5 @@
 import '../../styles/globals.css'
-import '../Page.css'
+import '../../styles/utilities.css'
 import NavBar from '../../components/NavBar/NavBar'
 
 const FeedBackPage = () => {
