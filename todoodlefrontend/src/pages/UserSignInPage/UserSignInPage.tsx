@@ -83,12 +83,10 @@ const UserSignInPage = () => {
 				console.log(data)
 				if (data.success) {
 					login(data.user)
-					const from = location.state?.from?.pathname || "/"
-					navigate(from, { replace: true })
+					navigate("/todo")
 				} else {
 					setErrors([data.message || "Login failed"])
 				}
-				navigate("/todo")
 			})
 			.catch((error) => {
         setErrors([...errors, error.message])
