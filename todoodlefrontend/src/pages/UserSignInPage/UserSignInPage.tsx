@@ -1,6 +1,6 @@
 import React from "react"
 import { useState } from "react"
-import { useNavigate, Link, useLocation } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import "../../styles/globals.css"
 import "../../styles/utilities.css"
 import "./UserSignInPage.css"
@@ -10,7 +10,6 @@ import { useAuth } from "../../hooks/useAuth"
 
 const UserSignInPage = () => {
 	const navigate = useNavigate()
-	const location = useLocation()
 	const { login } = useAuth()
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
