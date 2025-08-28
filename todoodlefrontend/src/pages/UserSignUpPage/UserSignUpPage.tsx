@@ -79,7 +79,6 @@ const UserSignUpPage = () => {
     })
       .then(response => response.json())
       .then(data => {
-		setErrors([])
 		if (data.success) {
 			navigate("/sign_in")
 		} else {
@@ -87,7 +86,7 @@ const UserSignUpPage = () => {
 		}
       })
       .catch(error => {
-        setErrors([...errors, error.message])
+        setErrors([error.message])
         console.error("Error:", error)
       })
       .finally(() => {
