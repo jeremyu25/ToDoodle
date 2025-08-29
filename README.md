@@ -47,7 +47,7 @@ cd todoodlefrontend
 ```
 Run this command to start the frontend server
 ```sh
-npm start dev
+npm run dev
 ```
 
 To run the backend
@@ -57,7 +57,7 @@ cd backend
 
 Run this command to start the backend server
 ```sh
-npm start dev
+npm run dev
 ```
 
 Remember to start up your local postgres database as per your configuration.
