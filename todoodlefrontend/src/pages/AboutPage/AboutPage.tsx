@@ -1,9 +1,9 @@
-import React from 'react'
 import { useNavigate } from 'react-router-dom'
-import '../styles/globals.css'
-import './Page.css'
-import NavBar from '../components/NavBar/NavBar'
-import todoodleImage from '../assets/serene_lady_writing_todo_list.png'
+import '../../styles/globals.css'
+import '../../styles/utilities.css'
+import './AboutPage.css'
+import NavBar from '../../components/NavBar/NavBar'
+import todoodleImage from '../../assets/serene_lady_writing_todo_list.png'
 
 const AboutPage = () => {
   const navigate = useNavigate();

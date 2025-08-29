@@ -1,0 +1,94 @@
+.home-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: left;
+    min-height: 90vh;
+}
+
+.hero-section {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 60px 40px 40px 40px;
+    text-align: left;
+    gap: clamp(60px, 8vw, 200px);
+    width: 100%;
+    max-width: 1200px;
+}
+
+.hero-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.hero-content h1 {
+    margin-bottom: 10px;
+    font-size: clamp(3rem, 6vw, 4.5rem);
+    font-weight: bold;
+    color: var(--color-text-primary);
+}
+
+.typewriter-text {
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 600;
+    min-height: 1.2em;
+    margin-bottom: 10px;
+}
+
+.hero-subtitle {
+    font-size: clamp(1.1rem, 2vw, 1.3rem);
+    color: var(--color-text-muted);
+    font-style: italic;
+    margin-bottom: 20px;
+    padding: 0;
+}
+
+.hero-buttons {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.hero-logo {
+    width: clamp(300px, 30vw, 400px);
+    height: auto;
+    transition: transform 0.3s ease;
+}
+
+.hero-logo:hover {
+    transform: scale(1.05);
+}
+
+.hero-footer {
+    text-align: center;
+    margin-top: 40px;
+}
+
+.hero-footer p {
+    font-size: 1rem;
+    padding: 0;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .hero-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 40px;
+        padding: 40px 20px;
+    }
+
+    .hero-content {
+        align-items: center;
+        text-align: center;
+    }
+
+    .hero-buttons {
+        justify-content: center;
+    }
+}

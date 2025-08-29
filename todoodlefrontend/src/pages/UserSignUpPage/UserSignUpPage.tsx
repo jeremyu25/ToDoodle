@@ -1,9 +1,11 @@
 import React from "react"
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import "../styles/globals.css"
-import NavBar from "../components/NavBar/NavBar"
-import logo from "../assets/virtual-learning-background-with-design-space.png"
+import "../../styles/globals.css"
+import "../../styles/utilities.css"
+import "./UserSignUpPage.css"
+import NavBar from "../../components/NavBar/NavBar"
+import logo from "../../assets/virtual-learning-background-with-design-space.png"
 
 const UserSignUpPage = () => {
   const navigate = useNavigate()

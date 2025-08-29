@@ -1,9 +1,9 @@
-import React from 'react'
 import { useNavigate } from 'react-router-dom';
-import '../styles/globals.css'
-import './Page.css'
-import NavBar from '../components/NavBar/NavBar'
-import todoodleImage from '../assets/todoodle_image_no_bg.png'
+import '../../styles/globals.css'
+import '../../styles/utilities.css'
+import './HomePage.css'
+import NavBar from '../../components/NavBar/NavBar'
+import todoodleImage from '../../assets/todoodle_image_no_bg.png'
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -64,7 +64,7 @@ const HomePage = () => {
             <div className="hero-buttons">
               <button className="btn-secondary" onClick={() => navigate('/sign_up')}>Get Started</button>
               <button className="btn-secondary" onClick={() => navigate('/about')}>Learn More</button>
-            </div>
+              </div>
           </div>
           <img src={todoodleImage} alt="Todoodle Logo" className="hero-logo" />
         </div>

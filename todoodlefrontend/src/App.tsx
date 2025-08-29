@@ -1,12 +1,12 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useEffect } from 'react';
-import HomePage from './pages/HomePage'
-import AboutPage from './pages/AboutPage'
-import UserSignUpPage from './pages/UserSignUpPage'
-import UserSignInPage from './pages/UserSignInPage'
-import FeedBackPage from './pages/FeedBackPage'
-import UserProfilePage from './pages/UserProfilePage'
-import TodoPage from './pages/TodoPage'
+import HomePage from './pages/HomePage/HomePage'
+import AboutPage from './pages/AboutPage/AboutPage'
+import UserSignUpPage from './pages/UserSignUpPage/UserSignUpPage'
+import UserSignInPage from './pages/UserSignInPage/UserSignInPage'
+import FeedBackPage from './pages/FeedBackPage/FeedBackPage'
+import UserProfilePage from './pages/UserProfilePage/UserProfilePage'
+import TodoPage from './pages/TodoPage/TodoPage'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
 import { useAuth } from './hooks/useAuth'
 

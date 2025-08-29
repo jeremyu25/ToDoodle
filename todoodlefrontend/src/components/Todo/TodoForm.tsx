@@ -1,6 +1,7 @@
 import React from "react"
 import { useState } from "react"
 import type { Status, Task, Folder } from "./types"
+import "./TodoForm.css"
 
 interface TodoFormProps {
   onSubmit: (task: Omit<Task, 'id' | 'createdAt'>) => void;
