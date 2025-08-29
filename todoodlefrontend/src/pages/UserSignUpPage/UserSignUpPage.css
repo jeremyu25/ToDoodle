@@ -154,6 +154,8 @@
     color: var(--color-text-primary);
     transition: all 0.2s ease;
     font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .form-input:focus {
@@ -176,6 +178,28 @@
 .form-input.input-error:focus {
     border-color: var(--color-error);
     box-shadow: 0 0 0 3px rgba(217, 138, 123, 0.2);
+}
+
+.password-input-container {
+    position: relative;
+}
+
+.password-input-container .form-input {
+    padding-right: 3rem;
+}
+
+.eye-icon {
+    position: absolute;
+    right: 1rem;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    cursor: pointer;
+    color: var(--color-text-muted);
+}
+
+.eye-icon:hover {
+    color: var(--color-primary);
 }
 
 .input-error-message {

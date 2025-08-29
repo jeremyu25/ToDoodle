@@ -1,6 +1,7 @@
 import React from "react"
 import { useState } from "react"
 import { useNavigate, Link } from "react-router-dom"
+import { FaEye, FaEyeSlash } from "react-icons/fa"
 import "../../styles/globals.css"
 import "../../styles/utilities.css"
 import "./UserSignUpPage.css"
@@ -12,6 +13,7 @@ const UserSignUpPage = () => {
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const [confirmPassword, setConfirmPassword] = useState("")
+	const [showPassword, setShowPassword] = useState(false)
 	const [errors, setErrors] = useState<string[]>([])
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -150,15 +152,22 @@ const UserSignUpPage = () => {
 
 							<div className="form-group">
 								<label htmlFor="password" className="form-label">Password</label>
-								<input
-									id="password"
-									type="password"
-									placeholder="Create a strong password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									className={`form-input ${password.length > 0 && passwordIsInvalid(password).length > 0 ? 'input-error' : ''}`}
-									required
-								/>
+								<div className="password-input-container">
+									<input
+										id="password"
+										type={showPassword ? "text" : "password"}
+										placeholder="Create a strong password"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										className={`form-input ${password.length > 0 && passwordIsInvalid(password).length > 0 ? 'input-error' : ''}`}
+										required
+									/>
+									{showPassword ? (
+										<FaEye className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+									) : (
+										<FaEyeSlash className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+									)}
+								</div>
 								{password.length > 0 && passwordIsInvalid(password).length > 0 && (
 									<div className="input-error-message">
 										{passwordIsInvalid(password).map((error, index) => (
@@ -170,15 +179,22 @@ const UserSignUpPage = () => {
 
 							<div className="form-group">
 								<label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-								<input
-									id="confirmPassword"
-									type="password"
-									placeholder="Confirm your password"
-									value={confirmPassword}
-									onChange={(e) => setConfirmPassword(e.target.value)}
-									className={`form-input ${confirmPassword.length > 0 && password !== confirmPassword ? 'input-error' : ''}`}
-									required
-								/>
+								<div className="password-input-container">
+									<input
+										id="confirmPassword"
+										type={showPassword ? "text" :"password"}
+										placeholder="Confirm your password"
+										value={confirmPassword}
+										onChange={(e) => setConfirmPassword(e.target.value)}
+										className={`form-input ${confirmPassword.length > 0 && password !== confirmPassword ? 'input-error' : ''}`}
+										required
+									/>
+									{showPassword ? (
+										<FaEye className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+									) : (
+										<FaEyeSlash className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+									)}
+								</div>
 								{confirmPassword.length > 0 && password !== confirmPassword && (
 									<div className="input-error-message">
 										<span className="error-dot">• Passwords do not match</span>
