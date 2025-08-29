@@ -7,6 +7,7 @@ import "./UserSignInPage.css"
 import NavBar from "../../components/NavBar/NavBar"
 import logo from "../../assets/virtual-learning-background-with-design-space.png"
 import { useAuth } from "../../hooks/useAuth"
+import { FaEye, FaEyeSlash } from "react-icons/fa"
 
 const UserSignInPage = () => {
 	const navigate = useNavigate()
@@ -14,6 +15,7 @@ const UserSignInPage = () => {
 	const { login } = useAuth()
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
+	const [showPassword, setShowPassword] = useState(false)
 	const [errors, setErrors] = useState<string[]>([])
 	const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -91,7 +93,7 @@ const UserSignInPage = () => {
 				navigate("/todo")
 			})
 			.catch((error) => {
-        setErrors([...errors, error.message])
+				setErrors([...errors, error.message])
 				console.error("Error:", error)
 			})
 			.finally(() => {
@@ -139,15 +141,22 @@ const UserSignInPage = () => {
 								<label htmlFor="password" className="form-label">
 									Password
 								</label>
-								<input
-									id="password"
-									type="password"
-									placeholder="Enter your password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									className={`form-input ${password.length > 0 && passwordIsInvalid(password).length > 0 ? "input-error" : ""}`}
-									required
-								/>
+								<div className="password-input-container">
+									<input
+										id="password"
+										type={showPassword ? "text" : "password"}
+										placeholder="Enter your password"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										className={`form-input ${password.length > 0 && passwordIsInvalid(password).length > 0 ? "input-error" : ""}`}
+										required
+									/>
+									{showPassword ? (
+										<FaEye className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+									) : (
+										<FaEyeSlash className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+									)}
+								</div>
 								{password.length > 0 && passwordIsInvalid(password).length > 0 && (
 									<div className="input-error-message">
 										{passwordIsInvalid(password).map((error, index) => (
