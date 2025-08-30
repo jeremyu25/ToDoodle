@@ -36,16 +36,23 @@ const NavBar = () => {
 					</>
 				)}
 			</div>
-			<div className="navbar-user">
-				{isAuthenticated && (
-					<span className="user-welcome">Welcome, {user?.username}!</span>
-				)}
-				{isAuthenticated && (
-					<button onClick={logout} className="logout-btn">
-						Logout
-					</button>
-				)}
-			</div>
+			{isAuthenticated ? (
+				<div className="navbar-user">
+					{isAuthenticated && (
+						<span className="user-welcome">Welcome, {user?.username}!</span>
+					)}
+					{isAuthenticated && (
+						<button onClick={logout} className="logout-btn">
+							Logout
+						</button>
+					)}
+				</div>
+			) : (
+				// This is only to achieve nice flexbox spacing 
+				<div className="navbar-logo" style={{ visibility: "hidden" }}>
+					<img src={logo} alt="ToDoodle Logo" />
+				</div>
+			)}
 		</nav>
 	)
 }
