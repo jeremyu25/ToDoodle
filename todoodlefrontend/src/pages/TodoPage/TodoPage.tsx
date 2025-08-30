@@ -36,23 +36,23 @@ const TodoPage = () => {
 	useEffect(() => {
 		const loadData = async () => {
 			if (!user?.id) return;
-			
+
 			try {
 				setIsLoading(true);
 				setError(null);
-				
+
 				// Load folders first
 				const foldersResponse = await foldersApi.getAllFolders(user.id);
 				const backendFolders = foldersResponse.data.folderdata || [];
 				const foldersWithColors = addDefaultColors(backendFolders);
 				setFolders(foldersWithColors);
-				
+
 				// Load notes/tasks
 				const notesResponse = await notesApi.getAllNotes(user.id);
 				const backendNotes = notesResponse.data.notedata || [];
 				const tasksFromNotes = backendNotes.map((note: any) => noteToTask(note, foldersWithColors));
 				setTasks(tasksFromNotes);
-				
+
 			} catch (err) {
 				console.error('Error loading data:', err);
 				setError(err instanceof Error ? err.message : 'Failed to load data');
@@ -66,7 +66,7 @@ const TodoPage = () => {
 
 	const handleAddTask = async (newTask: Omit<Task, "id" | "createdAt">) => {
 		if (!user?.id) return;
-		
+
 		try {
 			const response = await notesApi.createNote(
 				user.id,
@@ -75,10 +75,10 @@ const TodoPage = () => {
 				newTask.description,
 				newTask.status || 'not_started'
 			);
-			
+
 			const createdNote = response.data.notedata;
 			const createdTask = noteToTask(createdNote, folders);
-			
+
 			setTasks([...tasks, createdTask]);
 			setShowForm(false);
 		} catch (err) {
@@ -101,10 +101,10 @@ const TodoPage = () => {
 		try {
 			const task = tasks.find(t => t.id === id);
 			if (!task) return;
-			
+
 			const updatedTask = { ...task, status: newStatus };
 			const noteData = taskToNote(updatedTask, user!.id);
-			
+
 			await notesApi.updateNoteStatus(id, noteData.status);
 			setTasks(tasks.map((task) => (task.id === id ? updatedTask : task)));
 		} catch (err) {
@@ -118,22 +118,22 @@ const TodoPage = () => {
 			const originalTask = tasks.find(t => t.id === updatedTask.id);
 			if (!originalTask) return;
 			const noteData = taskToNote(updatedTask, user!.id);
-			
+
 			// Update title if changed
 			if (updatedTask.title !== originalTask.title) {
 				await notesApi.updateNoteTitle(updatedTask.id, updatedTask.title);
 			}
-			
+
 			// Update content if changed
 			if (updatedTask.description !== originalTask.description) {
 				await notesApi.updateNoteContent(updatedTask.id, noteData.content);
 			}
-			
+
 			// Update status if changed
 			if (updatedTask.status !== originalTask.status) {
 				await notesApi.updateNoteStatus(updatedTask.id, noteData.status);
 			}
-			
+
 			setTasks(tasks.map((task) => (task.id === updatedTask.id ? updatedTask : task)));
 		} catch (err) {
 			console.error('Error updating task:', err);
@@ -143,12 +143,12 @@ const TodoPage = () => {
 
 	const handleCreateFolder = async () => {
 		if (!user?.id || !newFolderName.trim()) return;
-		
+
 		try {
 			const response = await foldersApi.createFolder(user.id, newFolderName.trim());
 			const createdFolder = response.data.folderdata;
 			const folderWithColor = addDefaultColors([createdFolder])[0];
-			
+
 			setFolders([...folders, folderWithColor]);
 			setNewFolderName("");
 			setShowFolderForm(false);
@@ -160,22 +160,34 @@ const TodoPage = () => {
 
 	const handleUpdateFolder = async () => {
 		if (!editingFolder || !editFolderName.trim()) return;
-		
+
 		try {
 			const response = await foldersApi.updateFolder(editingFolder.id, editFolderName.trim());
 			const updatedFolder = response.data.folderdata;
-			
-			setFolders(folders.map(folder => 
-				folder.id === editingFolder.id 
+
+			setFolders(folders.map(folder =>
+				folder.id === editingFolder.id
 					? { ...folder, name: editFolderName.trim() }
 					: folder
 			));
-			
+
 			setEditingFolder(null);
 			setEditFolderName("");
 		} catch (err) {
 			console.error('Error updating folder:', err);
 			setError(err instanceof Error ? err.message : 'Failed to update folder');
+		}
+	}
+
+	const handleDeleteFolder = async (folder: Folder) => {
+		try {
+			const response = await foldersApi.deleteFolder(folder.id);
+			const deletedFolder = response.data.folderdata;
+
+			setFolders(folders => folders.filter(f => f.id !== folder.id));
+		} catch (err) {
+			console.error('Error deleting folder:', err);
+			setError(err instanceof Error ? err.message : 'Failed to delete folder');
 		}
 	}
 
@@ -290,7 +302,7 @@ const TodoPage = () => {
 
 	return (
 		<>
-            <NavBar />
+			<NavBar />
 			<div className="page-container">
 				<div className="todo-header">
 					<h1>Welcome back, {user?.username || "User"}! 👋</h1>
@@ -333,14 +345,14 @@ const TodoPage = () => {
 						<div className="folders-overview">
 							<div className="folders-header">
 								<h3>Folders</h3>
-								<button 
-									onClick={() => setShowFolderForm(!showFolderForm)} 
+								<button
+									onClick={() => setShowFolderForm(!showFolderForm)}
 									className="add-folder-btn"
 								>
 									{showFolderForm ? "Cancel" : "+ Add Folder"}
 								</button>
 							</div>
-							
+
 							{showFolderForm && (
 								<div className="folder-form">
 									<input
@@ -350,7 +362,7 @@ const TodoPage = () => {
 										onChange={(e) => setNewFolderName(e.target.value)}
 										className="folder-input"
 									/>
-									<button 
+									<button
 										onClick={handleCreateFolder}
 										className="create-folder-btn"
 										disabled={!newFolderName.trim()}
@@ -359,15 +371,15 @@ const TodoPage = () => {
 									</button>
 								</div>
 							)}
-							
+
 							<div className="folders-grid">
 								{folders.map((folder) => (
-									<div 
-										key={folder.id} 
-										className={`folder-card ${filterFolder === folder.id ? 'selected' : ''}`} 
+									<div
+										key={folder.id}
+										className={`folder-card ${filterFolder === folder.id ? 'selected' : ''}`}
 									>
-										<div 
-											className="folder-color" 
+										<div
+											className="folder-color"
 											style={{ backgroundColor: folder.color || '#A8BBA0' }}
 											onClick={() => setFilterFolder(folder.id)}
 										></div>
@@ -382,7 +394,7 @@ const TodoPage = () => {
 														onClick={(e) => e.stopPropagation()}
 													/>
 													<div className="folder-edit-buttons">
-														<button 
+														<button
 															onClick={(e) => {
 																e.stopPropagation();
 																handleUpdateFolder();
@@ -392,7 +404,7 @@ const TodoPage = () => {
 														>
 															Save
 														</button>
-														<button 
+														<button
 															onClick={(e) => {
 																e.stopPropagation();
 																handleCancelEdit();
@@ -407,7 +419,7 @@ const TodoPage = () => {
 												<>
 													<span className="folder-name">{folder.name}</span>
 													<span className="folder-count">{getFolderCount(folder.id)} tasks</span>
-													<button 
+													<button
 														onClick={(e) => {
 															e.stopPropagation();
 															handleEditFolder(folder);
@@ -416,13 +428,22 @@ const TodoPage = () => {
 													>
 														✏️
 													</button>
+													<button
+														onClick={(e) => {
+															e.stopPropagation();
+															handleDeleteFolder(folder);
+														}}
+														className="folder-delete-btn"
+													>
+														🗑️
+													</button>
 												</>
 											)}
 										</div>
 									</div>
 								))}
-								<div 
-									className={`folder-card ${filterFolder === "ALL" ? 'selected' : ''}`} 
+								<div
+									className={`folder-card ${filterFolder === "ALL" ? 'selected' : ''}`}
 									onClick={() => setFilterFolder("ALL")}
 								>
 									<div className="folder-color" style={{ backgroundColor: '#6D6D6D' }}></div>
@@ -506,8 +527,8 @@ const TodoPage = () => {
 							) : (
 								<div className="compact-tasks-grid">
 									{sortedTasks.map((task) => (
-										<div 
-											key={task.id} 
+										<div
+											key={task.id}
 											className="compact-task-item"
 											onClick={() => handleTaskClick(task)}
 										>
@@ -515,7 +536,7 @@ const TodoPage = () => {
 												<div className="task-header">
 													<h3 className="task-title">{task.title}</h3>
 													{task.folder && (
-														<span 
+														<span
 															className="folder-badge"
 															style={{ backgroundColor: task.folder.color || '#A8BBA0' }}
 														>
