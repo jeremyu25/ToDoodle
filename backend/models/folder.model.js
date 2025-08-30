@@ -31,7 +31,7 @@ const getAllFolders = async (user_id) => {
 const createFolder = async (user_id, name, description) => {
 
     try {
-        const res = await query(
+        const results = await query(
             `INSERT INTO folders (user_id, name, description) VALUES ($1, $2, $3) RETURNING *`,
             [user_id, name, description]
         )
