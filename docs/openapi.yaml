@@ -1,0 +1,198 @@
+openapi: 3.0.0
+info:
+  title: Notes API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001/notes
+    description: Local development server
+tags:
+  - name: notes
+    description: Everything about notes
+  - name: folder
+    description: Everything about folders
+  - name: auth
+    description: Operations relating to users
+paths:
+  /notes:
+    get:
+      tags:
+        - notes
+        
+      summary: Get a single note
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A note object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+    post:
+      tags:
+        - notes
+      summary: Create a new note
+      parameters:
+        - in: query
+          name: folderId
+          required: false
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteInput'
+      responses:
+        '201':
+          description: Note created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+    delete:
+      tags:
+      - notes
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Note deleted
+
+  /notes/all:
+    get:
+      tags:
+        - notes
+      summary: Get all notes
+      responses:
+        '200':
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+    delete:
+      tags:
+        - notes
+      summary: Delete all notes
+      responses:
+        '204':
+          description: All notes deleted
+
+  /content:
+    patch:
+      tags:
+        - notes
+      summary: Update a note's content
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                content:
+                  type: string
+      responses:
+        '200':
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+
+  /title:
+    patch:
+      tags:
+        - notes
+      summary: Update a note's title
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                title:
+                  type: string
+      responses:
+        '200':
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+
+  /status:
+    patch:
+      tags:
+      - notes
+      summary: Update a note's status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                status:
+                  type: string
+                  enum: [active, archived, deleted]
+      responses:
+        '200':
+          description: Note updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+
+components:
+  schemas:
+    Note:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "abc123"
+        title:
+          type: string
+          example: "Shopping List"
+        content:
+          type: string
+          example: "Buy milk, eggs, bread"
+        status:
+          type: string
+          enum: [active, archived, deleted]
+          example: active
+    NoteInput:
+      type: object
+      required:
+        - title
+        - content
+      properties:
+        title:
+          type: string
+          example: "New Note"
+        content:
+          type: string
+          example: "Write something..."
