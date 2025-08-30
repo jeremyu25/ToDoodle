@@ -99,7 +99,7 @@ const UserSignInPage = () => {
 	}
 
 	return (
-		<>
+		<div className="signin-page-container">
 			<NavBar />
 			<div className="signin-container">
 				<div className="signin-left-panel">
@@ -228,7 +228,7 @@ const UserSignInPage = () => {
 					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

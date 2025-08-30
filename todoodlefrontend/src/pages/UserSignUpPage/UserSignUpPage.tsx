@@ -97,7 +97,7 @@ const UserSignUpPage = () => {
 	}
 
 	return (
-		<>
+		<div className="signup-page-container">
 			<NavBar />
 			<div className="signup-container">
 				<div className="signup-left-panel">
@@ -238,7 +238,7 @@ const UserSignUpPage = () => {
 					</div>
 				</div>
 			</div>
-		</>
+		</div>
 	)
 }
 

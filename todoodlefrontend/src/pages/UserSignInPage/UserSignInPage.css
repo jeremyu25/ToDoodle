@@ -1,7 +1,13 @@
-/* Sign In Page Styles */
+/* Page Container */
+.signin-page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
 .signin-container {
     display: flex;
-    min-height: 100vh;
+    flex: 1;
     background: linear-gradient(135deg, var(--color-bg-main) 0%, var(--color-bg-alt) 100%);
 }
 
