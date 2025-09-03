@@ -67,6 +67,10 @@ Remember to start up your local postgres database as per your configuration.
 Add a .env file in the frontend and backend folder respectively.
 (TBD: Add keys like DATABASE_URL, PORT, JWT_SECRET, etc.)
 
+## Running SwaggerUI
+
+https://swagger.io/docs/open-source-tools/swagger-ui/development/setting-up/
+
 ## Tech stack
 
 ReactJS Typescript - frontend  
