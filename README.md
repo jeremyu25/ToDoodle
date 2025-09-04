@@ -12,7 +12,7 @@ A simple, intuitive todo application to help users organize and track their dail
 
 ## WIP demo  
 
-<img src="./docs/assets/intro_page_demo.gif" width="300" />
+<img src="./docs/assets/intro_page_demo.gif" width="600" />
 
 [WIP_demo](./docs/assets/WIP_demo.mp4)
 
