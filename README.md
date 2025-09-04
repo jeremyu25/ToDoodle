@@ -12,10 +12,9 @@ A simple, intuitive todo application to help users organize and track their dail
 
 ## WIP demo  
 
-<video width="600" controls>
-  <source src="./docs/assets/WIP_demo.mp4" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+<img src="./docs/assets/intro_page_demo.gif" width="300" />
+
+[WIP_demo](./docs/assets/WIP_demo.mp4)
 
 ## Development plan
 
