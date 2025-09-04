@@ -9,6 +9,7 @@ import TaskModal from "../../components/Todo/TaskModal"
 import type { Task, Status, Folder } from "../../components/Todo/types"
 import { notesApi, foldersApi } from "../../services/api"
 import { noteToTask, taskToNote, addDefaultColors } from "../../utils/dataTransformers"
+import FolderItem from "../../components/Folder/FolderItem"
 
 type SortOption = 'title' | 'status' | 'folder' | 'createdAt' | 'priority';
 type SortDirection = 'asc' | 'desc';
@@ -374,74 +375,20 @@ const TodoPage = () => {
 
 							<div className="folders-grid">
 								{folders.map((folder) => (
-									<div
-										key={folder.id}
-										className={`folder-card ${filterFolder === folder.id ? 'selected' : ''}`}
-									>
-										<div
-											className="folder-color"
-											style={{ backgroundColor: folder.color || '#A8BBA0' }}
-											onClick={() => setFilterFolder(folder.id)}
-										></div>
-										<div className="folder-info" onClick={() => setFilterFolder(folder.id)}>
-											{editingFolder?.id === folder.id ? (
-												<div className="folder-edit-form">
-													<input
-														type="text"
-														value={editFolderName}
-														onChange={(e) => setEditFolderName(e.target.value)}
-														className="folder-edit-input"
-														onClick={(e) => e.stopPropagation()}
-													/>
-													<div className="folder-edit-buttons">
-														<button
-															onClick={(e) => {
-																e.stopPropagation();
-																handleUpdateFolder();
-															}}
-															className="folder-save-btn"
-															disabled={!editFolderName.trim()}
-														>
-															Save
-														</button>
-														<button
-															onClick={(e) => {
-																e.stopPropagation();
-																handleCancelEdit();
-															}}
-															className="folder-cancel-btn"
-														>
-															Cancel
-														</button>
-													</div>
-												</div>
-											) : (
-												<>
-													<span className="folder-name">{folder.name}</span>
-													<span className="folder-count">{getFolderCount(folder.id)} tasks</span>
-													<button
-														onClick={(e) => {
-															e.stopPropagation();
-															handleEditFolder(folder);
-														}}
-														className="folder-edit-btn"
-													>
-														✏️
-													</button>
-													<button
-														onClick={(e) => {
-															e.stopPropagation();
-															handleDeleteFolder(folder);
-														}}
-														className="folder-delete-btn"
-													>
-														🗑️
-													</button>
-												</>
-											)}
-										</div>
-									</div>
-								))}
+									<FolderItem 
+										folder={folder} 
+										editingFolder={editingFolder} 
+										editFolderName={editFolderName} 
+										setEditFolderName={setEditFolderName} 
+										handleUpdateFolder={handleUpdateFolder} 
+										handleCancelEdit={handleCancelEdit} 
+										handleEditFolder={handleEditFolder} 
+										handleDeleteFolder={handleDeleteFolder} 
+										getFolderCount={getFolderCount} 
+										filterFolder={filterFolder} 
+										setFilterFolder={setFilterFolder} 
+										key={folder.id}/>
+									))}
 								<div
 									className={`folder-card ${filterFolder === "ALL" ? 'selected' : ''}`}
 									onClick={() => setFilterFolder("ALL")}
