@@ -1,19 +1,45 @@
 # ToDoodle
 For now the most basic To Do App we can possibly do.
 
-# Project Overview
-A simple, intuitive todo application to help users organize and track their daily tasks efficiently.
+<img src="./docs/assets/meme.gif" width="300" />
 
-## Features planned
-- [ ]  User can create a new note.
-- [ ]  User can edit their notes.
-- [ ]  User can delete their notes.
-- [ ]  User can save notes.
-- [ ]  User can type text input to their notes.
-- [ ]  User can create a user account.
-- [ ]  User can log into their user account.
-- [ ]  User can log out of their account.
-- [ ]  User can access the website via a url link.
+
+# Project Overview
+
+<img src="./docs/assets/todoodle_logo.png" width="150" />
+
+A simple, intuitive todo application to help users organize and track their daily tasks efficiently.  
+
+## WIP demo  
+
+<video width="600" controls>
+  <source src="./docs/assets/WIP_demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+## Development plan
+
+### Features planned
+- [x]  User can create a new note.
+- [x]  User can edit their notes.
+- [x]  User can delete their notes.
+- [x]  User can save notes.
+- [x]  User can type text input to their notes.
+- [x]  User can create a user account.
+- [x]  User can log into their user account.
+- [x]  User can log out of their account.
+- [x]  User can access the website via a url link.
+- [ ]  Debouncing and throttling.
+- [ ]  Google oauth.
+- [ ]  2FA authentication.
+
+### DevOps
+- [ ] Dockerise dev.
+- [ ] Add unit testing for backend.
+- [ ] Add OpenAPI specification for backend (Swagger UI).
+- [ ] Add GitHub Actions CI/CD.
+- [ ] Implement proper GitHub flow once CI/CD and deployment to prod is up.
+- [ ] Deploy to AWS cloud. Monolithic EC2 for now.
 
 ## Getting started
 
