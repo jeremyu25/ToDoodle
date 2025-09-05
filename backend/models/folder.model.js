@@ -3,11 +3,7 @@ import query from "../db/index.js"
 const getFolderById = async (id) => {
     try {
         const results = await query(`select * from folders where id = $1`, [id])
-
-        if (results.rows.length === 0) {
-            throw new Error("Folder not found.")
-        }
-        return results.rows
+        return results.rows[0]
     } catch (error) {
         console.error("Error in getting the folder of from database:", error.message)
         throw new Error("DB error while getting folder.")
@@ -17,10 +13,6 @@ const getFolderById = async (id) => {
 const getAllFolders = async (user_id) => {
     try {
         const results = await query(`select * from folders where user_id = $1`, [user_id])
-
-        if (results.rows.length === 0) {
-            throw new Error("User ID not found or user has no folders.")
-        }
         return results.rows
     } catch (error) {
         console.error("Error in getting all folders of a user from database:", error.message)
@@ -31,14 +23,10 @@ const getAllFolders = async (user_id) => {
 const createFolder = async (user_id, name, description) => {
 
     try {
-        const res = await query(
+        const results = await query(
             `INSERT INTO folders (user_id, name, description) VALUES ($1, $2, $3) RETURNING *`,
             [user_id, name, description]
         )
-
-        if (results.rows.length === 0) {
-            throw new Error("Unable to create new folder in ")
-        }
         return results.rows[0]
     } catch (error) {
         console.error("Error in creating folder in database:", error.message)
@@ -80,11 +68,7 @@ const deleteFolder = async (id) => {
 
     try {
         const results = await query(`DELETE FROM folders WHERE id = $1 RETURNING *`, [id])
-
-        if (results.rows.length === 0) {
-            throw new Error("Folder not found.")
-        }
-        return results.rows
+        return results.rows[0]
     } catch (error) {
         console.error("Error in deleting folder from database:", error.message)
         throw new Error("DB error while deleting folder.")
@@ -95,10 +79,6 @@ const deleteFolder = async (id) => {
 const deleteAllFolders = async (user_id) => {
     try {
         const results = await query(`DELETE FROM folders WHERE user_id = $1 RETURNING *`, [user_id])
-
-        if (results.rows.length === 0) {
-            throw new Error("User ID not found or user has no folders, nothing deleted.")
-        }
         return results.rows
     } catch (error) {
         console.error("Error in deleting all folders of a user from database:", error.message)
