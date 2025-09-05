@@ -339,7 +339,7 @@ paths:
                             created_at: 2025-08-12T13:46:48.399Z
                             updated_at: 2025-08-12T13:46:48.399Z
                             status: not_started
-  /content:
+  /note/content:
     patch:
       tags:
         - notes
@@ -397,7 +397,7 @@ paths:
                     example: Internal server error
 
 
-  /title:
+  /note/title:
     patch:
       tags:
         - notes
@@ -454,7 +454,7 @@ paths:
                     type: string
                     example: Internal server error
 
-  /status:
+  /note/status:
     patch:
       tags:
       - notes
@@ -508,6 +508,410 @@ paths:
               schema:
                 type: object
                 properties:
+                  message:
+                    type: string
+                    example: Internal server error
+  /folder:
+    get:
+      tags:
+        - folder
+      summary: Get a single folder by ID
+      parameters:
+        - in: query
+          name: id
+          description: The ID of the folder to retrieve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Folder retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                      $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dsstatus:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Folder ID is required
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User folder not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+
+    post:
+      tags:
+        - folder
+      summary: Create a new folder
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: description
+          required: false
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Folder created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: User ID and folder name are required.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+    delete:
+      tags:
+        - folder
+      summary: Delete a single folder
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Folder deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User folder not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+
+  /folder/all:
+    get:
+      tags:
+        - folder
+      summary: Get all folders for a user
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results_length:
+                    type: integer
+                    example: 2
+              examples:
+                noFolders:
+                  summary: No folders/user found
+                  value:
+                    status: success
+                    results_length: 0
+                    data:
+                      folderdata: []
+                    message: "No folders found for user 1067d4f8-a2f3-4895-9aa0-ea189ec123e0"
+                withFolders:
+                  summary: Folders found
+                  value:
+                    status: success
+                    results_length: 2
+                    data:
+                      folderdata:
+                        - id: d2f4a1e7-1c5a-4b5e-8d9e-9a7e0d72f7a1
+                          user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                          name: Work Projects
+                          created_at: 2025-08-12T13:46:48.399Z
+                          description: Folder containing all project-related notes
+                        - id: a1b2c3d4-e5f6-7890-abcd-ef0123456789
+                          user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                          name: Personal
+                          created_at: 2025-08-12T13:46:48.399Z
+                          description: Personal notes and reminders
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Internal server error
+
+    delete:
+      tags:
+        - folder
+      summary: Delete all folders for a user
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: All folders deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    description: Number of folders deleted
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      folderdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Folder'
+                        description: List of deleted folders (empty if none found)
+                        example: []
+              examples:
+                  noFolders:
+                    summary: No folders/user found
+                    value:
+                      message: "User doesn't exist, or has no folders"
+                  withFolders:
+                    summary: Folders found
+                    value:
+                      results_length: 2
+                      data:
+                        folderdata:
+                          - id: d2f4a1e7-1c5a-4b5e-8d9e-9a7e0d72f7a1
+                            user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                            name: Work Projects
+                            created_at: 2025-08-12T13:46:48.399Z
+                            description: Folder containing all project-related notes
+                          - id: a1b2c3d4-e5f6-7890-abcd-ef0123456789
+                            user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                            name: Personal
+                            created_at: 2025-08-12T13:46:48.399Z
+                            description: Personal notes and reminders
+
+  /folder/name:
+    patch:
+      tags:
+        - folder
+      summary: Update a folder's name
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Folder name updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Folder ID and new folder name are required.
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: User folder not found
+  /folder/description:
+    patch:
+      tags:
+        - folder
+      summary: Update a folder's description
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: description
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Folder description updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Folder ID and new folder description are required.
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: User folder not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
                   message:
                     type: string
                     example: Internal server error
@@ -572,3 +976,24 @@ components:
           type: string
           enum: [in_progress, not_started, completed]
           example: in_progress
+    Folder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d2f4a1e7-1c5a-4b5e-8d9e-9a7e0d72f7a1"
+        user_id:
+          type: string
+          format: uuid
+          example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+        name:
+          type: string
+          example: "Work Projects"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-08-12T13:46:48.399Z"
+        description:
+          type: string
+          example: "Folder containing all project-related notes"
