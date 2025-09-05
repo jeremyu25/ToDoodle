@@ -74,26 +74,30 @@ const FolderItem: React.FC<FolderItemProps> = ({
                     </div>
                 ) : (
                     <>
-                        <span className="folder-name">{folder.name}</span>
-                        <span className="folder-count">{getFolderCount(folder.id)} tasks</span>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditFolder(folder);
-                            }}
-                            className="folder-edit-btn"
-                        >
-                            ✏️
-                        </button>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteFolder(folder);
-                            }}
-                            className="folder-delete-btn"
-                        >
-                            🗑️
-                        </button>
+                        <div className="folder-details">
+                            <span className="folder-name">{folder.name}</span>
+                            <span className="folder-count">{getFolderCount(folder.id)} tasks</span>
+                        </div>
+                        <div className="folder-actions">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditFolder(folder);
+                                }}
+                                className="folder-edit-btn"
+                            >
+                                ✏️
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteFolder(folder);
+                                }}
+                                className="folder-delete-btn"
+                            >
+                                🗑️
+                            </button>
+                        </div>
                     </>
                 )}
             </div>
