@@ -82,7 +82,7 @@ const TodoPage = () => {
 				newTask.status || 'not_started'
 			);
 
-			const createdNote = response.data.notedata;
+			const createdNote = response.data;
 			const createdTask = noteToTask(createdNote, folders);
 
 			setTasks([...tasks, createdTask]);
@@ -167,7 +167,7 @@ const TodoPage = () => {
 		setIsLoading(true);
 		try {
 			const response = await foldersApi.createFolder(user.id, folderName.trim());
-			const createdFolder = response.data.folderdata;
+			const createdFolder = response.data;
 			const folderWithColor = addDefaultColors([createdFolder])[0];
 
 			setFolders([...folders, folderWithColor]);
@@ -188,7 +188,7 @@ const TodoPage = () => {
 
 		try {
 			const response = await foldersApi.updateFolder(editingFolder.id, editFolderName.trim());
-			const updatedFolder = response.data.folderdata;
+			const updatedFolder = response.data;
 
 			setFolders(folders.map(folder =>
 				folder.id === editingFolder.id
@@ -211,7 +211,7 @@ const TodoPage = () => {
 		setIsLoading(true);
 		try {
 			const response = await foldersApi.deleteFolder(folder.id);
-			const deletedFolder = response.data.folderdata;
+			const deletedFolder = response.data;
 
 			setFolders(folders => folders.filter(f => f.id !== folder.id));
 		} catch (err) {
