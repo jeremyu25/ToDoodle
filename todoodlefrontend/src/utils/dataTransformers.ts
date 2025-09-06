@@ -1,4 +1,4 @@
-import type { Note, Task, Folder, Status } from '../components/Todo/types';
+import type { Note, Task, Folder, Status } from '../types/types';
 
 // Convert backend Note to frontend Task
 export const noteToTask = (note: Note, folders: Folder[]): Task => {

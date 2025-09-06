@@ -1,0 +1,37 @@
+/* Todo stats */
+.todo-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: var(--color-bg-alt);
+    padding: 25px;
+    border-radius: 12px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    border-color: var(--color-primary);
+    box-shadow: 0 8px 25px rgba(168, 187, 160, 0.15);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+}
+
+.stat-label {
+    color: var(--color-text-muted);
+    font-size: 1rem;
+    font-weight: 500;
+}

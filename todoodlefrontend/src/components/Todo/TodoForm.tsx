@@ -1,6 +1,6 @@
 import React from "react"
 import { useState } from "react"
-import type { Status, Task, Folder } from "./types"
+import type { Task, Folder } from "../../types/types"
 import "./TodoForm.css"
 
 interface TodoFormProps {

@@ -1,0 +1,157 @@
+.folder-card::before {
+    content: "";
+    position: absolute;
+    top: -10px;
+    left: 0px;
+    right: 0;
+    height: 100%;
+    width: 40%;
+    border-radius: 8px 8px 0 0;
+    outline-offset: 0;
+    outline: 2px solid var(--color-primary);
+    background: var(--color-primary);
+    z-index: -1;
+}
+
+.folder-card {
+    position: relative;
+    background: var(--color-bg-alt);
+    padding: 16px;
+    border-radius: 0px 8px 8px 8px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 60px;
+}
+
+.folder-card:hover {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(168, 187, 160, 0.15);
+}
+
+.folder-card.selected {
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(168, 187, 160, 0.15);
+}
+
+.folder-color {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.folder-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.folder-details {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.folder-actions {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.folder-name {
+    font-weight: 600;
+    color: var(--color-text-primary);
+    font-size: 1rem;
+}
+
+.folder-count {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+/* Folder Edit Styles */
+.folder-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.folder-edit-input {
+    padding: 6px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+}
+
+.folder-edit-buttons {
+    display: flex;
+    gap: 6px;
+}
+
+.folder-save-btn,
+.folder-cancel-btn {
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.folder-save-btn {
+    background: var(--color-primary);
+    color: white;
+}
+
+.folder-save-btn:hover:not(:disabled) {
+    background: var(--color-highlight);
+}
+
+.folder-save-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.folder-cancel-btn {
+    background: var(--color-text-muted);
+    color: white;
+}
+
+.folder-cancel-btn:hover {
+    background: #666;
+}
+
+.folder-edit-btn,
+.folder-delete-btn {
+    background: none;
+    border: none;
+    cursor: not-allowed;
+    font-size: 1rem;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.folder-card:hover .folder-edit-btn,
+.folder-card:hover .folder-delete-btn {
+    cursor: pointer;
+    opacity: 0.7;
+    pointer-events: auto;
+}
+
+.folder-edit-btn:hover,
+.folder-delete-btn:hover {
+    opacity: 1;
+    background: var(--color-bg-alt);
+}
