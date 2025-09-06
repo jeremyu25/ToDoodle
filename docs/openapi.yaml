@@ -1,0 +1,1005 @@
+openapi: 3.0.0
+info:
+  title: Notes API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3001/api/v1
+    description: Local development server
+tags:
+  - name: notes
+    description: Everything about notes
+  - name: folder
+    description: Everything about folders
+  - name: auth
+    description: Operations relating to users
+paths:
+  /note:
+    get:
+      tags:
+        - notes
+        
+      summary: Get a single note by passing in the note ID
+      parameters:
+        - in: query
+          name: id
+          description: The ID of the note to retrieve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Returns a note object
+          content:
+            application/json:
+              schema:
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Note'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Note ID query param is required
+        '404':
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Note with id 349405e1-20af-4111-8a8d-ca8ff6b87016 not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+    post:
+      tags:
+        - notes
+      summary: Create a new note
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: folder_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: title
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: content
+          required: false
+          schema:
+            type: string
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [in_progress, not_started, completed]
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteInput'
+      responses:
+        '201':
+          description: Note created
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: user_id, folder_id, and title are required
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Internal server error
+    delete:
+      tags:
+      - notes
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Note deleted
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+        '404':
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User note not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+
+  /note/all:
+    get:
+      tags:
+        - notes
+      summary: Get all notes
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of notes (may be empty)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results_length:
+                    type: integer
+                    description: Number of notes returned
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      notedata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Note'
+                        description: List of notes (empty if none found)
+                        example: []
+              examples:
+                noNotes:
+                  summary: No notes/user found
+                  value:
+                    status: success
+                    results_length: 0
+                    data:
+                      notedata: []
+                    message: "No notes found for user 1067d4f8-a2f3-4895-9aa0-ea189ec123e0"
+                withNotes:
+                  summary: Notes found
+                  value:
+                    status: success
+                    results_length: 2
+                    data:
+                      notedata:
+                        - id: e58ffe93-ce4f-4a09-9292-4bb634f9de35
+                          user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                          folder_id: b193dc98-6975-4400-9a70-1310d104aa21
+                          title: Meeting Notes
+                          content: Discuss project deadlines and deliverables.
+                          created_at: 2025-08-12T13:46:48.399Z
+                          updated_at: 2025-08-12T13:46:48.399Z
+                          status: not_started
+                        - id: a5121420-8b88-4d11-88e3-f5d6021b8063
+                          user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                          folder_id: 28efc7aa-2f85-4674-966f-37402822f1cd
+                          title: Grocery List
+                          content: Milk, Eggs, Bread, Butter
+                          created_at: 2025-08-12T13:46:48.399Z
+                          updated_at: 2025-08-12T13:46:48.399Z
+                          status: not_started
+
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: User ID is required
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Internal server error
+    delete:
+      tags:
+        - notes
+      summary: Delete all notes
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: All notes deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    description: Number of notes deleted
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      notedata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Note'
+                        description: List of deleted notes (empty if none found)
+                        example: []
+              examples:
+                  noNotes:
+                    summary: No notes/user found
+                    value:
+                      message: "User doesn't exist, or has no notes"
+                  withNotes:
+                    summary: Notes found
+                    value:
+                      results_length: 2
+                      data:
+                        notedata:
+                          - id: e58ffe93-ce4f-4a09-9292-4bb634f9de35
+                            user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                            folder_id: b193dc98-6975-4400-9a70-1310d104aa21
+                            title: Meeting Notes
+                            content: Discuss project deadlines and deliverables.
+                            created_at: 2025-08-12T13:46:48.399Z
+                            updated_at: 2025-08-12T13:46:48.399Z
+                            status: not_started
+                          - id: a5121420-8b88-4d11-88e3-f5d6021b8063
+                            user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                            folder_id: 28efc7aa-2f85-4674-966f-37402822f1cd
+                            title: Grocery List
+                            content: Milk, Eggs, Bread, Butter
+                            created_at: 2025-08-12T13:46:48.399Z
+                            updated_at: 2025-08-12T13:46:48.399Z
+                            status: not_started
+  /note/content:
+    patch:
+      tags:
+        - notes
+      summary: Update a note's content
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: content
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Note contentupdated
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Note ID and content are required.
+        '404':
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User note not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+
+
+  /note/title:
+    patch:
+      tags:
+        - notes
+      summary: Update a note's title
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: title
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Note title updated
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Note ID and title are required.
+        '404':
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User note not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+
+  /note/status:
+    patch:
+      tags:
+      - notes
+      summary: Update a note's status
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          required: true
+          schema:
+            type: string
+            enum: [in_progress, not_started, completed]
+      responses:
+        '200':
+          description: Note status updated
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Note'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Note ID and status are required.
+        '404':
+          description: Note not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User note not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+  /folder:
+    get:
+      tags:
+        - folder
+      summary: Get a single folder by ID
+      parameters:
+        - in: query
+          name: id
+          description: The ID of the folder to retrieve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Folder retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                      $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dsstatus:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Folder ID is required
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User folder not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+
+    post:
+      tags:
+        - folder
+      summary: Create a new folder
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: description
+          required: false
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Folder created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: User ID and folder name are required.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+    delete:
+      tags:
+        - folder
+      summary: Delete a single folder
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Folder deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User folder not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+
+  /folder/all:
+    get:
+      tags:
+        - folder
+      summary: Get all folders for a user
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results_length:
+                    type: integer
+                    example: 2
+              examples:
+                noFolders:
+                  summary: No folders/user found
+                  value:
+                    status: success
+                    results_length: 0
+                    data:
+                      folderdata: []
+                    message: "No folders found for user 1067d4f8-a2f3-4895-9aa0-ea189ec123e0"
+                withFolders:
+                  summary: Folders found
+                  value:
+                    status: success
+                    results_length: 2
+                    data:
+                      folderdata:
+                        - id: d2f4a1e7-1c5a-4b5e-8d9e-9a7e0d72f7a1
+                          user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                          name: Work Projects
+                          created_at: 2025-08-12T13:46:48.399Z
+                          description: Folder containing all project-related notes
+                        - id: a1b2c3d4-e5f6-7890-abcd-ef0123456789
+                          user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                          name: Personal
+                          created_at: 2025-08-12T13:46:48.399Z
+                          description: Personal notes and reminders
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Internal server error
+
+    delete:
+      tags:
+        - folder
+      summary: Delete all folders for a user
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: All folders deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    description: Number of folders deleted
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      folderdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Folder'
+                        description: List of deleted folders (empty if none found)
+                        example: []
+              examples:
+                  noFolders:
+                    summary: No folders/user found
+                    value:
+                      message: "User doesn't exist, or has no folders"
+                  withFolders:
+                    summary: Folders found
+                    value:
+                      results_length: 2
+                      data:
+                        folderdata:
+                          - id: d2f4a1e7-1c5a-4b5e-8d9e-9a7e0d72f7a1
+                            user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                            name: Work Projects
+                            created_at: 2025-08-12T13:46:48.399Z
+                            description: Folder containing all project-related notes
+                          - id: a1b2c3d4-e5f6-7890-abcd-ef0123456789
+                            user_id: 2ef2042c-fdcd-4377-856c-db4573b041c2
+                            name: Personal
+                            created_at: 2025-08-12T13:46:48.399Z
+                            description: Personal notes and reminders
+
+  /folder/name:
+    patch:
+      tags:
+        - folder
+      summary: Update a folder's name
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Folder name updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Folder ID and new folder name are required.
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: User folder not found
+  /folder/description:
+    patch:
+      tags:
+        - folder
+      summary: Update a folder's description
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: description
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Folder description updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    $ref: '#/components/schemas/Folder'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Folder ID and new folder description are required.
+        '404':
+          description: Folder not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: User folder not found
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: fail
+                  message:
+                    type: string
+                    example: Internal server error
+
+components:
+  schemas:
+    Note:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "349405e1-20af-4111-8a8d-ca8ff6b87013"
+        user_id:
+          type: string
+          format: uuid
+          example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+        folder_id:
+          type: string
+          format: uuid
+          example: "28efc7aa-2f85-4674-966f-37402822f1cd"
+        title:
+          type: string
+          example: "Shopping List"
+        content:
+          type: string
+          example: "Buy milk, eggs, bread"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-03-15T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2023-03-15T12:00:00Z"
+        status:
+          type: string
+          enum: [in_progress, not_started, completed]
+          example: in_progress
+    NoteInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "349405e1-20af-4111-8a8d-ca8ff6b87013"
+        user_id:
+          type: string
+          format: uuid
+          example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+        folder_id:
+          type: string
+          format: uuid
+          example: "28efc7aa-2f85-4674-966f-37402822f1cd"
+        title:
+          type: string
+          example: "Shopping List"
+        content:
+          type: string
+          example: "Buy milk, eggs, bread"
+        status:
+          type: string
+          enum: [in_progress, not_started, completed]
+          example: in_progress
+    Folder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d2f4a1e7-1c5a-4b5e-8d9e-9a7e0d72f7a1"
+        user_id:
+          type: string
+          format: uuid
+          example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+        name:
+          type: string
+          example: "Work Projects"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-08-12T13:46:48.399Z"
+        description:
+          type: string
+          example: "Folder containing all project-related notes"

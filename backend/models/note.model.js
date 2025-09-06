@@ -3,10 +3,7 @@ import query from "../db/index.js"
 const getNoteById = async (id) => {
     try {
         const results = await query(`select * from notes where id = $1`, [id])
-        if (results.rows.length === 0) {
-            throw new Error("Note not found.")
-        }
-        return results.rows
+        return results.rows[0]
     } catch (error) {
         console.error("Error in getting note ID from database:", error.message)
         throw new Error("DB error while getting note ID.")
@@ -16,9 +13,6 @@ const getNoteById = async (id) => {
 const getAllNotes = async (user_id) => {
     try {
         const results = await query(`select * from notes where user_id = $1`, [user_id])
-        if (results.rows.length === 0) {
-            throw new Error("Note not found or user has no notes.")
-        }
         return results.rows
     } catch (error) {
         console.error("Error in getting note ID from database:", error.message)
@@ -31,10 +25,7 @@ const createNote = async (user_id, folder_id, title, content, status) => {
         const results = await query(
             `INSERT INTO notes(user_id, folder_id, title, content, status) VALUES($1, $2, $3, $4, $5) RETURNING *`,
             [user_id, folder_id, title, content, status]
-        );
-        if (results.rows.length === 0) {
-            throw new Error("Unable to create new note in DB.")
-        }
+        )
         return results.rows[0];
     } catch (error) {
         console.error("Error in creating note in database:", error.message)
@@ -45,10 +36,7 @@ const createNote = async (user_id, folder_id, title, content, status) => {
 const updateNoteContent = async (id, content) => {
     try {
         const results = await query(`UPDATE notes SET content = $1 WHERE id = $2 RETURNING *`, [content, id])
-        if (results.rows.length === 0) {
-            throw new Error("Note not found.")
-        }
-        return results.rows
+        return results.rows[0]
     } catch (error) {
         console.error("Error in updating note from database:", error.message)
         throw new Error("DB error while updating note ID content.")
@@ -59,11 +47,7 @@ const updateNoteContent = async (id, content) => {
 const updateNoteTitle = async (id, title) => {
     try {
         const results = await query(`UPDATE notes SET title = $1 WHERE id = $2 RETURNING *`, [title, id])
-
-        if (results.rows.length === 0) {
-            throw new Error("Note not found.")
-        }
-        return results.rows
+        return results.rows[0]
     } catch (error) {
         console.error("Error in updating note from database:", error.message)
         throw new Error("DB error while updating note ID title.")
@@ -73,11 +57,7 @@ const updateNoteTitle = async (id, title) => {
 const updateNoteStatus = async (id, status) => {
     try {
         const results = await query(`UPDATE notes SET status = $1 WHERE id = $2 RETURNING *`, [status, id])
-
-        if (results.rows.length === 0) {
-            throw new Error("Note not found.")
-        }
-        return results.rows
+        return results.rows[0]
     } catch (error) {
         console.error("Error in updating note from database:", error.message)
         throw new Error("DB error while updating note ID status.")
@@ -87,11 +67,7 @@ const updateNoteStatus = async (id, status) => {
 const deleteNote = async (id) => {
     try {
         const results = await query(`DELETE FROM notes WHERE id = $1 RETURNING *`, [id])
-
-        if (results.rows.length === 0) {
-            throw new Error("Note not found.")
-        }
-        return results.rows
+        return results.rows[0]
     } catch (error) {
         console.error("Error in deleting note from database:", error.message)
         throw new Error("DB error while deleting note.")
@@ -102,10 +78,6 @@ const deleteNote = async (id) => {
 const deleteAllNotes = async (user_id) => {
     try {
         const results = await query(`DELETE FROM notes WHERE user_id = $1 RETURNING *`, [user_id])
-
-        if (results.rows.length === 0) {
-            throw new Error("User ID not found or user has no notes, nothing deleted.")
-        }
         return results.rows
     } catch (error) {
         console.error("Error in deleting all notes of a user from database:", error.message)

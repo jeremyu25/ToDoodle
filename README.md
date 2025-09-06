@@ -92,6 +92,10 @@ Remember to start up your local postgres database as per your configuration.
 Add a .env file in the frontend and backend folder respectively.
 (TBD: Add keys like DATABASE_URL, PORT, JWT_SECRET, etc.)
 
+## Running SwaggerUI
+
+When running backend server, open another url for the openapi documentation: http://localhost:3001/api-docs/.
+
 ## Tech stack
 
 ReactJS Typescript - frontend  
