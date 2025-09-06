@@ -13,6 +13,8 @@ import { notesApi, foldersApi } from "../../services/api"
 import { noteToTask, taskToNote, addDefaultColors } from "../../utils/dataTransformers"
 import FolderItem from "../../components/Folder/FolderItem"
 import FolderForm from "../../components/Folder/FolderForm"
+import LoadingContainer from "../../components/LoadingContainer/LoadingContainer"
+import ErrorContainer from "../../components/ErrorContainer/ErrorContainer"
 
 type SortOption = 'title' | 'status' | 'folder' | 'createdAt' | 'priority'
 type SortDirection = 'asc' | 'desc'
@@ -72,6 +74,7 @@ const TodoPage = () => {
 		if (!user?.id) return;
 
 		try {
+			setIsLoading(true);
 			const response = await notesApi.createNote(
 				user.id,
 				newTask.folderId || '',
@@ -89,9 +92,13 @@ const TodoPage = () => {
 			console.error('Error creating task:', err);
 			setError(err instanceof Error ? err.message : 'Failed to create task');
 		}
+		finally {
+			setIsLoading(false);
+		}
 	}
 
 	const handleDeleteTask = async (id: string) => {
+		setIsLoading(true);
 		try {
 			await notesApi.deleteNote(id);
 			setTasks(tasks.filter((task) => task.id !== id));
@@ -99,9 +106,13 @@ const TodoPage = () => {
 			console.error('Error deleting task:', err);
 			setError(err instanceof Error ? err.message : 'Failed to delete task');
 		}
+		finally {
+			setIsLoading(false);
+		}
 	}
 
 	const handleUpdateTaskStatus = async (id: string, newStatus: Status) => {
+		setIsLoading(true);
 		try {
 			const task = tasks.find(t => t.id === id);
 			if (!task) return;
@@ -115,9 +126,13 @@ const TodoPage = () => {
 			console.error('Error updating task status:', err);
 			setError(err instanceof Error ? err.message : 'Failed to update task status');
 		}
+		finally {
+			setIsLoading(false);
+		}
 	}
 
 	const handleUpdateTask = async (updatedTask: Task) => {
+		setIsLoading(true);
 		try {
 			const originalTask = tasks.find(t => t.id === updatedTask.id);
 			if (!originalTask) return;
@@ -143,11 +158,14 @@ const TodoPage = () => {
 			console.error('Error updating task:', err);
 			setError(err instanceof Error ? err.message : 'Failed to update task');
 		}
+		finally {
+			setIsLoading(false);
+		}
 	}
 
 	const handleCreateFolder = async () => {
 		if (!user?.id || !newFolderName.trim()) return;
-
+		setIsLoading(true);
 		try {
 			const response = await foldersApi.createFolder(user.id, newFolderName.trim());
 			const createdFolder = response.data.folderdata;
@@ -160,10 +178,15 @@ const TodoPage = () => {
 			console.error('Error creating folder:', err);
 			setError(err instanceof Error ? err.message : 'Failed to create folder');
 		}
+		finally {
+			setIsLoading(false);
+		}
 	}
 
 	const handleUpdateFolder = async () => {
 		if (!editingFolder || !editFolderName.trim()) return;
+
+		setIsLoading(true);
 
 		try {
 			const response = await foldersApi.updateFolder(editingFolder.id, editFolderName.trim());
@@ -181,9 +204,13 @@ const TodoPage = () => {
 			console.error('Error updating folder:', err);
 			setError(err instanceof Error ? err.message : 'Failed to update folder');
 		}
+		finally {
+			setIsLoading(false);
+		}
 	}
 
 	const handleDeleteFolder = async (folder: Folder) => {
+		setIsLoading(true);
 		try {
 			const response = await foldersApi.deleteFolder(folder.id);
 			const deletedFolder = response.data.folderdata;
@@ -192,6 +219,9 @@ const TodoPage = () => {
 		} catch (err) {
 			console.error('Error deleting folder:', err);
 			setError(err instanceof Error ? err.message : 'Failed to delete folder');
+		}
+		finally {
+			setIsLoading(false);
 		}
 	}
 
@@ -314,17 +344,9 @@ const TodoPage = () => {
 				</div>
 				{
 					isLoading ? (
-						<div className="loading-container">
-							<div className="loading-spinner"></div>
-							<p>Loading your tasks...</p>
-						</div>
+						<LoadingContainer name="tasks" />
 					) : error ? (
-						<div className="error-container">
-							<p className="error-message">Error: {error}</p>
-							<button onClick={() => window.location.reload()} className="retry-btn">
-								Retry
-							</button>
-						</div>
+						<ErrorContainer error_name={error} />
 					) : (
 						<>
 							<TodoStats tasks={tasks} getStatusCount={getStatusCount} />
