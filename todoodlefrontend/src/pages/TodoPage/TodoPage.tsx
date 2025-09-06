@@ -6,13 +6,15 @@ import { useAuth } from "../../hooks/useAuth"
 import NavBar from "../../components/NavBar/NavBar"
 import TodoForm from "../../components/Todo/TodoForm"
 import TaskModal from "../../components/Todo/TaskModal"
+import TodoStats from "../../components/Todo/TodoStats"
 import type { Task, Status, Folder } from "../../components/Todo/types"
 import { notesApi, foldersApi } from "../../services/api"
 import { noteToTask, taskToNote, addDefaultColors } from "../../utils/dataTransformers"
 import FolderItem from "../../components/Folder/FolderItem"
+import FolderForm from "../../components/Folder/FolderForm"
 
-type SortOption = 'title' | 'status' | 'folder' | 'createdAt' | 'priority';
-type SortDirection = 'asc' | 'desc';
+type SortOption = 'title' | 'status' | 'folder' | 'createdAt' | 'priority'
+type SortDirection = 'asc' | 'desc'
 
 const TodoPage = () => {
 	const { user, isAuthenticated } = useAuth()
@@ -309,98 +311,73 @@ const TodoPage = () => {
 					<h1>Welcome back, {user?.username || "User"}! 👋</h1>
 					<p>Let's get things done today</p>
 				</div>
-
-				{isLoading ? (
-					<div className="loading-container">
-						<div className="loading-spinner"></div>
-						<p>Loading your tasks...</p>
-					</div>
-				) : error ? (
-					<div className="error-container">
-						<p className="error-message">Error: {error}</p>
-						<button onClick={() => window.location.reload()} className="retry-btn">
-							Retry
-						</button>
-					</div>
-				) : (
-					<>
-						<div className="todo-stats">
-							<div className="stat-card">
-								<span className="stat-number">{tasks.length}</span>
-								<span className="stat-label">Total Tasks</span>
-							</div>
-							<div className="stat-card">
-								<span className="stat-number">{getStatusCount("NOT_STARTED")}</span>
-								<span className="stat-label">To Do</span>
-							</div>
-							<div className="stat-card">
-								<span className="stat-number">{getStatusCount("IN_PROGRESS")}</span>
-								<span className="stat-label">In Progress</span>
-							</div>
-							<div className="stat-card">
-								<span className="stat-number">{getStatusCount("COMPLETED")}</span>
-								<span className="stat-label">Completed</span>
-							</div>
+				{
+					isLoading ? (
+						<div className="loading-container">
+							<div className="loading-spinner"></div>
+							<p>Loading your tasks...</p>
 						</div>
-
-						<div className="folders-overview">
-							<div className="folders-header">
-								<h3>Folders</h3>
-								<button
-									onClick={() => setShowFolderForm(!showFolderForm)}
-									className="add-folder-btn"
-								>
-									{showFolderForm ? "Cancel" : "+ Add Folder"}
-								</button>
-							</div>
-
-							{showFolderForm && (
-								<div className="folder-form">
-									<input
-										type="text"
-										placeholder="Enter folder name"
-										value={newFolderName}
-										onChange={(e) => setNewFolderName(e.target.value)}
-										className="folder-input"
-									/>
+					) : error ? (
+						<div className="error-container">
+							<p className="error-message">Error: {error}</p>
+							<button onClick={() => window.location.reload()} className="retry-btn">
+								Retry
+							</button>
+						</div>
+					) : (
+						<>
+							<TodoStats tasks={tasks} getStatusCount={getStatusCount} />
+							<div className="folders-overview">
+								<div className="folders-header">
+									<h3>Folders</h3>
 									<button
-										onClick={handleCreateFolder}
-										className="create-folder-btn"
-										disabled={!newFolderName.trim()}
+										onClick={() => setShowFolderForm(!showFolderForm)}
+										className="add-folder-btn"
 									>
-										Create
+										{showFolderForm ? "Cancel" : "+ Add Folder"}
 									</button>
 								</div>
-							)}
 
-							<div className="folders-grid">
-								{folders.map((folder) => (
-									<FolderItem 
-										folder={folder} 
-										editingFolder={editingFolder} 
-										editFolderName={editFolderName} 
-										setEditFolderName={setEditFolderName} 
-										handleUpdateFolder={handleUpdateFolder} 
-										handleCancelEdit={handleCancelEdit} 
-										handleEditFolder={handleEditFolder} 
-										handleDeleteFolder={handleDeleteFolder} 
-										getFolderCount={getFolderCount} 
-										filterFolder={filterFolder} 
-										setFilterFolder={setFilterFolder} 
-										key={folder.id}/>
-									))}
-								<div
-									className={`folder-card ${filterFolder === "ALL" ? 'selected' : ''}`}
-									onClick={() => setFilterFolder("ALL")}
-								>
+								{
+									showFolderForm && (
+										<FolderForm
+											onCreateFolder={handleCreateFolder}
+											onCancel={() => setShowFolderForm(false)}
+										/>
+									)
+								}
+
+								<div className="folders-grid">
+									{
+										folders.map((folder) => (
+											<FolderItem 
+												folder={folder} 
+												editingFolder={editingFolder} 
+												editFolderName={editFolderName} 
+												setEditFolderName={setEditFolderName} 
+												handleUpdateFolder={handleUpdateFolder} 
+												handleCancelEdit={handleCancelEdit} 
+												handleEditFolder={handleEditFolder} 
+												handleDeleteFolder={handleDeleteFolder} 
+												getFolderCount={getFolderCount} 
+												filterFolder={filterFolder} 
+												setFilterFolder={setFilterFolder} 
+												key={folder.id}
+											/>
+										))
+									}
+									<div
+										className={`folder-card ${filterFolder === "ALL" ? 'selected' : ''}`}
+										onClick={() => setFilterFolder("ALL")}
+									>
 									<div className="folder-color" style={{ backgroundColor: '#6D6D6D' }}></div>
-									<div className="folder-info">
-										<span className="folder-name">All Folders</span>
-										<span className="folder-count">{tasks.length} tasks</span>
+										<div className="folder-info">
+											<span className="folder-name">All Folders</span>
+											<span className="folder-count">{tasks.length} tasks</span>
+										</div>
 									</div>
 								</div>
 							</div>
-						</div>
 
 						<div className="todo-controls">
 							<div className="search-filter">
