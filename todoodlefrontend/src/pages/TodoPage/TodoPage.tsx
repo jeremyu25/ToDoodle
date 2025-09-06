@@ -34,7 +34,6 @@ const TodoPage = () => {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [showFolderForm, setShowFolderForm] = useState(false)
-	const [newFolderName, setNewFolderName] = useState("")
 	const [editingFolder, setEditingFolder] = useState<Folder | null>(null)
 	const [editFolderName, setEditFolderName] = useState("")
 
@@ -163,16 +162,15 @@ const TodoPage = () => {
 		}
 	}
 
-	const handleCreateFolder = async () => {
-		if (!user?.id || !newFolderName.trim()) return;
+	const handleCreateFolder = async (folderName: string) => {
+		if (!user?.id || !folderName.trim()) return;
 		setIsLoading(true);
 		try {
-			const response = await foldersApi.createFolder(user.id, newFolderName.trim());
+			const response = await foldersApi.createFolder(user.id, folderName.trim());
 			const createdFolder = response.data.folderdata;
 			const folderWithColor = addDefaultColors([createdFolder])[0];
 
 			setFolders([...folders, folderWithColor]);
-			setNewFolderName("");
 			setShowFolderForm(false);
 		} catch (err) {
 			console.error('Error creating folder:', err);
