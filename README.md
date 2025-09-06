@@ -14,7 +14,7 @@ A simple, intuitive todo application to help users organize and track their dail
 
 <img src="./docs/assets/intro_page_demo.gif" width="600" />
 
-[WIP_demo](./docs/assets/WIP_demo.mp4)
+Download the full demo here, [WIP_demo](./docs/assets/WIP_demo.mp4).
 
 ## Development plan
 
@@ -28,6 +28,8 @@ A simple, intuitive todo application to help users organize and track their dail
 - [x]  User can log into their user account.
 - [x]  User can log out of their account.
 - [x]  User can access the website via a url link.
+- [ ]  User can upload profile pictures.
+- [ ]  User can edit their profile names, email and password.
 - [ ]  Debouncing and throttling.
 - [ ]  Google oauth.
 - [ ]  2FA authentication.
@@ -35,7 +37,7 @@ A simple, intuitive todo application to help users organize and track their dail
 ### DevOps
 - [ ] Dockerise dev.
 - [ ] Add unit testing for backend.
-- [ ] Add OpenAPI specification for backend (Swagger UI).
+- [x] Add OpenAPI specification for backend (Swagger UI).
 - [ ] Add GitHub Actions CI/CD.
 - [ ] Implement proper GitHub flow once CI/CD and deployment to prod is up.
 - [ ] Deploy to AWS cloud. Monolithic EC2 for now.
@@ -60,7 +62,7 @@ cd backend
 npm install
 ```
 
-Note that for now, we are using local postgresql database hosted on docker for development. Set up instructions TBD as we may migrate to cloud database.
+(TBD: Upload initial setup SQL script and Supabase instructions.)
 
 ### Running in development
 
@@ -85,7 +87,7 @@ Run this command to start the backend server
 npm run dev
 ```
 
-Remember to start up your local postgres database as per your configuration.
+Remember to start up your local postgres / cloud database as per your configuration.
 
 ## Configurations used
 
@@ -96,11 +98,14 @@ Add a .env file in the frontend and backend folder respectively.
 
 When running backend server, open another url for the openapi documentation: http://localhost:3001/api-docs/.
 
+<img src="./docs/assets/openapi_specification_demo.png" alt="openapi_specification_demo" />
+
 ## Tech stack
 
 ReactJS Typescript - frontend  
 ExpressJS NodeJS - backend  
-Postgresql - backend  
+Postgresql (Supabase) - database  
+Vite - build tool  
 
 ## License
 
