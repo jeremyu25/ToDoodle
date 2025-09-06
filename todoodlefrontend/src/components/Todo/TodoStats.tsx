@@ -1,4 +1,4 @@
-import type { Task, Status } from "./types"
+import type { Task, Status } from "../../types/types"
 import "./TodoStats.css"
 
 interface TodoStatsProps {

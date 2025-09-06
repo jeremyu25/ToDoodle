@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Task, Status, Folder } from './types';
+import type { Task, Status, Folder } from '../../types/types';
 import './TaskModal.css';
 
 interface TaskModalProps {

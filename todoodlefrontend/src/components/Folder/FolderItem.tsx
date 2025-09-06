@@ -1,6 +1,6 @@
 import './FolderItem.css';
 
-import type { Folder } from "../Todo/types";
+import type { Folder } from "../../types/types";
 import React from "react";
 
 type FolderItemProps = {
