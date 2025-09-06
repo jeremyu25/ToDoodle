@@ -8,6 +8,7 @@ import TodoForm from "../../components/Todo/TodoForm"
 import TaskModal from "../../components/Todo/TaskModal"
 import TodoStats from "../../components/Todo/TodoStats"
 import type { Task, Status, Folder } from "../../components/Todo/types"
+import { Statuses, StatusLabels } from "../../components/Todo/types"
 import { notesApi, foldersApi } from "../../services/api"
 import { noteToTask, taskToNote, addDefaultColors } from "../../utils/dataTransformers"
 import FolderItem from "../../components/Folder/FolderItem"
@@ -379,128 +380,136 @@ const TodoPage = () => {
 								</div>
 							</div>
 
-						<div className="todo-controls">
-							<div className="search-filter">
-								<input
-									type="text"
-									placeholder="Search tasks..."
-									value={searchTerm}
-									onChange={(e) => setSearchTerm(e.target.value)}
-									className="search-input"
-								/>
-								<select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as Status | "ALL")} className="filter-select">
-									<option value="ALL">All Statuses</option>
-									<option value="NOT_STARTED">Not Started</option>
-									<option value="IN_PROGRESS">In Progress</option>
-									<option value="COMPLETED">Completed</option>
-								</select>
-								<select value={filterFolder} onChange={(e) => setFilterFolder(e.target.value)} className="filter-select">
-									<option value="ALL">All Folders</option>
-									{folders.map((folder) => (
-										<option key={folder.id} value={folder.id}>{folder.name}</option>
-									))}
-								</select>
-							</div>
-							<button onClick={() => setShowForm(!showForm)} className="add-task-btn">
-								{showForm ? "Cancel" : "+ Add New Task"}
-							</button>
-						</div>
-
-						<div className="sorting-controls">
-							<div className="sort-options">
-								<span className="sort-label">Sort by:</span>
-								{[
-									{ value: 'createdAt', label: 'Date Created' },
-									{ value: 'title', label: 'Title' },
-									{ value: 'status', label: 'Status' },
-									{ value: 'folder', label: 'Folder' },
-									{ value: 'priority', label: 'Priority' }
-								].map((option) => (
-									<button
-										key={option.value}
-										onClick={() => handleSort(option.value as SortOption)}
-										className={`sort-btn ${sortBy === option.value ? 'active' : ''}`}
-									>
-										{option.label}
-										{sortBy === option.value && (
-											<span className="sort-direction">
-												{sortDirection === 'asc' ? '↑' : '↓'}
-											</span>
-										)}
-									</button>
-								))}
-							</div>
-						</div>
-
-						{showForm && (
-							<div className="form-container">
-								<TodoForm onSubmit={handleAddTask} folders={folders} />
-							</div>
-						)}
-
-						<div className="tasks-container">
-							{sortedTasks.length === 0 ? (
-								<div className="no-tasks">
-									<p>
-										No tasks found.{" "}
-										{searchTerm || filterStatus !== "ALL" || filterFolder !== "ALL"
-											? "Try adjusting your search or filters."
-											: "Create your first task to get started!"}
-									</p>
+							<div className="todo-controls">
+								<div className="search-filter">
+									<input
+										type="text"
+										placeholder="Search tasks..."
+										value={searchTerm}
+										onChange={(e) => setSearchTerm(e.target.value)}
+										className="search-input"
+									/>
+									<select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value as Status | "ALL")} className="filter-select">
+										<option value="ALL">All Statuses</option>
+										{
+											Statuses.map((status) => (
+												<option key={status} value={status}>{StatusLabels[status]}</option>
+											))
+										}
+									</select>
+									<select value={filterFolder} onChange={(e) => setFilterFolder(e.target.value)} className="filter-select">
+										<option value="ALL">All Folders</option>
+										{
+											folders.map((folder) => (
+												<option key={folder.id} value={folder.id}>{folder.name}</option>
+											))
+										}
+									</select>
 								</div>
-							) : (
-								<div className="compact-tasks-grid">
-									{sortedTasks.map((task) => (
-										<div
-											key={task.id}
-											className="compact-task-item"
-											onClick={() => handleTaskClick(task)}
+								<button onClick={() => setShowForm(!showForm)} className="add-task-btn">
+									{showForm ? "Cancel" : "+ Add New Task"}
+								</button>
+							</div>
+
+							<div className="sorting-controls">
+								<div className="sort-options">
+									<span className="sort-label">Sort by:</span>
+									{[
+										{ value: 'createdAt', label: 'Date Created' },
+										{ value: 'title', label: 'Title' },
+										{ value: 'status', label: 'Status' },
+										{ value: 'folder', label: 'Folder' },
+										{ value: 'priority', label: 'Priority' }
+									].map((option) => (
+										<button
+											key={option.value}
+											onClick={() => handleSort(option.value as SortOption)}
+											className={`sort-btn ${sortBy === option.value ? 'active' : ''}`}
 										>
-											<div className="task-main-info">
-												<div className="task-header">
-													<h3 className="task-title">{task.title}</h3>
-													{task.folder && (
-														<span
-															className="folder-badge"
-															style={{ backgroundColor: task.folder.color || '#A8BBA0' }}
-														>
-															{task.folder.name}
-														</span>
-													)}
-												</div>
-												<p className="task-description">{task.description}</p>
-												<div className="task-meta">
-													<span className="task-date">Created: {formatDate(task.createdAt)}</span>
-												</div>
-											</div>
-											<div className="task-status-section">
-												<span className={`status-badge status-${task.status.toLowerCase().replace("_", "-")}`}>
-													{task.status.replace("_", " ")}
+											{option.label}
+											{sortBy === option.value && (
+												<span className="sort-direction">
+													{sortDirection === 'asc' ? '↑' : '↓'}
 												</span>
-												<div className="quick-actions">
-													<select
-														value={task.status}
-														onChange={(e) => {
-															e.stopPropagation()
-															handleUpdateTaskStatus(task.id, e.target.value as Status)
-														}}
-														className="quick-status-select"
-														onClick={(e) => e.stopPropagation()}
-													>
-														<option value="NOT_STARTED">Not Started</option>
-														<option value="IN_PROGRESS">In Progress</option>
-														<option value="COMPLETED">Completed</option>
-													</select>
-												</div>
-											</div>
-										</div>
+											)}
+										</button>
 									))}
+								</div>
+							</div>
+
+							{showForm && (
+								<div className="form-container">
+									<TodoForm onSubmit={handleAddTask} folders={folders} />
 								</div>
 							)}
-						</div>
-					</>
-				)}
 
+							<div className="tasks-container">
+								{sortedTasks.length === 0 ? (
+									<div className="no-tasks">
+										<p>
+											No tasks found.{" "}
+											{searchTerm || filterStatus !== "ALL" || filterFolder !== "ALL"
+												? "Try adjusting your search or filters."
+												: "Create your first task to get started!"}
+										</p>
+									</div>
+								) : (
+									<div className="compact-tasks-grid">
+										{sortedTasks.map((task) => (
+											<div
+												key={task.id}
+												className="compact-task-item"
+												onClick={() => handleTaskClick(task)}
+											>
+												<div className="task-main-info">
+													<div className="task-header">
+														<h3 className="task-title">{task.title}</h3>
+														{task.folder && (
+															<span
+																className="folder-badge"
+																style={{ backgroundColor: task.folder.color || '#A8BBA0' }}
+															>
+																{task.folder.name}
+															</span>
+														)}
+													</div>
+													<p className="task-description">{task.description}</p>
+													<div className="task-meta">
+														<span className="task-date">Created: {formatDate(task.createdAt)}</span>
+													</div>
+												</div>
+												<div className="task-status-section">
+													<span className={`status-badge status-${task.status.toLowerCase().replace("_", "-")}`}>
+														{task.status.replace("_", " ")}
+													</span>
+													<div className="quick-actions">
+														<select
+															value={task.status}
+															onChange={(e) => {
+																e.stopPropagation()
+																handleUpdateTaskStatus(task.id, e.target.value as Status)
+															}}
+															className="quick-status-select"
+															onClick={(e) => e.stopPropagation()}
+														>
+														{
+															Statuses.map((status) => (
+																<option key={status} value={status}>
+																	{StatusLabels[status]}
+																</option>
+															))
+														}
+														</select>
+													</div>
+												</div>
+											</div>
+										))}
+									</div>
+								)}
+							</div>
+						</>
+					)
+				}
 			</div>
 
 			<TaskModal
