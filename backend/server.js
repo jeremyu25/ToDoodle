@@ -2,6 +2,9 @@ import "dotenv/config.js" // automatically loads .env
 import express from "express"
 import cors from "cors"
 import cookies from "cookie-parser"
+import swaggerUI from "swagger-ui-express"
+import YAML from "yaml"
+import fs from "fs"
 
 import folderRoutes from "./routes/folder.route.js"
 import noteRoutes from "./routes/note.route.js"
@@ -21,6 +24,10 @@ app.use("/api/v1/folder", folderRoutes)
 app.use("/api/v1/note", noteRoutes)
 app.use("/api/v1/auth", userRoutes)
 app.use("/api/v1/feedback", feedbackRoutes)
+
+const file = fs.readFileSync("../docs/openapi.yaml", "utf-8")
+const swaggerDocument = YAML.parse(file)
+app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument))
 
 try {
 	const port = process.env.PORT

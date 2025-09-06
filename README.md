@@ -69,7 +69,7 @@ Add a .env file in the frontend and backend folder respectively.
 
 ## Running SwaggerUI
 
-https://swagger.io/docs/open-source-tools/swagger-ui/development/setting-up/
+When running backend server, open another url for the openapi documentation: http://localhost:3001/api-docs/.
 
 ## Tech stack
 

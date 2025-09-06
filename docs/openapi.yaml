@@ -3,7 +3,7 @@ info:
   title: Notes API
   version: 1.0.0
 servers:
-  - url: http://localhost:3001
+  - url: http://localhost:3001/api/v1
     description: Local development server
 tags:
   - name: notes
@@ -13,7 +13,7 @@ tags:
   - name: auth
     description: Operations relating to users
 paths:
-  /notes:
+  /note:
     get:
       tags:
         - notes
@@ -97,7 +97,6 @@ paths:
           required: true
           schema:
             type: string
-            format: uuid
         - in: query
           name: content
           required: false
@@ -192,11 +191,18 @@ paths:
                     type: string
                     example: Internal server error
 
-  /notes/all:
+  /note/all:
     get:
       tags:
         - notes
       summary: Get all notes
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
       responses:
         '200':
           description: List of notes (may be empty)
