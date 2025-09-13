@@ -1,11 +1,11 @@
 import query from "../db/index.js"
 
-const signUp = async (username, passwordhash) => {
+const signUp = async (username, passwordhash, email) => {
   try {
     const results = await query(
-      `INSERT INTO users(username, password_hash) 
-       VALUES($1, $2) RETURNING id, username`,
-      [username, passwordhash]
+      `INSERT INTO users(username, password_hash, email) 
+       VALUES($1, $2, $3) RETURNING id, username`,
+      [username, passwordhash, email]
     )
 
     if (results.rows.length === 0) {
@@ -14,9 +14,9 @@ const signUp = async (username, passwordhash) => {
 
     return results.rows[0]
   } catch (error) {
-    console.error("Error signing up user in database:", error.message)
-    throw new Error("DB error while creating user.")
-  }
+    throw error
+
+}
 }
 
 const getUser = async (username) => {
