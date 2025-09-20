@@ -4,7 +4,7 @@ const signUp = async (username, passwordhash, email) => {
   try {
     const results = await query(
       `INSERT INTO users(username, password_hash, email) 
-       VALUES($1, $2, $3) RETURNING id, username`,
+       VALUES($1, $2, $3) RETURNING id, username, email`,
       [username, passwordhash, email]
     )
 
@@ -22,7 +22,7 @@ const signUp = async (username, passwordhash, email) => {
 const getUser = async (username) => {
   try {
     const results = await query(
-      `SELECT id, username, password_hash 
+      `SELECT id, username, email, password_hash 
        FROM users WHERE username = $1`,
       [username]
     )
@@ -37,7 +37,7 @@ const getUser = async (username) => {
 const deleteUser = async (id) => {
   try {
     const results = await query(
-      `DELETE FROM users WHERE id = $1 RETURNING id, username`,
+      `DELETE FROM users WHERE id = $1 RETURNING id, username, email`,
       [id]
     )
 

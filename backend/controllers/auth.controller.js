@@ -29,6 +29,9 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
     try {
         const { username, password, email } = req.body
+        if (!username || !password) {
+            return res.status(400).json({message: "Username and password are required"})
+        }
         const validUser = await AuthModel.getUser(username)
         if (!validUser) {
             return res.status(404).json({message: "Username not found"})
@@ -82,8 +85,11 @@ const deleteUser = async (req, res) => {
         return res.status(403).json({message: "You are not authorized to delete this user"})
     }
     try {
-        await AuthModel.deleteUser(req.query.id)
-        return res.status(200).json({message: "User deleted successfully"})
+        const results = await AuthModel.deleteUser(req.query.id)
+        return res.status(200).json({
+            message: "User deleted successfully",
+            data: results
+        })
     } catch (error) {
         return res.status(500).json({ message: error.message })
     }
