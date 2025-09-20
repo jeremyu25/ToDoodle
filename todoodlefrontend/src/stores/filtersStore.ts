@@ -103,8 +103,8 @@ export const useFiltersStore = create<FiltersState>()(
           const { sortBy, sortDirection } = get()
           
           return [...tasks].sort((a, b) => {
-            let aValue: any
-            let bValue: any
+            let aValue: string | number | Date
+            let bValue: string | number | Date
 
             switch (sortBy) {
               case 'title':
