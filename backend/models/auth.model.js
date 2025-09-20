@@ -27,10 +27,6 @@ const getUser = async (username) => {
       [username]
     )
 
-    if (results.rows.length === 0) {
-      throw new Error("User not found.")
-    }
-
     return results.rows[0]
   } catch (error) {
     console.error("Error fetching user from database:", error.message)
