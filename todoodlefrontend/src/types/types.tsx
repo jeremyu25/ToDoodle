@@ -1,10 +1,11 @@
-export const Statuses = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as const
-export type Status = typeof Statuses[number]
-export const StatusLabels: Record<Status, string> = {
+export const StatusLabels = {
     NOT_STARTED: 'Not Started',
     IN_PROGRESS: 'In Progress',
     COMPLETED: 'Completed',
-}
+} as const
+
+export const Statuses = Object.keys(StatusLabels) as Array<keyof typeof StatusLabels>
+export type Status = keyof typeof StatusLabels
 
 export type Folder = {
     id: string;
@@ -20,7 +21,7 @@ export type Note = {
     folder_id?: string;
     title?: string;
     content: string;
-    status: 'not_started' | 'in_progress' | 'completed';
+    status: Status;
     created_at: string;
     updated_at: string;
 };
