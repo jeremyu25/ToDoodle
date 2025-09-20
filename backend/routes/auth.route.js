@@ -10,6 +10,4 @@ router.post("/signout", authController.signOut)
 router.get("/verify", verifyToken, authController.verifyUser)
 router.delete("/delete", verifyToken, authController.deleteUser)
 
-router.get("/verify", verifyToken, authController.verifyUser)
-
 export default router
