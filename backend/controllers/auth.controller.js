@@ -28,7 +28,7 @@ const signUp = async (req, res) => {
 
 const signIn = async (req, res) => {
     try {
-        const { username, password } = req.body
+        const { username, password, email } = req.body
         const validUser = await AuthModel.getUser(username)
         if (!validUser) {
             return res.status(404).json({message: "Username not found"})
