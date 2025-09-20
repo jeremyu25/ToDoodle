@@ -107,28 +107,33 @@ export const useFiltersStore = create<FiltersState>()(
             let bValue: string | number | Date
 
             switch (sortBy) {
-              case 'title':
+              case 'title': {
                 aValue = a.title.toLowerCase()
                 bValue = b.title.toLowerCase()
                 break
-              case 'status':
+              }
+              case 'status': {
                 aValue = a.status
                 bValue = b.status
                 break
-              case 'folder':
+              }
+              case 'folder': {
                 aValue = a.folder?.name || 'No Folder'
                 bValue = b.folder?.name || 'No Folder'
                 break
-              case 'createdAt':
+              }
+              case 'createdAt': {
                 aValue = a.createdAt
                 bValue = b.createdAt
                 break
-              case 'priority':
+              }
+              case 'priority': {
                 // Custom priority: IN_PROGRESS > NOT_STARTED > COMPLETED
                 const priorityOrder = { 'IN_PROGRESS': 3, 'NOT_STARTED': 2, 'COMPLETED': 1 }
                 aValue = priorityOrder[a.status]
                 bValue = priorityOrder[b.status]
                 break
+              }
               default:
                 return 0
             }
