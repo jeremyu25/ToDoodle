@@ -1,14 +1,16 @@
 import React from "react"
 import { useState } from "react"
-import type { Task, Folder } from "../../types/types"
+import type { Task } from "../../types/types"
+import { useTodoStore } from "../../stores/toDoStore"
+import { useUIStore } from "../../stores/uiStore"
+import { useAuth } from "../../hooks/useAuth"
 import "./TodoForm.css"
 
-interface TodoFormProps {
-  onSubmit: (task: Omit<Task, 'id' | 'createdAt'>) => void;
-  folders: Folder[];
-}
-
-const TodoForm = ({ onSubmit, folders }: TodoFormProps) => {
+const TodoForm = () => {
+	const { user } = useAuth()
+	const { folders, addTask } = useTodoStore()
+	const { setShowTaskForm } = useUIStore()
+	
 	const [formData, setFormData] = useState<Omit<Task, 'id' | 'createdAt'>>({
 		title: "",
 		description: "",
@@ -24,10 +26,10 @@ const TodoForm = ({ onSubmit, folders }: TodoFormProps) => {
 		})
 	}
 
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (formData.title.trim() && formData.description.trim()) {
-          onSubmit(formData);
+        if (formData.title.trim() && formData.description.trim() && user?.id) {
+          await addTask(user.id, formData);
           // Reset form
           setFormData({
             title: "",
@@ -35,6 +37,7 @@ const TodoForm = ({ onSubmit, folders }: TodoFormProps) => {
             status: "NOT_STARTED",
             folderId: undefined,
           });
+          setShowTaskForm(false);
         }
     }
 

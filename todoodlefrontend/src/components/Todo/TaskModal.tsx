@@ -1,69 +1,67 @@
 import React, { useState, useEffect } from 'react';
-import type { Task, Status, Folder } from '../../types/types';
+import type { Task, Status } from '../../types/types';
+import { useTodoStore } from '../../stores/toDoStore';
+import { useUIStore } from '../../stores/uiStore';
+import { useAuth } from '../../hooks/useAuth';
 import './TaskModal.css';
 
-interface TaskModalProps {
-  task: Task | null;
-  isOpen: boolean;
-  onClose: () => void;
-  onUpdate: (updatedTask: Task) => void;
-  onDelete: (id: string) => void;
-  folders: Folder[];
-}
-
-const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, onDelete, folders }) => {
+const TaskModal: React.FC = () => {
+  const { user } = useAuth();
+  const { folders, updateTask, deleteTask } = useTodoStore();
+  const { isModalOpen, selectedTask, closeTaskModal } = useUIStore();
+  
   const [editMode, setEditMode] = useState(false);
   const [editedTask, setEditedTask] = useState<Task | null>(null);
   const [lastClickTime, setLastClickTime] = useState(0);
 
   useEffect(() => {
-    if (task) {
-      setEditedTask({ ...task });
+    if (selectedTask) {
+      setEditedTask({ ...selectedTask });
       setEditMode(false);
     }
-  }, [task]);
+  }, [selectedTask]);
 
   const handleOverlayClick = () => {
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - lastClickTime;
     
-    // For double clicking outside of mdoal to close it
+    // For double clicking outside of modal to close it
     // If it's been less than 300ms since the last click, treat it as a double-click
     if (timeDiff < 300) {
-      onClose();
+      closeTaskModal();
       setLastClickTime(0);
     } else {
       setLastClickTime(currentTime);
     }
   };
 
-  const handleSave = () => {
-    if (editedTask) {
-      onUpdate(editedTask);
+  const handleSave = async () => {
+    if (editedTask && user?.id) {
+      await updateTask(editedTask, user.id);
       setEditMode(false);
     }
   };
 
   const handleCancel = () => {
-    setEditedTask(task ? { ...task } : null);
+    setEditedTask(selectedTask ? { ...selectedTask } : null);
     setEditMode(false);
   };
 
-  const handleDelete = () => {
-    if (task && window.confirm('Are you sure you want to delete this task?')) {
-      onDelete(task.id);
-      onClose();
+  const handleDelete = async () => {
+    if (selectedTask && window.confirm('Are you sure you want to delete this task?')) {
+      await deleteTask(selectedTask.id);
+      closeTaskModal();
     }
   };
 
-  if (!isOpen || !task) return null;
+  if (!isModalOpen || !selectedTask) return null;
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{editMode ? 'Edit Task' : 'Task Details'}</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={closeTaskModal}>×</button>
         </div>
 
         <div className="modal-body">
@@ -128,30 +126,30 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
             <div className="task-details">
               <div className="detail-row">
                 <span className="detail-label">Title:</span>
-                <span className="detail-value">{task.title}</span>
+                <span className="detail-value">{selectedTask.title}</span>
               </div>
               
               <div className="detail-row">
                 <span className="detail-label">Description:</span>
-                <span className="detail-value">{task.description}</span>
+                <span className="detail-value">{selectedTask.description}</span>
               </div>
               
               <div className="detail-row">
                 <span className="detail-label">Status:</span>
-                <span className={`status-badge status-${task.status.toLowerCase().replace('_', '-')}`}>
-                  {task.status.replace('_', ' ')}
+                <span className={`status-badge status-${selectedTask.status.toLowerCase().replace('_', '-')}`}>
+                  {selectedTask.status.replace('_', ' ')}
                 </span>
               </div>
 
               <div className="detail-row">
                 <span className="detail-label">Folder:</span>
                 <span className="detail-value">
-                  {task.folder ? (
+                  {selectedTask.folder ? (
                     <span 
                       className="folder-badge"
-                      style={{ backgroundColor: task.folder.color || '#A8BBA0' }}
+                      style={{ backgroundColor: selectedTask.folder.color || '#A8BBA0' }}
                     >
-                      {task.folder.name}
+                      {selectedTask.folder.name}
                     </span>
                   ) : (
                     'No Folder'
@@ -161,7 +159,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
               
               <div className="detail-row">
                 <span className="detail-label">Task ID:</span>
-                <span className="detail-value">#{task.id}</span>
+                <span className="detail-value">#{selectedTask.id}</span>
               </div>
             </div>
           )}
@@ -185,7 +183,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, isOpen, onClose, onUpdate, 
               <button className="btn-danger" onClick={handleDelete}>
                 Delete
               </button>
-              <button className="btn-primary" onClick={onClose}>
+              <button className="btn-primary" onClick={closeTaskModal}>
                 Close
               </button>
             </>

@@ -1,25 +1,27 @@
 import { useState } from "react"
+import { useTodoStore } from "../../stores/toDoStore"
+import { useUIStore } from "../../stores/uiStore"
+import { useAuth } from "../../hooks/useAuth"
 import "./FolderForm.css"
 
-interface FolderFormProps {
-	onCreateFolder: (folderName: string) => void
-	onCancel: () => void
-}
-
-const FolderForm = ({ onCreateFolder, onCancel }: FolderFormProps) => {
+const FolderForm = () => {
+	const { user } = useAuth()
+	const { createFolder } = useTodoStore()
+	const { setShowFolderForm } = useUIStore()
 	const [folderName, setFolderName] = useState("")
 
-	const handleSubmit = (e: React.FormEvent) => {
+	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		if (folderName.trim()) {
-			onCreateFolder(folderName.trim())
+		if (folderName.trim() && user?.id) {
+			await createFolder(user.id, folderName.trim())
 			setFolderName("")
+			setShowFolderForm(false)
 		}
 	}
 
 	const handleCancel = () => {
 		setFolderName("")
-		onCancel()
+		setShowFolderForm(false)
 	}
 
 	return (

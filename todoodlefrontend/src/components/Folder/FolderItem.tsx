@@ -1,35 +1,43 @@
 import './FolderItem.css';
-
 import type { Folder } from "../../types/types";
 import React from "react";
+import { useTodoStore } from "../../stores/toDoStore";
+import { useUIStore } from "../../stores/uiStore";
+import { useFiltersStore } from "../../stores/filtersStore";
 
 type FolderItemProps = {
     folder: Folder;
-    editingFolder: Folder | null;
-    editFolderName: string;
-    setEditFolderName: React.Dispatch<React.SetStateAction<string>>;
-    handleUpdateFolder: () => void;
-    handleCancelEdit: () => void;
-    handleEditFolder: (folder: Folder) => void;
-    handleDeleteFolder: (folder: Folder) => void;
-    getFolderCount: (folderId: string) => number;
-    filterFolder: string | "ALL";
-    setFilterFolder: React.Dispatch<React.SetStateAction<string | "ALL">>;
 };
 
-const FolderItem: React.FC<FolderItemProps> = ({
-    folder,
-    editingFolder,
-    editFolderName,
-    setEditFolderName,
-    handleUpdateFolder,
-    handleCancelEdit,
-    handleEditFolder,
-    handleDeleteFolder,
-    getFolderCount,
-    filterFolder,
-    setFilterFolder
-}) => {
+const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
+    // Get what we need from stores
+    const { updateFolder, deleteFolder, getFolderCount } = useTodoStore();
+    const { 
+        editingFolder, 
+        editFolderName, 
+        startEditingFolder, 
+        updateEditFolderName, 
+        cancelEditingFolder 
+    } = useUIStore();
+    const { filterFolder, setFilterFolder } = useFiltersStore();
+
+    const handleUpdateFolder = async () => {
+        if (!editingFolder || !editFolderName.trim()) return;
+        await updateFolder(editingFolder.id, editFolderName.trim());
+        cancelEditingFolder();
+    };
+
+    const handleDeleteFolder = async () => {
+        await deleteFolder(folder.id);
+    };
+
+    const handleEditFolder = () => {
+        startEditingFolder(folder);
+    };
+
+    const handleCancelEdit = () => {
+        cancelEditingFolder();
+    };
     return (
         <div
             key={folder.id}
@@ -46,7 +54,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                         <input
                             type="text"
                             value={editFolderName}
-                            onChange={(e) => setEditFolderName(e.target.value)}
+                            onChange={(e) => updateEditFolderName(e.target.value)}
                             className="folder-edit-input"
                             onClick={(e) => e.stopPropagation()}
                         />
@@ -82,7 +90,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleEditFolder(folder);
+                                    handleEditFolder();
                                 }}
                                 className="folder-edit-btn"
                             >
@@ -91,7 +99,7 @@ const FolderItem: React.FC<FolderItemProps> = ({
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    handleDeleteFolder(folder);
+                                    handleDeleteFolder();
                                 }}
                                 className="folder-delete-btn"
                             >
