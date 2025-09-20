@@ -1,0 +1,197 @@
+/* Success Page Container */
+.success-page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.success-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    position: relative;
+}
+
+/* Success Card */
+.success-card {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 2rem 2.5rem;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    position: relative;
+    z-index: 2;
+}
+
+/* Success Checkmark Animation */
+.success-icon-container {
+    margin-bottom: 2rem;
+}
+
+/* Success Header */
+.success-header {
+    margin-bottom: 2rem;
+}
+
+.success-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.success-subtitle {
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* Success Details */
+.success-details {
+    margin-bottom: 2.5rem;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.detail-item:hover {
+    background-color: rgba(168, 187, 160, 0.1);
+}
+
+.detail-icon {
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.detail-text {
+    font-size: 1rem;
+    color: var(--color-text-primary);
+    font-weight: 500;
+}
+
+/* Success Actions */
+.success-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.success-btn {
+    padding: 1rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.success-btn-secondary {
+    padding: 0.875rem 2rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+/* Success Footer */
+.success-footer {
+    border-top: 1px solid var(--color-bg-main);
+    padding-top: 1.5rem;
+}
+
+.footer-text {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .success-content {
+        padding: 1rem;
+    }
+
+    .success-title {
+        font-size: 1.5rem;
+    }
+
+    .success-subtitle {
+        font-size: 1rem;
+    }
+
+    .success-actions {
+        gap: 0.75rem;
+    }
+
+    .success-btn,
+    .success-btn-secondary {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .detail-item {
+        padding: 0.5rem 0;
+    }
+
+    .detail-text {
+        font-size: 0.95rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .success-checkmark {
+        width: 60px;
+        height: 60px;
+    }
+
+    .check-icon {
+        width: 60px;
+        height: 60px;
+    }
+
+    .icon-stem {
+        height: 14px;
+        top: 24px;
+        left: 24px;
+    }
+
+    .icon-kick {
+        height: 9px;
+        top: 30px;
+        left: 19px;
+    }
+
+    .success-title {
+        font-size: 1.25rem;
+    }
+
+    .success-actions {
+        gap: 0.5rem;
+    }
+
+    .success-btn,
+    .success-btn-secondary {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.9rem;
+    }
+}
