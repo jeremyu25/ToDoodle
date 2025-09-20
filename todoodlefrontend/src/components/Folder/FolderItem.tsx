@@ -28,7 +28,9 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
     };
 
     const handleDeleteFolder = async () => {
-        await deleteFolder(folder.id);
+        if (window.confirm("Are you sure you want to delete this folder and all its contents?")) {
+            await deleteFolder(folder.id);
+        }
     };
 
     const handleEditFolder = () => {
