@@ -102,9 +102,7 @@ const TodoPage = () => {
 					<p>Let's get things done today</p>
 				</div>
 				{
-					isLoading ? (
-						<LoadingContainer name="tasks" />
-					) : error ? (
+					error ? (
 						<ErrorContainer error_name={error} />
 					) : (
 						<>
@@ -280,6 +278,8 @@ const TodoPage = () => {
 				}
 			</div>
 
+			{/* Loading overlay - always rendered but only visible when isLoading is true */}
+			<LoadingContainer name="tasks" isLoading={isLoading} />
 			<TaskModal />
 		</>
 	)
