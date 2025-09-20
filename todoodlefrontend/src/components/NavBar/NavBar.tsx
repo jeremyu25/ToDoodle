@@ -2,12 +2,12 @@ import { useState } from "react";
 import { Link } from "react-router-dom"
 import "../../styles/globals.css"
 import "./NavBar.css"
-import { useAuth } from "../../hooks/useAuth"
+import { useAuthStore } from "../../stores/authStore"
 import logo from '../../assets/todoodle_image_no_bg.png';
 
 
 const NavBar = () => {
-	const { isAuthenticated, logout, user } = useAuth()
+	const { isAuthenticated, logout, user } = useAuthStore()
 	// For mobile / narrow screen
 	const [menuOpen, setMenuOpen] = useState(false)
 	const handleMenuToggle = () => setMenuOpen((open) => !open)

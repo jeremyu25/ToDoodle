@@ -1,11 +1,11 @@
 import { useState } from "react"
 import { useTodoStore } from "../../stores/toDoStore"
 import { useUIStore } from "../../stores/uiStore"
-import { useAuth } from "../../hooks/useAuth"
+import { useAuthStore } from "../../stores/authStore"
 import "./FolderForm.css"
 
 const FolderForm = () => {
-	const { user } = useAuth()
+	const { user } = useAuthStore()
 	const { createFolder } = useTodoStore()
 	const { setShowFolderForm } = useUIStore()
 	const [folderName, setFolderName] = useState("")

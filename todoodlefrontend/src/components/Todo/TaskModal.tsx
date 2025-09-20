@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import type { Task, Status } from '../../types/types';
 import { useTodoStore } from '../../stores/toDoStore';
 import { useUIStore } from '../../stores/uiStore';
-import { useAuth } from '../../hooks/useAuth';
+import { useAuthStore } from '../../stores/authStore';
 import './TaskModal.css';
 
 const TaskModal: React.FC = () => {
-  const { user } = useAuth();
+  const { user } = useAuthStore();
   const { folders, updateTask, deleteTask } = useTodoStore();
   const { isModalOpen, selectedTask, closeTaskModal } = useUIStore();
   

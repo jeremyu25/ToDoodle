@@ -8,10 +8,10 @@ import FeedBackPage from './pages/FeedBackPage/FeedBackPage'
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage'
 import TodoPage from './pages/TodoPage/TodoPage'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
-import { useAuth } from './hooks/useAuth'
+import { useAuthStore } from './stores/authStore'
 
 function App() {
-  const { checkAuthStatus } = useAuth();
+  const { checkAuthStatus } = useAuthStore();
 
   useEffect(() => {
     checkAuthStatus();

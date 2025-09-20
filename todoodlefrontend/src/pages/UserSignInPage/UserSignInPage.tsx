@@ -6,12 +6,12 @@ import "../../styles/utilities.css"
 import "./UserSignInPage.css"
 import NavBar from "../../components/NavBar/NavBar"
 import logo from "../../assets/virtual-learning-background-with-design-space.png"
-import { useAuth } from "../../hooks/useAuth"
+import { useAuthStore } from "../../stores/authStore"
 import { FaEye, FaEyeSlash } from "react-icons/fa"
 
 const UserSignInPage = () => {
 	const navigate = useNavigate()
-	const { login } = useAuth()
+	const { login } = useAuthStore()
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const [showPassword, setShowPassword] = useState(false)

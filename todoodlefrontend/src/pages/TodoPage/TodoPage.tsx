@@ -2,7 +2,7 @@ import "../../styles/globals.css"
 import "../../styles/utilities.css"
 import "./TodoPage.css"
 import { useEffect } from "react"
-import { useAuth } from "../../hooks/useAuth"
+import { useAuthStore } from "../../stores/authStore"
 import NavBar from "../../components/NavBar/NavBar"
 import TodoForm from "../../components/Todo/TodoForm"
 import TaskModal from "../../components/Todo/TaskModal"
@@ -18,7 +18,7 @@ import { useUIStore } from "../../stores/uiStore"
 import { useFiltersStore } from "../../stores/filtersStore"
 
 const TodoPage = () => {
-	const { user, isAuthenticated } = useAuth()
+	const { user, isAuthenticated } = useAuthStore()
 	
 	// Zustand stores
 	const { 
