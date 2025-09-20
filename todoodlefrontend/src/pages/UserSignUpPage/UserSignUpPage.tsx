@@ -1,21 +1,22 @@
 import React from "react"
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { Link } from "react-router-dom"
 import { FaEye, FaEyeSlash } from "react-icons/fa"
 import "../../styles/globals.css"
 import "../../styles/utilities.css"
 import "./UserSignUpPage.css"
+import SignUpSuccessPage from "../SignUpSuccessPage/SignUpSuccessPage"
 import NavBar from "../../components/NavBar/NavBar"
 import logo from "../../assets/virtual-learning-background-with-design-space.png"
 
 const UserSignUpPage = () => {
-  const navigate = useNavigate()
 	const [username, setUsername] = useState("")
 	const [password, setPassword] = useState("")
 	const [confirmPassword, setConfirmPassword] = useState("")
 	const [showPassword, setShowPassword] = useState(false)
 	const [errors, setErrors] = useState<string[]>([])
 	const [isSubmitting, setIsSubmitting] = useState(false)
+	const [isSuccess, setIsSuccess] = useState(false)
 
 	const passwordIsInvalid = (password: string): string[] => {
 		const passwordErrors = []
@@ -71,174 +72,180 @@ const UserSignUpPage = () => {
 		setErrors([])
 		setIsSubmitting(true)
 
-    fetch("http://localhost:3001/api/v1/auth/signup", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: 'include',
-      body: JSON.stringify({ username, password }),
-    })
-      .then(response => response.json())
-      .then(data => {
-		if (data.success) {
-			navigate("/sign_in")
-		} else {
-			setErrors([data.message || "Sign up failed"])
-		}
-      })
-      .catch(error => {
-        setErrors([error.message])
-        console.error("Error:", error)
-      })
-      .finally(() => {
-        setIsSubmitting(false)
-      })
+		fetch("http://localhost:3001/api/v1/auth/signup", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			credentials: 'include',
+			body: JSON.stringify({ username, password }),
+		})
+			.then(response => {
+				return response.json();
+			})
+			.then((data) => {
+				if(data.data) {
+					setIsSuccess(true);
+				} else {
+					setErrors([data.message || "Sign up failed"]);
+				}
+			})
+			.catch(error => {
+				setErrors([error.message])
+				console.error("Sign up failed. Error:", error)
+			})
+			.finally(() => {
+				setIsSubmitting(false)
+			})
 	}
 
+
+
 	return (
-		<div className="signup-page-container">
-			<NavBar />
-			<div className="signup-container">
-				<div className="signup-left-panel">
-					<div className="welcome-content">
-						<h1 className="welcome-title">Welcome to ToDoodle!</h1>
-						<p className="welcome-subtitle">Join 2 users who are already organizing their life with our esteemed todo app.</p>
-						<div className="feature-list">
-							<div className="feature-item">
-								<span className="feature-icon">✨</span>
-								<span>Smart task organization</span>
-							</div>
-							<div className="feature-item">
-								<span className="feature-icon">🎯</span>
-								<span>Track your progress</span>
-							</div>
-							<div className="feature-item">
-								<span className="feature-icon">🚀</span>
-								<span>Boost productivity</span>
+		isSuccess ? <SignUpSuccessPage /> : (
+			<div className="signup-page-container">
+				<NavBar />
+				<div className="signup-container">
+					<div className="signup-left-panel">
+						<div className="welcome-content">
+							<h1 className="welcome-title">Welcome to ToDoodle!</h1>
+							<p className="welcome-subtitle">Join 2 users who are already organizing their life with our esteemed todo app.</p>
+							<div className="feature-list">
+								<div className="feature-item">
+									<span className="feature-icon">✨</span>
+									<span>Smart task organization</span>
+								</div>
+								<div className="feature-item">
+									<span className="feature-icon">🎯</span>
+									<span>Track your progress</span>
+								</div>
+								<div className="feature-item">
+									<span className="feature-icon">🚀</span>
+									<span>Boost productivity</span>
+								</div>
 							</div>
 						</div>
-					</div>
-					<div className="logo-container">
-						<img src={logo} alt="ToDoodle Logo" className="signup-logo" />
-					</div>
-				</div>
-				
-				<div className="signup-right-panel">
-					<div className="signup-form-container">
-						<div className="form-header">
-							<h2 className="form-title">Create Your Account</h2>
-							<p className="form-subtitle">Start your journey to better organization today</p>
+						<div className="logo-container">
+							<img src={logo} alt="ToDoodle Logo" className="signup-logo" />
 						</div>
-						
-						<form className="signup-form" onSubmit={handleSubmit}>
-							<div className="form-group">
-								<label htmlFor="username" className="form-label">Username</label>
-								<input
-									id="username"
-									type="text"
-									placeholder="Enter your username"
-									value={username}
-									onChange={(e) => setUsername(e.target.value)}
-									className={`form-input ${username.length > 0 && usernameIsInvalid(username).length > 0 ? 'input-error' : ''}`}
-									required
-								/>
-								{username.length > 0 && usernameIsInvalid(username).length > 0 && (
-									<div className="input-error-message">
-										{usernameIsInvalid(username).map((error, index) => (
-											<span key={index} className="error-dot">• {error}</span>
-										))}
-									</div>
-								)}
+					</div>
+					
+					<div className="signup-right-panel">
+						<div className="signup-form-container">
+							<div className="form-header">
+								<h2 className="form-title">Create Your Account</h2>
+								<p className="form-subtitle">Start your journey to better organization today</p>
 							</div>
-
-							<div className="form-group">
-								<label htmlFor="password" className="form-label">Password</label>
-								<div className="password-input-container">
+							
+							<form className="signup-form" onSubmit={handleSubmit}>
+								<div className="form-group">
+									<label htmlFor="username" className="form-label">Username</label>
 									<input
-										id="password"
-										type={showPassword ? "text" : "password"}
-										placeholder="Create a strong password"
-										value={password}
-										onChange={(e) => setPassword(e.target.value)}
-										className={`form-input ${password.length > 0 && passwordIsInvalid(password).length > 0 ? 'input-error' : ''}`}
+										id="username"
+										type="text"
+										placeholder="Enter your username"
+										value={username}
+										onChange={(e) => setUsername(e.target.value)}
+										className={`form-input ${username.length > 0 && usernameIsInvalid(username).length > 0 ? 'input-error' : ''}`}
 										required
 									/>
-									{showPassword ? (
-										<FaEye className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
-									) : (
-										<FaEyeSlash className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
-									)}
-								</div>
-								{password.length > 0 && passwordIsInvalid(password).length > 0 && (
-									<div className="input-error-message">
-										{passwordIsInvalid(password).map((error, index) => (
-											<span key={index} className="error-dot">• {error}</span>
-										))}
-									</div>
-								)}
-							</div>
-
-							<div className="form-group">
-								<label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
-								<div className="password-input-container">
-									<input
-										id="confirmPassword"
-										type={showPassword ? "text" :"password"}
-										placeholder="Confirm your password"
-										value={confirmPassword}
-										onChange={(e) => setConfirmPassword(e.target.value)}
-										className={`form-input ${confirmPassword.length > 0 && password !== confirmPassword ? 'input-error' : ''}`}
-										required
-									/>
-									{showPassword ? (
-										<FaEye className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
-									) : (
-										<FaEyeSlash className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
-									)}
-								</div>
-								{confirmPassword.length > 0 && password !== confirmPassword && (
-									<div className="input-error-message">
-										<span className="error-dot">• Passwords do not match</span>
-									</div>
-								)}
-							</div>
-
-							{errors.length > 0 && (
-								<div className="form-errors">
-									{errors.map((error, index) => (
-										<div key={index} className="error-message">
-											{error}
+									{username.length > 0 && usernameIsInvalid(username).length > 0 && (
+										<div className="input-error-message">
+											{usernameIsInvalid(username).map((error, index) => (
+												<span key={index} className="error-dot">• {error}</span>
+											))}
 										</div>
-									))}
+									)}
 								</div>
-							)}
 
-							<button 
-								type="submit" 
-								className={`submit-button ${isSubmitting ? 'submitting' : ''} ${!isFormValidForSubmission() && !isSubmitting ? 'validation-error' : ''}`}
-								disabled={isSubmitting || !isFormValidForSubmission()}
-							>
-								{isSubmitting ? (
-									<>
-										<span className="spinner"></span>
-										Creating Account...
-									</>
-								) : (
-									'Create Account'
+								<div className="form-group">
+									<label htmlFor="password" className="form-label">Password</label>
+									<div className="password-input-container">
+										<input
+											id="password"
+											type={showPassword ? "text" : "password"}
+											placeholder="Create a strong password"
+											value={password}
+											onChange={(e) => setPassword(e.target.value)}
+											className={`form-input ${password.length > 0 && passwordIsInvalid(password).length > 0 ? 'input-error' : ''}`}
+											required
+										/>
+										{showPassword ? (
+											<FaEye className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+										) : (
+											<FaEyeSlash className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+										)}
+									</div>
+									{password.length > 0 && passwordIsInvalid(password).length > 0 && (
+										<div className="input-error-message">
+											{passwordIsInvalid(password).map((error, index) => (
+												<span key={index} className="error-dot">• {error}</span>
+											))}
+										</div>
+									)}
+								</div>
+
+								<div className="form-group">
+									<label htmlFor="confirmPassword" className="form-label">Confirm Password</label>
+									<div className="password-input-container">
+										<input
+											id="confirmPassword"
+											type={showPassword ? "text" :"password"}
+											placeholder="Confirm your password"
+											value={confirmPassword}
+											onChange={(e) => setConfirmPassword(e.target.value)}
+											className={`form-input ${confirmPassword.length > 0 && password !== confirmPassword ? 'input-error' : ''}`}
+											required
+										/>
+										{showPassword ? (
+											<FaEye className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+										) : (
+											<FaEyeSlash className="eye-icon" onClick={() => setShowPassword(!showPassword)} />
+										)}
+									</div>
+									{confirmPassword.length > 0 && password !== confirmPassword && (
+										<div className="input-error-message">
+											<span className="error-dot">• Passwords do not match</span>
+										</div>
+									)}
+								</div>
+
+								{errors.length > 0 && (
+									<div className="form-errors">
+										{errors.map((error, index) => (
+											<div key={index} className="error-message">
+												{error}
+											</div>
+										))}
+									</div>
 								)}
-							</button>
-						</form>
 
-						<div className="form-footer">
-							<p className="login-link">
-								Already have an account? <Link to="/sign_in" className="link-primary">Sign In</Link>
-							</p>
+								<button 
+									type="submit" 
+									className={`submit-button ${isSubmitting ? 'submitting' : ''} ${!isFormValidForSubmission() && !isSubmitting ? 'validation-error' : ''}`}
+									disabled={isSubmitting || !isFormValidForSubmission()}
+								>
+									{isSubmitting ? (
+										<>
+											<span className="spinner"></span>
+											Creating Account...
+										</>
+									) : (
+										'Create Account'
+									)}
+								</button>
+							</form>
+
+							<div className="form-footer">
+								<p className="login-link">
+									Already have an account? <Link to="/sign_in" className="link-primary">Sign In</Link>
+								</p>
+							</div>
 						</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		)
 	)
 }
 
