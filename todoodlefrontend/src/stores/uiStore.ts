@@ -19,6 +19,7 @@ interface UIState {
   // Modal actions
   openTaskModal: (task: Task) => void
   closeTaskModal: () => void
+  updateSelectedTask: (task: Task) => void
   
   // Form actions
   toggleTaskForm: () => void
@@ -59,6 +60,12 @@ export const useUIStore = create<UIState>()(
           isModalOpen: false, 
           selectedTask: null 
         })
+      },
+
+      updateSelectedTask: (task: Task) => {
+        set(state => ({
+          selectedTask: state.selectedTask?.id === task.id ? task : state.selectedTask
+        }))
       },
 
       // Form actions

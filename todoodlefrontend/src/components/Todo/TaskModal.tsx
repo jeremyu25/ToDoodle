@@ -7,19 +7,26 @@ import './TaskModal.css';
 
 const TaskModal: React.FC = () => {
   const { user } = useAuthStore();
-  const { folders, updateTask, deleteTask } = useTodoStore();
+  const { folders, updateTask, deleteTask, tasks } = useTodoStore();
   const { isModalOpen, selectedTask, closeTaskModal } = useUIStore();
   
   const [editMode, setEditMode] = useState(false);
   const [editedTask, setEditedTask] = useState<Task | null>(null);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const currentTask = selectedTask ? tasks.find(t => t.id === selectedTask.id) || selectedTask : null;
 
   useEffect(() => {
-    if (selectedTask) {
-      setEditedTask({ ...selectedTask });
+    if (currentTask) {
+      setEditedTask({ ...currentTask });
       setEditMode(false);
     }
-  }, [selectedTask]);
+  }, [currentTask]);
+
+  useEffect(() => {
+    if (currentTask && editedTask && !editMode) {
+      setEditedTask({ ...currentTask });
+    }
+  }, [currentTask, editMode, editedTask]);
 
   const handleOverlayClick = () => {
     const currentTime = new Date().getTime();
@@ -48,13 +55,13 @@ const TaskModal: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (selectedTask && window.confirm('Are you sure you want to delete this task?')) {
-      await deleteTask(selectedTask.id);
+    if (currentTask && window.confirm('Are you sure you want to delete this task?')) {
+      await deleteTask(currentTask.id);
       closeTaskModal();
     }
   };
 
-  if (!isModalOpen || !selectedTask) return null;
+  if (!isModalOpen || !selectedTask || !currentTask) return null;
 
   return (
     <div className="modal-overlay" onClick={handleOverlayClick}>
@@ -126,30 +133,30 @@ const TaskModal: React.FC = () => {
             <div className="task-details">
               <div className="detail-row">
                 <span className="detail-label">Title:</span>
-                <span className="detail-value">{selectedTask.title}</span>
+                <span className="detail-value">{currentTask.title}</span>
               </div>
               
               <div className="detail-row">
                 <span className="detail-label">Description:</span>
-                <span className="detail-value">{selectedTask.description}</span>
+                <span className="detail-value">{currentTask.description}</span>
               </div>
               
               <div className="detail-row">
                 <span className="detail-label">Status:</span>
-                <span className={`status-badge status-${selectedTask.status.toLowerCase().replace('_', '-')}`}>
-                  {selectedTask.status.replace('_', ' ')}
+                <span className={`status-badge status-${currentTask.status.toLowerCase().replace('_', '-')}`}>
+                  {currentTask.status.replace('_', ' ')}
                 </span>
               </div>
 
               <div className="detail-row">
                 <span className="detail-label">Folder:</span>
                 <span className="detail-value">
-                  {selectedTask.folder ? (
+                  {currentTask.folder ? (
                     <span 
                       className="folder-badge"
-                      style={{ backgroundColor: selectedTask.folder.color || '#A8BBA0' }}
+                      style={{ backgroundColor: currentTask.folder.color || '#A8BBA0' }}
                     >
-                      {selectedTask.folder.name}
+                      {currentTask.folder.name}
                     </span>
                   ) : (
                     'No Folder'
@@ -159,7 +166,7 @@ const TaskModal: React.FC = () => {
               
               <div className="detail-row">
                 <span className="detail-label">Task ID:</span>
-                <span className="detail-value">#{selectedTask.id}</span>
+                <span className="detail-value">#{currentTask.id}</span>
               </div>
             </div>
           )}

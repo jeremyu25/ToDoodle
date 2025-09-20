@@ -3,6 +3,7 @@ import { devtools } from 'zustand/middleware'
 import type { Task, Folder, Status } from '../types/types'
 import { notesApi, foldersApi } from '../services/api'
 import { noteToTask, taskToNote, addDefaultColors } from '../utils/dataTransformers'
+import { useUIStore } from './uiStore'
 
 interface TodoState {
   // Data
@@ -137,6 +138,7 @@ export const useTodoStore = create<TodoState>()(
             ),
             isLoading: false
           }))
+          useUIStore.getState().updateSelectedTask(updatedTask)
         } catch (err) {
           console.error('Error updating task:', err)
           set({ 
@@ -164,6 +166,7 @@ export const useTodoStore = create<TodoState>()(
             ),
             isLoading: false
           }))
+          useUIStore.getState().updateSelectedTask(updatedTask)
         } catch (err) {
           console.error('Error updating task status:', err)
           set({ 
