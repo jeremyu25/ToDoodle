@@ -19,12 +19,12 @@ const signUp = async (username, passwordhash, email) => {
 }
 }
 
-const getUser = async (username) => {
+const getUser = async (identifier) => {
   try {
     const results = await query(
       `SELECT id, username, email, password_hash 
-       FROM users WHERE username = $1`,
-      [username]
+       FROM users WHERE username = $1 OR email = $1`,
+      [identifier]
     )
 
     return results.rows[0]

@@ -29,12 +29,15 @@ const signUp = async (req, res) => {
 const signIn = async (req, res) => {
     try {
         const { username, password, email } = req.body
-        if (!username || !password) {
-            return res.status(400).json({message: "Username and password are required"})
+        
+        if ((!username && !email) || !password) {
+            return res.status(400).json({message: "Either username or email, and password are required"})
         }
-        const validUser = await AuthModel.getUser(username)
+        
+        const identifier = email || username
+        const validUser = await AuthModel.getUser(identifier)
         if (!validUser) {
-            return res.status(404).json({message: "Username not found"})
+            return res.status(404).json({message: "User not found"})
         }
         const validPassword = bcryptjs.compareSync(password, validUser.password_hash)
         if (!validPassword) {
