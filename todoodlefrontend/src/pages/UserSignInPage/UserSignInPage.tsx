@@ -12,7 +12,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa"
 const UserSignInPage = () => {
 	const navigate = useNavigate()
 	const { login } = useAuthStore()
-	const [username, setUsername] = useState("")
+	const [identifier, setIdentifier] = useState("")
 	const [password, setPassword] = useState("")
 	const [showPassword, setShowPassword] = useState(false)
 	const [errors, setErrors] = useState<string[]>([])
@@ -41,29 +41,26 @@ const UserSignInPage = () => {
 		return passwordErrors
 	}
 
-	const usernameIsInvalid = (username: string): string[] => {
-		const usernameErrors = []
-		if (username.length < 3) {
-			usernameErrors.push("Username must be at least 3 characters long")
+	const identifierIsInvalid = (identifier: string): string[] => {
+		const identifierErrors: string[] = []
+		if (identifier.length < 3) {
+			identifierErrors.push("Username/Email must be at least 3 characters long")
 		}
-		if (username.length > 100) {
-			usernameErrors.push("Username must be less than 100 characters long")
+		if (identifier.length > 100) {
+			identifierErrors.push("Username/Email must be less than 100 characters long")
 		}
-		if (!/^[a-zA-Z0-9]+$/.test(username)) {
-			usernameErrors.push("Username must contain only letters and numbers")
-		}
-		return usernameErrors
+		return identifierErrors
 	}
 
 	const hasValidationErrors = (): boolean => {
-		const usernameErrors = usernameIsInvalid(username)
+		const identifierErrors = identifierIsInvalid(identifier)
 		const passwordErrors = passwordIsInvalid(password)
 
-		return usernameErrors.length > 0 || passwordErrors.length > 0
+		return identifierErrors.length > 0 || passwordErrors.length > 0
 	}
 
 	const isFormValidForSubmission = (): boolean => {
-		return username.length > 0 && password.length > 0 && !hasValidationErrors()
+		return identifier.length > 0 && password.length > 0 && !hasValidationErrors()
 	}
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -71,13 +68,19 @@ const UserSignInPage = () => {
 		setErrors([])
 		setIsSubmitting(true)
 
+		// Determine if identifier is email or username
+		const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)
+		const requestBody = isEmail 
+			? { email: identifier, password }
+			: { username: identifier, password }
+
 		fetch("http://localhost:3001/api/v1/auth/signin", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
 			},
 			credentials: "include",
-			body: JSON.stringify({ username, password }),
+			body: JSON.stringify(requestBody),
 		})
 			.then((response) => response.json())
 			.then((data) => {
@@ -111,21 +114,21 @@ const UserSignInPage = () => {
 
 						<form className="signin-form" onSubmit={handleSubmit}>
 							<div className="form-group">
-								<label htmlFor="username" className="form-label">
-									Username
+								<label htmlFor="identifier" className="form-label">
+									Username or Email
 								</label>
 								<input
-									id="username"
+									id="identifier"
 									type="text"
-									placeholder="Enter your username"
-									value={username}
-									onChange={(e) => setUsername(e.target.value)}
-									className={`form-input ${username.length > 0 && usernameIsInvalid(username).length > 0 ? "input-error" : ""}`}
+									placeholder="Enter your username or email"
+									value={identifier}
+									onChange={(e) => setIdentifier(e.target.value)}
+									className={`form-input ${identifier.length > 0 && identifierIsInvalid(identifier).length > 0 ? "input-error" : ""}`}
 									required
 								/>
-								{username.length > 0 && usernameIsInvalid(username).length > 0 && (
+								{identifier.length > 0 && identifierIsInvalid(identifier).length > 0 && (
 									<div className="input-error-message">
-										{usernameIsInvalid(username).map((error, index) => (
+										{identifierIsInvalid(identifier).map((error, index) => (
 											<span key={index} className="error-dot">
 												• {error}
 											</span>

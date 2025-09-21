@@ -11,6 +11,7 @@ import logo from "../../assets/virtual-learning-background-with-design-space.png
 
 const UserSignUpPage = () => {
 	const [username, setUsername] = useState("")
+	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
 	const [confirmPassword, setConfirmPassword] = useState("")
 	const [showPassword, setShowPassword] = useState(false)
@@ -55,16 +56,31 @@ const UserSignUpPage = () => {
 		return usernameErrors
 	}
 
+	const emailIsInvalid = (email: string): string[] => {
+		const emailErrors: string[] = []
+		if (email.length === 0) {
+			return emailErrors
+		}
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			emailErrors.push("Please enter a valid email address")
+		}
+		if (email.length > 100) {
+			emailErrors.push("Email must be less than 100 characters long")
+		}
+		return emailErrors
+	}
+
 	const hasValidationErrors = (): boolean => {
 		const usernameErrors = usernameIsInvalid(username)
+		const emailErrors = emailIsInvalid(email)
 		const passwordErrors = passwordIsInvalid(password)
 		const confirmPasswordErrors = password !== confirmPassword ? ["Passwords do not match"] : []
 		
-		return usernameErrors.length > 0 || passwordErrors.length > 0 || confirmPasswordErrors.length > 0
+		return usernameErrors.length > 0 || emailErrors.length > 0 || passwordErrors.length > 0 || confirmPasswordErrors.length > 0
 	}
 
 	const isFormValidForSubmission = (): boolean => {
-		return username.length > 0 && password.length > 0 && confirmPassword.length > 0 && !hasValidationErrors()
+		return username.length > 0 && email.length > 0 && password.length > 0 && confirmPassword.length > 0 && !hasValidationErrors()
 	}
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -78,7 +94,7 @@ const UserSignUpPage = () => {
 				"Content-Type": "application/json",
 			},
 			credentials: 'include',
-			body: JSON.stringify({ username, password }),
+			body: JSON.stringify({ username, email, password }),
 		})
 			.then(response => {
 				return response.json();
@@ -152,6 +168,26 @@ const UserSignUpPage = () => {
 									{username.length > 0 && usernameIsInvalid(username).length > 0 && (
 										<div className="input-error-message">
 											{usernameIsInvalid(username).map((error, index) => (
+												<span key={index} className="error-dot">• {error}</span>
+											))}
+										</div>
+									)}
+								</div>
+
+								<div className="form-group">
+									<label htmlFor="email" className="form-label">Email</label>
+									<input
+										id="email"
+										type="email"
+										placeholder="Enter your email address"
+										value={email}
+										onChange={(e) => setEmail(e.target.value)}
+										className={`form-input ${email.length > 0 && emailIsInvalid(email).length > 0 ? 'input-error' : ''}`}
+										required
+									/>
+									{email.length > 0 && emailIsInvalid(email).length > 0 && (
+										<div className="input-error-message">
+											{emailIsInvalid(email).map((error, index) => (
 												<span key={index} className="error-dot">• {error}</span>
 											))}
 										</div>
