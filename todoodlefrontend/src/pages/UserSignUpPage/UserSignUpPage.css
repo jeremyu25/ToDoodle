@@ -81,12 +81,15 @@
 }
 
 .logo-container {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    position: absolute;
+    z-index: 0;
+    bottom: 0;
+    left: 0;
+    justify-content: flex-end;
+    align-items: flex-start;
+    width: 100%;
 }
+
 
 .signup-logo {
     max-width: 100%;
@@ -323,6 +326,10 @@
 
     .signup-form-container {
         padding: 2rem;
+    }
+
+    .logo-container {
+        display: none;
     }
 }
 
