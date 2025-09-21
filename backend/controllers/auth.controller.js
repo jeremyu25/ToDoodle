@@ -34,10 +34,16 @@ const signIn = async (req, res) => {
             return res.status(400).json({message: "Either username or email, and password are required"})
         }
         
-        const identifier = email || username
-        const validUser = await AuthModel.getUser(identifier)
+        let validUser;
+        if (username && email) {
+            validUser = await AuthModel.getUser(username, email)
+        } else {
+            const identifier = email || username
+            validUser = await AuthModel.getUser(identifier)
+        }
+        
         if (!validUser) {
-            return res.status(404).json({message: "User not found"})
+            return res.status(404).json({message: "User not found or credentials don't match"})
         }
         const validPassword = bcryptjs.compareSync(password, validUser.password_hash)
         if (!validPassword) {

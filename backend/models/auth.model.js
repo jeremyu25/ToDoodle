@@ -19,15 +19,23 @@ const signUp = async (username, passwordhash, email) => {
 }
 }
 
-const getUser = async (identifier) => {
+const getUser = async (identifier, secondaryIdentifier = null) => {
   try {
-    const results = await query(
-      `SELECT id, username, email, password_hash 
-       FROM users WHERE username = $1 OR email = $1`,
-      [identifier]
-    )
-
-    return results.rows[0]
+    let query_text, params;
+    
+    if (secondaryIdentifier) {
+      // Both email and username provided - verify they belong to the same user
+      query_text = `SELECT id, username, email, password_hash 
+                    FROM users WHERE username = $1 AND email = $2`;
+      params = [identifier, secondaryIdentifier];
+    } else {
+      query_text = `SELECT id, username, email, password_hash 
+                    FROM users WHERE username = $1 OR email = $1`;
+      params = [identifier];
+    }
+    
+    const results = await query(query_text, params);
+    return results.rows[0];
   } catch (error) {
     console.error("Error fetching user from database:", error.message)
     throw new Error("DB error while fetching user.")
