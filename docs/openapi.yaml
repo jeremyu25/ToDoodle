@@ -921,7 +921,297 @@ paths:
                   message:
                     type: string
                     example: Internal server error
-
+  /auth/signup:
+    post:
+      tags:
+        - auth
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: johndoe
+                password:
+                  type: string
+                  format: password
+                  example: StrongP@ssw0rd!
+                email:
+                  type: string
+                  format: email
+                  example: johndoe@example.com
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User created successfully
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+                      username:
+                        type: string
+                        example: "johndoe"
+                      email:
+                        type: string
+                        format: email
+                        example: "johndoe@example.com"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Username, password, and email are required.
+        '409':
+          description: Conflict - Username or email already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Username or email already exists.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: DB error while creating user.
+  /auth/signin:
+    post:
+      tags:
+        - auth
+      summary: Authenticate a user and return a JWT token
+      description: |
+        Authenticate a user using either username or email (or both) along with password.
+        - If only username is provided, authentication is done by username
+        - If only email is provided, authentication is done by email
+        - If both username and email are provided, they must belong to the same user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                username:
+                  type: string
+                  example: johndoe
+                  description: "Username (optional if email is provided)"
+                email:
+                  type: string
+                  format: email
+                  example: johndoe@example.com
+                  description: "Email address (optional if username is provided)"
+                password:
+                  type: string
+                  format: password
+                  example: StrongP@ssw0rd!
+                  description: "User's password (required)"
+              description: "Provide either username or email (or both) along with password. If both username and email are provided, they must belong to the same user."
+      responses:
+        '200':
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+                      username:
+                        type: string
+                        example: "johndoe"
+                      email:
+                        type: string
+                        format: email
+                        example: "johndoe@example.com"
+          headers:
+            Set-Cookie:
+              description: JWT token set in HttpOnly cookie
+              schema:
+                type: string
+                example: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; 
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Either username or email, and password are required
+        '401':
+          description: Unauthorized - Invalid credentials
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Wrong password entered
+        '404':
+          description: User not found or credentials don't match
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User not found or credentials don't match
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: DB error while signing in.
+  /auth/signout:
+    post:
+      tags:
+        - auth
+      summary: Sign out a user by clearing the JWT cookie
+      responses:
+        '200':
+          description: User signed out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User signed out successfully
+          headers:
+            Set-Cookie:
+              description: Clears the JWT token cookie
+              schema:
+                type: string
+                example: access_token=; HttpOnly; Max-Age=0; 
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error while signing out user.
+  /auth/verify:
+    get:
+      tags:
+        - auth
+      summary: Verify the JWT token and return user info
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: User is authenticated
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "2ef2042c-fdcd-4373-856c-db4573b041c2"
+                      iat:
+                        type: integer
+                        example: 1700000000
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+  /auth/delete:
+      delete:
+        tags:
+          - auth
+        summary: Delete the authenticated user's account
+        parameters:
+          - in: query
+            name: id
+            required: true
+            schema:
+              type: string
+              format: uuid
+        responses:
+          '200':
+            description: User deleted successfully
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: User deleted successfully
+                    data:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "2ef2042c-fdcd-4373-856c-db4573b041c2"
+                        username:
+                          type: string
+                          example: "johndoe"
+                        email:
+                          type: string
+                          format: email
+                          example: "johndoe@example.com"
 components:
   schemas:
     Note:
@@ -1003,3 +1293,17 @@ components:
         description:
           type: string
           example: "Folder containing all project-related notes"
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          format: email
+          example: "johndoe@example.com"

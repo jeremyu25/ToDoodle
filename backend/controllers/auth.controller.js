@@ -4,24 +4,46 @@ import jwt from "jsonwebtoken"
 
 const signUp = async (req, res) => {
     try {
-        const { username, password } = req.body
+        const { username, password, email } = req.body
+        if (!username || !password || !email) {
+            return res.status(400).json({ message: "Username, password, and email are required" })
+        }
         const hashedPassword = bcryptjs.hashSync(password, 10)
-        const newUser = await AuthModel.signUp(username, hashedPassword)
+        const newUser = await AuthModel.signUp(username, hashedPassword, email)
         res.status(201).json({ message: "User created successfully", data: newUser })
     } catch (error) {
-        if (error.code === 23505) { // PSQL duplicate key error code
-            return res.status(409).json({ message: "Username is already taken" })
+            switch (error.code) {
+        case '23505': // unique_violation
+            return res.status(409).json({ message: "Username or email already exists." })
+        case '22P02': // invalid_text_representation
+            return res.status(400).json({ message: "Invalid data type provided." })
+        case '23514': // check_violation
+            return res.status(400).json({ message: "Data failed a check constraint." })
+        default:
+            console.error("Error creating user in database:", error.message)
+            return res.status(500).json({ message: "DB error while creating user." })
         }
-        return res.status(500).json({ message: error.message })
     }
 }
 
 const signIn = async (req, res) => {
     try {
-        const { username, password } = req.body
-        const validUser = await AuthModel.getUser(username)
+        const { username, password, email } = req.body
+        
+        if ((!username && !email) || !password) {
+            return res.status(400).json({message: "Either username or email, and password are required"})
+        }
+        
+        let validUser;
+        if (username && email) {
+            validUser = await AuthModel.getUser(username, email)
+        } else {
+            const identifier = email || username
+            validUser = await AuthModel.getUser(identifier)
+        }
+        
         if (!validUser) {
-            return res.status(404).json({message: "Username not found"})
+            return res.status(404).json({message: "User not found or credentials don't match"})
         }
         const validPassword = bcryptjs.compareSync(password, validUser.password_hash)
         if (!validPassword) {
@@ -72,8 +94,11 @@ const deleteUser = async (req, res) => {
         return res.status(403).json({message: "You are not authorized to delete this user"})
     }
     try {
-        await AuthModel.deleteUser(req.query.id)
-        return res.status(200).json({message: "User deleted successfully"})
+        const results = await AuthModel.deleteUser(req.query.id)
+        return res.status(200).json({
+            message: "User deleted successfully",
+            data: results
+        })
     } catch (error) {
         return res.status(500).json({ message: error.message })
     }

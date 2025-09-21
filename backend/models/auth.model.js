@@ -1,11 +1,11 @@
 import query from "../db/index.js"
 
-const signUp = async (username, passwordhash) => {
+const signUp = async (username, passwordhash, email) => {
   try {
     const results = await query(
-      `INSERT INTO users(username, password_hash) 
-       VALUES($1, $2) RETURNING id, username`,
-      [username, passwordhash]
+      `INSERT INTO users(username, password_hash, email) 
+       VALUES($1, $2, $3) RETURNING id, username, email`,
+      [username, passwordhash, email]
     )
 
     if (results.rows.length === 0) {
@@ -14,24 +14,28 @@ const signUp = async (username, passwordhash) => {
 
     return results.rows[0]
   } catch (error) {
-    console.error("Error signing up user in database:", error.message)
-    throw new Error("DB error while creating user.")
-  }
+    throw error
+
+}
 }
 
-const getUser = async (username) => {
+const getUser = async (identifier, secondaryIdentifier = null) => {
   try {
-    const results = await query(
-      `SELECT id, username, password_hash 
-       FROM users WHERE username = $1`,
-      [username]
-    )
-
-    if (results.rows.length === 0) {
-      throw new Error("User not found.")
+    let query_text, params;
+    
+    if (secondaryIdentifier) {
+      // Both email and username provided - verify they belong to the same user
+      query_text = `SELECT id, username, email, password_hash 
+                    FROM users WHERE username = $1 AND email = $2`;
+      params = [identifier, secondaryIdentifier];
+    } else {
+      query_text = `SELECT id, username, email, password_hash 
+                    FROM users WHERE username = $1 OR email = $1`;
+      params = [identifier];
     }
-
-    return results.rows[0]
+    
+    const results = await query(query_text, params);
+    return results.rows[0];
   } catch (error) {
     console.error("Error fetching user from database:", error.message)
     throw new Error("DB error while fetching user.")
@@ -41,7 +45,7 @@ const getUser = async (username) => {
 const deleteUser = async (id) => {
   try {
     const results = await query(
-      `DELETE FROM users WHERE id = $1 RETURNING id, username`,
+      `DELETE FROM users WHERE id = $1 RETURNING id, username, email`,
       [id]
     )
 
