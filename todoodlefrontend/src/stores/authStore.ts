@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>()(
 
       logout: async () => {
         try {
-          await fetch('http://localhost:3001/api/v1/auth/signout', {
+          await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/signout`, {
             method: 'POST',
             credentials: 'include',
           });
@@ -55,7 +55,7 @@ export const useAuthStore = create<AuthState>()(
 
           if (currentState.user && currentState.isAuthenticated) {
             try {
-              const response = await fetch('http://localhost:3001/api/v1/auth/verify', {
+              const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/verify`, {
                 method: 'GET',
                 credentials: 'include', // This will send the HttpOnly cookie
                 headers: {

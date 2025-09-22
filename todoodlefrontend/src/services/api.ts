@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3001/api/v1';
+const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/api/v1`;
 
 // Helper function to handle API responses
 const handleResponse = async (response: Response) => {

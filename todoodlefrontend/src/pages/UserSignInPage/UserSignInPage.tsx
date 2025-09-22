@@ -74,7 +74,7 @@ const UserSignInPage = () => {
 			? { email: identifier, password }
 			: { username: identifier, password }
 
-		fetch("http://localhost:3001/api/v1/auth/signin", {
+		fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/signin`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",

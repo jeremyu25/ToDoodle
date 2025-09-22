@@ -88,7 +88,7 @@ const UserSignUpPage = () => {
 		setErrors([])
 		setIsSubmitting(true)
 
-		fetch("http://localhost:3001/api/v1/auth/signup", {
+		fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/signup`, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
