@@ -45,6 +45,11 @@ const signIn = async (req, res) => {
         if (!validUser) {
             return res.status(404).json({message: "User not found or credentials don't match"})
         }
+
+        if (!validUser.password_hash) {
+            return res.status(401).json({message: "This is not a local password account"})
+        }
+
         const validPassword = bcryptjs.compareSync(password, validUser.password_hash)
         if (!validPassword) {
             return res.status(401).json({message: "Wrong Password entered"})
