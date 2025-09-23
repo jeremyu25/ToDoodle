@@ -126,7 +126,7 @@ const googleCallback = async (req, res) => {
             } else {
                 // Create new user from Google profile
                 user = await AuthModel.createGoogleUser({
-                    username: googleUser.displayName || googleUser.emails[0].value.split('@')[0],
+                    username: (googleUser.displayName || googleUser.emails[0].value.split('@')[0]).replace(/\s+/g, '_'),
                     email: googleUser.emails[0].value,
                     googleId: googleUser.id
                 })
