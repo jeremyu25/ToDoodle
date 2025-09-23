@@ -280,6 +280,29 @@
     background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-primary) 100%);
 }
 
+.google-button {
+    background-color: white;
+    color: black;
+    width: 100%; /* Ensure full width */
+    padding: 10px;
+    margin-top: 0.5rem;
+    border: 1px solid #A9A9A9; /* Add border */
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 400;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background-color 0.3s;
+}
+
+.google-button:hover {
+    border: 1px solid #CBE0FA;
+    background-color: #EEF5FE; /* Same hover color as button1 */
+}
+
 .form-footer {
     text-align: center;
     margin-top: 1.5rem;

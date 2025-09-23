@@ -10,6 +10,9 @@ import folderRoutes from "./routes/folder.route.js"
 import noteRoutes from "./routes/note.route.js"
 import userRoutes from "./routes/auth.route.js"
 import feedbackRoutes from "./routes/feedback.route.js"
+import session from "express-session"
+import passport from "passport"
+import { Strategy as GoogleStrategy } from "passport-google-oauth20"
 
 const app = express()
 
@@ -20,6 +23,42 @@ app.use(cors({
 }))
 app.use(express.json())
 app.use(cookies())
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: true,
+        maxAge: 24 * 60 * 60 * 1000
+    }
+}))
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+
+// Google Strategy
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: `http://localhost:3001/api/v1/auth/google/callback`,
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        // Pass the profile to the callback controller for database handling
+        return done(null, profile);
+      } catch (error) {
+        return done(error, null);
+      }
+    }
+  )
+);
+
 app.use("/api/v1/folder", folderRoutes)
 app.use("/api/v1/note", noteRoutes)
 app.use("/api/v1/auth", userRoutes)

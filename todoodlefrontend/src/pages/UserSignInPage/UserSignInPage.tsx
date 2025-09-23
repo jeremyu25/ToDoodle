@@ -101,6 +101,83 @@ const UserSignInPage = () => {
 			})
 	}
 
+	const loginWithGooglePopup = async () => {
+		if (isSubmitting) return
+		setIsSubmitting(true)
+		setErrors([])
+
+		try {
+			const popup = window.open(
+				`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/google`, 
+				"googleAuth", 
+				"width=500,height=600,scrollbars=yes,resizable=yes,toolbar=no,menubar=no,location=no,directories=no,status=no"
+			)
+
+			if (!popup) {
+				throw new Error("Popup blocked! Please allow popups for this site.")
+			}
+
+			// Listen for messages from the popup
+			const messageListener = async (evt: any) => {
+				// Only accept messages with the expected structure to ensure security
+				if (!evt.data || typeof evt.data !== 'object') return
+				if (!evt.data.type || (evt.data.type !== 'oauth-success' && evt.data.type !== 'oauth-error')) return
+
+				if (evt.data?.type === "oauth-success") {
+					// Handle successful OAuth login
+					if (evt.data.user) {
+						login(evt.data.user)
+						navigate("/todo")
+					}
+
+					// Clean up
+					window.removeEventListener("message", messageListener)
+					popup.close()
+				} else if (evt.data?.type === "oauth-error") {
+					// Handle OAuth error
+					setErrors([evt.data.message || "Failed to sign in with Google"])
+					window.removeEventListener("message", messageListener)
+					popup.close()
+				}
+			}
+
+			window.addEventListener("message", messageListener)
+
+			// Check if popup was closed manually
+			const checkClosed = setInterval(() => {
+				if (popup.closed) {
+					clearInterval(checkClosed)
+					window.removeEventListener("message", messageListener)
+					setIsSubmitting(false)
+				}
+			}, 1000)
+
+			// Timeout after 5 minutes
+			setTimeout(() => {
+				if (!popup.closed) {
+					popup.close()
+					clearInterval(checkClosed)
+					window.removeEventListener("message", messageListener)
+					setIsSubmitting(false)
+				}
+			}, 300000) // 5 minutes
+		} catch (error: any) {
+			console.error("Google sign-in error:", error)
+			setErrors([error.message || "Failed to sign in with Google"])
+		} finally {
+			setIsSubmitting(false)
+		}
+	}
+
+	const GoogleButton = () => {
+		return (
+			<button type="button" className="google-button" onClick={loginWithGooglePopup} disabled={isSubmitting}>
+				<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" className="google-logo" width={20} height={20} />
+				Continue with Google
+			</button>
+		)
+	}
+
 	return (
 		<div className="signin-page-container">
 			<NavBar />
@@ -194,6 +271,7 @@ const UserSignInPage = () => {
 									"Login"
 								)}
 							</button>
+							<GoogleButton />
 						</form>
 
 						<div className="form-footer">

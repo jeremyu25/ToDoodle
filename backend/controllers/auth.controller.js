@@ -104,10 +104,113 @@ const deleteUser = async (req, res) => {
     }
 }
 
+const googleCallback = async (req, res) => {
+    try {
+        // req.user contains the Google profile from Passport
+        const googleUser = req.user
+        
+        if (!googleUser || !googleUser.emails || !googleUser.emails[0]) {
+            throw new Error("Invalid Google user data received")
+        }
+        
+        let user = await AuthModel.getUserByProvider('google', googleUser.id)
+        
+        if (!user) {
+            // Check if user exists with this email (maybe they have a local account)
+            const existingUser = await AuthModel.getUserByEmail(googleUser.emails[0].value)
+            
+            if (existingUser) {
+                // Link Google auth to existing user
+                await AuthModel.linkAuthProvider(existingUser.id, 'google', googleUser.id)
+                user = existingUser
+            } else {
+                // Create new user from Google profile
+                user = await AuthModel.createGoogleUser({
+                    username: googleUser.displayName || googleUser.emails[0].value.split('@')[0],
+                    email: googleUser.emails[0].value,
+                    googleId: googleUser.id
+                })
+            }
+        }
+        
+        if (!user) {
+            throw new Error("Failed to create or retrieve user")
+        }
+        
+        const token = jwt.sign({id: user.id}, process.env.JWT_SECRET)
+        const expiryDate = new Date(Date.now() + 10800000)
+        
+        res.cookie("access_token", token, {httpOnly: true, expires: expiryDate})
+        
+        // Send HTML page that communicates with parent window
+        const {password_hash, ...userWithoutPassword} = user
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authentication Successful</title>
+            </head>
+            <body>
+                <script>
+                    try {
+                        if (window.opener) {
+                            window.opener.postMessage({
+                                type: 'oauth-success',
+                                user: ${JSON.stringify(userWithoutPassword)}
+                            }, '*');
+                            window.close();
+                        } else {
+                            // Fallback: redirect to frontend
+                            window.location.href = '${process.env.CLIENT_URL}/todo';
+                        }
+                    } catch (error) {
+                        console.error('Error communicating with parent:', error);
+                        window.location.href = '${process.env.CLIENT_URL}/todo';
+                    }
+                </script>
+                <p>Authentication successful! This window should close automatically.</p>
+            </body>
+            </html>
+        `)
+    } catch (error) {
+        console.error("Google OAuth callback error:", error)
+        
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authentication Failed</title>
+            </head>
+            <body>
+                <script>
+                    try {
+                        if (window.opener) {
+                            window.opener.postMessage({
+                                type: 'oauth-error',
+                                message: 'Authentication failed. Please try again.'
+                            }, '*');
+                            window.close();
+                        } else {
+                            // Fallback: redirect to frontend
+                            window.location.href = '${process.env.CLIENT_URL}/signin';
+                        }
+                    } catch (error) {
+                        console.error('Error communicating with parent:', error);
+                        window.location.href = '${process.env.CLIENT_URL}/signin';
+                    }
+                </script>
+                <p>Authentication failed. This window should close automatically.</p>
+            </body>
+            </html>
+        `)
+    }
+}
+
 export default {
     signUp,
     signIn,
     signOut,
     deleteUser,
-    verifyUser
+    verifyUser,
+    googleCallback
 }
