@@ -45,6 +45,11 @@ const signIn = async (req, res) => {
         if (!validUser) {
             return res.status(404).json({message: "User not found or credentials don't match"})
         }
+
+        if (!validUser.password_hash) {
+            return res.status(401).json({message: "This is not a local password account"})
+        }
+
         const validPassword = bcryptjs.compareSync(password, validUser.password_hash)
         if (!validPassword) {
             return res.status(401).json({message: "Wrong Password entered"})
@@ -104,10 +109,125 @@ const deleteUser = async (req, res) => {
     }
 }
 
+const googleCallback = async (req, res) => {
+    try {
+        // req.user contains the Google profile from Passport
+        const googleUser = req.user
+        
+        if (!googleUser || !googleUser.emails || !googleUser.emails[0]) {
+            throw new Error("Invalid Google user data received")
+        }
+        
+        const email = googleUser.emails[0].value
+        const isEmailVerified = googleUser.emails[0].verified
+        
+        if (!isEmailVerified) {
+            throw new Error("Email not verified by Google")
+        }
+        
+        let user = await AuthModel.getUserByProvider('google', googleUser.id)
+        
+        if (!user) {
+            const existingUser = await AuthModel.getUserByEmail(email)
+            
+            if (existingUser) {
+                const existingGoogleAuth = await AuthModel.getUserAuthMethods(existingUser.id)
+                const hasGoogleAuth = existingGoogleAuth.some(auth => auth.provider === 'google')
+                
+                if (hasGoogleAuth) {
+                    throw new Error("Google account is already linked to this user")
+                }
+                
+                await AuthModel.linkAuthProvider(existingUser.id, 'google', googleUser.id)
+                user = existingUser
+            }
+            else {
+                user = await AuthModel.createGoogleUser({
+                    username: (googleUser.displayName || email.split('@')[0]).replace(/\s+/g, '_'),
+                    email: email,
+                    googleId: googleUser.id
+                })
+            }
+        }
+        
+        if (!user) {
+            throw new Error("Failed to create or retrieve user")
+        }
+        
+        const token = jwt.sign({id: user.id}, process.env.JWT_SECRET)
+        const expiryDate = new Date(Date.now() + 10800000)
+        
+        res.cookie("access_token", token, {httpOnly: true, expires: expiryDate})
+        
+        // Send HTML page that communicates with parent window
+        const {password_hash, ...userWithoutPassword} = user
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authentication Successful</title>
+            </head>
+            <body>
+                <script>
+                    try {
+                        if (window.opener) {
+                            window.opener.postMessage({
+                                type: 'oauth-success',
+                                user: ${JSON.stringify(userWithoutPassword)}
+                            }, '*');
+                            window.close();
+                        } else {
+                            // Fallback: redirect to frontend
+                            window.location.href = '${process.env.CLIENT_URL}/todo';
+                        }
+                    } catch (error) {
+                        console.error('Error communicating with parent:', error);
+                        window.location.href = '${process.env.CLIENT_URL}/todo';
+                    }
+                </script>
+                <p>Authentication successful! This window should close automatically.</p>
+            </body>
+            </html>
+        `)
+    } catch (error) {
+        console.error("Google OAuth callback error:", error)
+        
+        res.send(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Authentication Failed</title>
+            </head>
+            <body>
+                <script>
+                    try {
+                        if (window.opener) {
+                            window.opener.postMessage({
+                                type: 'oauth-error',
+                                message: 'Authentication failed. Please try again.'
+                            }, '*');
+                            window.close();
+                        } else {
+                            // Fallback: redirect to frontend
+                            window.location.href = '${process.env.CLIENT_URL}/signin';
+                        }
+                    } catch (error) {
+                        console.error('Error communicating with parent:', error);
+                        window.location.href = '${process.env.CLIENT_URL}/signin';
+                    }
+                </script>
+                <p>Authentication failed. This window should close automatically.</p>
+            </body>
+            </html>
+        `)
+    }
+}
+
 export default {
     signUp,
     signIn,
     signOut,
     deleteUser,
-    verifyUser
+    verifyUser,
+    googleCallback
 }
