@@ -11,15 +11,12 @@ router.post("/signout", authController.signOut)
 router.get("/verify", verifyToken, authController.verifyUser)
 router.delete("/delete", verifyToken, authController.deleteUser)
 
-// Google OAuth routes
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }))
-
 router.get("/google/callback", 
-    passport.authenticate("google", { failureRedirect: "/auth/failure" }),
+    passport.authenticate("google", { failureRedirect: "/auth/auth-failure" }),
     authController.googleCallback
 )
-
-router.get("/failure", (req, res) => {
+router.get("/login-failure", (req, res) => {
     res.status(401).json({ message: "Authentication failed" })
 })
 
