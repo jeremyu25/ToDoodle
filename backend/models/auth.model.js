@@ -205,6 +205,22 @@ const linkAuthProvider = async (userId, provider, providerUserId, passwordHash =
   }
 }
 
+// Function to get all auth methods for a user
+const getUserAuthMethods = async (userId) => {
+  try {
+    const results = await query(
+      `SELECT provider, provider_user_id 
+       FROM auth_identities 
+       WHERE user_id = $1`,
+      [userId]
+    )
+    return results.rows
+  } catch (error) {
+    console.error("Error fetching user auth methods:", error.message)
+    throw new Error("DB error while fetching user auth methods.")
+  }
+}
+
 export default {
   signUp,
   getUser,
@@ -213,5 +229,6 @@ export default {
   createGoogleUser,
   getUserByProvider,
   createOAuthUser,
-  linkAuthProvider
+  linkAuthProvider,
+  getUserAuthMethods
 }

@@ -118,21 +118,33 @@ const googleCallback = async (req, res) => {
             throw new Error("Invalid Google user data received")
         }
         
+        const email = googleUser.emails[0].value
+        const isEmailVerified = googleUser.emails[0].verified
+        
+        if (!isEmailVerified) {
+            throw new Error("Email not verified by Google")
+        }
+        
         let user = await AuthModel.getUserByProvider('google', googleUser.id)
         
         if (!user) {
-            // Check if user exists with this email (maybe they have a local account)
-            const existingUser = await AuthModel.getUserByEmail(googleUser.emails[0].value)
+            const existingUser = await AuthModel.getUserByEmail(email)
             
             if (existingUser) {
-                // Link Google auth to existing user
+                const existingGoogleAuth = await AuthModel.getUserAuthMethods(existingUser.id)
+                const hasGoogleAuth = existingGoogleAuth.some(auth => auth.provider === 'google')
+                
+                if (hasGoogleAuth) {
+                    throw new Error("Google account is already linked to this user")
+                }
+                
                 await AuthModel.linkAuthProvider(existingUser.id, 'google', googleUser.id)
                 user = existingUser
-            } else {
-                // Create new user from Google profile
+            }
+            else {
                 user = await AuthModel.createGoogleUser({
-                    username: (googleUser.displayName || googleUser.emails[0].value.split('@')[0]).replace(/\s+/g, '_'),
-                    email: googleUser.emails[0].value,
+                    username: (googleUser.displayName || email.split('@')[0]).replace(/\s+/g, '_'),
+                    email: email,
                     googleId: googleUser.id
                 })
             }
