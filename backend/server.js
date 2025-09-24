@@ -11,8 +11,7 @@ import noteRoutes from "./routes/note.route.js"
 import userRoutes from "./routes/auth.route.js"
 import feedbackRoutes from "./routes/feedback.route.js"
 import session from "express-session"
-import passport from "passport"
-import { Strategy as GoogleStrategy } from "passport-google-oauth20"
+import passport from "./config/passport.js"
 
 const app = express()
 
@@ -34,30 +33,8 @@ app.use(session({
     }
 }))
 
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
-
-// Google Strategy
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `http://localhost:3001/api/v1/auth/google/callback`,
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      try {
-        // Pass the profile to the callback controller for database handling
-        return done(null, profile);
-      } catch (error) {
-        return done(error, null);
-      }
-    }
-  )
-);
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.use("/api/v1/folder", folderRoutes)
 app.use("/api/v1/note", noteRoutes)
