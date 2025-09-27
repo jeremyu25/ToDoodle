@@ -31,7 +31,7 @@ Download the full demo here, [WIP_demo](./docs/assets/WIP_demo.mp4).
 - [ ]  User can upload profile pictures.
 - [ ]  User can edit their profile names, email and password.
 - [ ]  Debouncing and throttling.
-- [ ]  Google oauth.
+- [x]  Google oauth.
 - [ ]  2FA authentication.
 
 ### DevOps
