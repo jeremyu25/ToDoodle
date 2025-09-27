@@ -1,7 +1,7 @@
 import query from "../db/index.js"
 import crypto from "crypto"
 
-const TIMEOUT_DURATION = 10 * 60 * 1000 // 10 mins
+const TIMEOUT_DURATION = 9 * 60 * 1000 // 9 mins
 
 // Create staging user (unverified)
 const createStagingUser = async (username, passwordhash, email) => {
