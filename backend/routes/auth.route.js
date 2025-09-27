@@ -12,6 +12,8 @@ router.post("/signin", authController.signIn)
 router.post("/signout", authController.signOut)
 router.get("/verify", verifyToken, authController.verifyUser)
 router.delete("/delete", verifyToken, authController.deleteUser)
+router.get("/verify-email", authController.verifyEmail)
+router.post("/resend-verification", authController.resendVerification)
 
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }))
 router.get("/google/callback", 
