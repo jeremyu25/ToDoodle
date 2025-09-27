@@ -14,7 +14,7 @@ const cleanupExpiredUsers = async () => {
 // Create cron job to run every 1 minute (for testing)
 // Cron pattern: '0 * * * * *' means "at second 0 of every minute"
 const cleanupJob = new CronJob(
-    '*/10 * * * * *', // Every 10 minute
+    "0 0 0 * * *", // At 00:00:00 every day (midnight)
     cleanupExpiredUsers,
     null, // onComplete callback
     false, // start immediately
@@ -24,7 +24,7 @@ const cleanupJob = new CronJob(
 export const startCronJobs = () => {
     console.log('🕐 Starting cron jobs...')
     cleanupJob.start()
-    console.log('✅ Cleanup job scheduled to run every 10 minute')
+    console.log('✅ Cleanup job scheduled to run every midnight')
 }
 
 // Function to stop all cron jobs (useful for graceful shutdown)
