@@ -120,7 +120,7 @@ const regenerateVerificationToken = async (email) => {
   }
 }
 
-// Clean up expired staging users // TODO: use it in cron job or configure on supabase side?
+// Clean up expired staging users (called by cron job every 10 minutes)
 const cleanupExpiredStagingUsers = async () => {
   try {
     const result = await query(
