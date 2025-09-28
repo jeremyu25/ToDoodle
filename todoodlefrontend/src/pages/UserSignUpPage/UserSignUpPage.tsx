@@ -2,12 +2,13 @@ import React from "react"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { FaEye, FaEyeSlash } from "react-icons/fa"
+import { authApi } from '../../services/api'
 import "../../styles/globals.css"
 import "../../styles/utilities.css"
 import "./UserSignUpPage.css"
-import SignUpSuccessPage from "../SignUpSuccessPage/SignUpSuccessPage"
 import NavBar from "../../components/NavBar/NavBar"
 import logo from "../../assets/virtual-learning-background-with-design-space.png"
+import EmailSentPage from "../EmailSentPage/EmailSentPage"
 
 const UserSignUpPage = () => {
 	const [username, setUsername] = useState("")
@@ -88,37 +89,21 @@ const UserSignUpPage = () => {
 		setErrors([])
 		setIsSubmitting(true)
 
-		fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/signup`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			credentials: 'include',
-			body: JSON.stringify({ username, email, password }),
-		})
-			.then(response => {
-				return response.json();
-			})
-			.then((data) => {
-				if(data.data) {
-					setIsSuccess(true);
-				} else {
-					setErrors([data.message || "Sign up failed"]);
-				}
-			})
-			.catch(error => {
-				setErrors([error.message])
-				console.error("Sign up failed. Error:", error)
-			})
-			.finally(() => {
-				setIsSubmitting(false)
-			})
+		try {
+			await authApi.signUp(username, email, password)
+			setIsSuccess(true)
+		} 
+		catch (error) {
+			setErrors([error instanceof Error ? error.message : "Sign up failed"])
+			console.error("Sign up failed. Error:", error)
+		} 
+		finally {
+			setIsSubmitting(false)
+		}
 	}
 
-
-
 	return (
-		isSuccess ? <SignUpSuccessPage /> : (
+		isSuccess ? <EmailSentPage email={email} /> : (
 			<div className="signup-page-container">
 				<NavBar />
 				<div className="signup-container">
