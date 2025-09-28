@@ -11,11 +11,11 @@ import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
 import { useAuthStore } from './stores/authStore'
 
 function App() {
-  const { checkAuthStatus } = useAuthStore();
+  const checkAuthStatus = useAuthStore(state => state.checkAuthStatus)
 
   useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
+    checkAuthStatus()
+  }, []);
 
   return (
     <BrowserRouter>
