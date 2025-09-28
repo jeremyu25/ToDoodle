@@ -146,3 +146,86 @@ export const foldersApi = {
     return handleResponse(response);
   },
 };
+
+// Auth API
+export const authApi = {
+  // Sign up a new user
+  signUp: async (username: string, email: string, password: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ username, email, password }),
+    });
+    return handleResponse(response);
+  },
+
+  // Sign in user
+  signIn: async (usernameOrEmail: string, password: string) => {
+    const isEmail = usernameOrEmail.includes('@');
+    const body = isEmail 
+      ? { email: usernameOrEmail, password }
+      : { username: usernameOrEmail, password };
+
+    const response = await fetch(`${API_BASE_URL}/auth/signin`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    return handleResponse(response);
+  },
+
+  // Sign out user
+  signOut: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/signout`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Verify user session
+  verifyUser: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/verify`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Verify email with token
+  verifyEmail: async (token: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-email?token=${token}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Resend verification email
+  resendVerification: async (email: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ email }),
+    });
+    return handleResponse(response);
+  },
+
+  // Delete user account
+  deleteUser: async (userId: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/delete?id=${userId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+};
