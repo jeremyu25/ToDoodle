@@ -1,4 +1,137 @@
 import query from "../db/index.js"
+import crypto from "crypto"
+
+const TIMEOUT_DURATION = 9 * 60 * 1000 // 9 mins
+
+// Create staging user (unverified)
+const createStagingUser = async (username, passwordhash, email) => {
+  try {
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const verificationExpires = new Date(Date.now() + TIMEOUT_DURATION)
+    const userId = crypto.randomUUID()
+
+    const result = await query(
+      `INSERT INTO staging_users(id, username, password_hash, email, verification_token, verification_expires) 
+       VALUES($1, $2, $3, $4, $5, $6) 
+       RETURNING id, username, email, verification_token`,
+      [userId, username, passwordhash, email, verificationToken, verificationExpires]
+    )
+
+    if (result.rows.length === 0) {
+      throw new Error("Unable to create staging user.")
+    }
+
+    return result.rows[0]
+  } catch (error) {
+    throw error
+  }
+}
+
+// Verify email and move user from staging to users table
+const verifyEmailAndCreateUser = async (verificationToken) => {
+  try {
+    await query('BEGIN')
+    
+    // Find staging user by verification token
+    const stagingUserResult = await query(
+      `SELECT * FROM staging_users 
+       WHERE verification_token = $1 AND verification_expires > NOW()`,
+      [verificationToken]
+    )
+
+    if (stagingUserResult.rows.length === 0) {
+      await query('ROLLBACK')
+      throw new Error("Invalid or expired verification token.")
+    }
+
+    const stagingUser = stagingUserResult.rows[0]
+    
+    // Create verified user
+    const userResult = await query(
+      `INSERT INTO users(id, username, email) 
+       VALUES($1, $2, $3) RETURNING id, username, email`,
+      [stagingUser.id, stagingUser.username, stagingUser.email]
+    )
+
+    if (userResult.rows.length === 0) {
+      await query('ROLLBACK')
+      throw new Error("Unable to create verified user.")
+    }
+
+    const user = userResult.rows[0]
+    
+    // Create local auth identity
+    await query(
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
+       VALUES($1, 'local', $2, $3)`,
+      [user.id, stagingUser.email, stagingUser.password_hash]
+    )
+
+    // Remove from staging users
+    await query(
+      `DELETE FROM staging_users WHERE id = $1`,
+      [stagingUser.id]
+    )
+
+    await query('COMMIT')
+    return user
+  } catch (error) {
+    await query('ROLLBACK')
+    throw error
+  }
+}
+
+// Get staging user by email
+const getStagingUserByEmail = async (email) => {
+  try {
+    const result = await query(
+      `SELECT id, username, email, verification_token, verification_expires 
+       FROM staging_users WHERE email = $1`,
+      [email]
+    )
+    return result.rows[0]
+  } catch (error) {
+    console.error("Error fetching staging user by email:", error.message)
+    throw new Error("DB error while fetching staging user.")
+  }
+}
+
+// Resend verification email (generate new token)
+const regenerateVerificationToken = async (email) => {
+  try {
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const verificationExpires = new Date(Date.now() + TIMEOUT_DURATION)
+
+    const result = await query(
+      `UPDATE staging_users 
+       SET verification_token = $1, verification_expires = $2 
+       WHERE email = $3 
+       RETURNING id, username, email, verification_token`,
+      [verificationToken, verificationExpires, email]
+    )
+
+    if (result.rows.length === 0) {
+      throw new Error("Staging user not found.")
+    }
+
+    return result.rows[0]
+  } catch (error) {
+    throw error
+  }
+}
+
+// Clean up expired staging users (called by cron job every 10 minutes)
+const cleanupExpiredStagingUsers = async () => {
+  try {
+    const result = await query(
+      `DELETE FROM staging_users WHERE verification_expires < NOW() RETURNING id`
+    )
+    return result.rows.length
+  } catch (error) {
+    console.error("Error cleaning up expired staging users:", error.message)
+    throw error
+  }
+}
 
 const signUp = async (username, passwordhash, email) => {
   try {
@@ -230,5 +363,10 @@ export default {
   getUserByProvider,
   createOAuthUser,
   linkAuthProvider,
-  getUserAuthMethods
+  getUserAuthMethods,
+  createStagingUser,
+  verifyEmailAndCreateUser,
+  getStagingUserByEmail,
+  regenerateVerificationToken,
+  cleanupExpiredStagingUsers
 }

@@ -12,6 +12,7 @@ import userRoutes from "./routes/auth.route.js"
 import feedbackRoutes from "./routes/feedback.route.js"
 import session from "express-session"
 import passport from "./config/passport.js"
+import { startCronJobs, stopCronJobs } from "./services/cronJobs.js"
 
 const app = express()
 
@@ -49,8 +50,23 @@ try {
 	const port = process.env.PORT
 	app.listen(port, () => {
 		console.log(`server is up and listening on port ${port}`)
+		// Start cron jobs after server is running
+		startCronJobs()
 	})
 } 
 catch (err) {
 	console.log(err)
 }
+
+// Graceful shutdown handling
+process.on('SIGINT', () => {
+	console.log('\n🛑 Received SIGINT. Graceful shutdown...')
+	stopCronJobs()
+	process.exit(0)
+})
+
+process.on('SIGTERM', () => {
+	console.log('\n🛑 Received SIGTERM. Graceful shutdown...')
+	stopCronJobs()
+	process.exit(0)
+})
