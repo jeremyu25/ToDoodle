@@ -26,7 +26,7 @@ const TaskModal: React.FC = () => {
     if (currentTask && editedTask && !editMode) {
       setEditedTask({ ...currentTask });
     }
-  }, [currentTask, editMode, editedTask]);
+  }, [currentTask, editMode]);
 
   const handleOverlayClick = () => {
     const currentTime = new Date().getTime();
