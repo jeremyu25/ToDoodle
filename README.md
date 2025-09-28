@@ -32,7 +32,7 @@ Download the full demo here, [WIP_demo](./docs/assets/WIP_demo.mp4).
 - [ ]  User can edit their profile names, email and password.
 - [ ]  Debouncing and throttling.
 - [x]  Google oauth.
-- [ ]  2FA authentication.
+- [x]  2FA authentication.
 
 ### DevOps
 - [ ] Dockerise dev.
