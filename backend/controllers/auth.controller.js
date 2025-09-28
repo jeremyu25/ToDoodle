@@ -42,11 +42,11 @@ const signUp = async (req, res) => {
             `Please click the following link to verify your email: ${verificationUrl}`,
             `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #2d89ef;">Welcome to ToDoodle!</h2>
+                <h2 style="color: #A8BBA0;">Welcome to ToDoodle!</h2>
                 <p>Thank you for signing up. Please verify your email address to complete your registration.</p>
                 <p style="margin: 30px 0;">
                     <a href="${verificationUrl}" 
-                       style="background-color: #2d89ef; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                       style="background-color: #A8BBA0; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
                         Verify Email Address
                     </a>
                 </p>
@@ -55,7 +55,7 @@ const signUp = async (req, res) => {
                     <a href="${verificationUrl}">${verificationUrl}</a>
                 </p>
                 <p style="color: #667; font-size: 14px;">
-                    This verification link will expire in 24 hours.
+                    This verification link will expire in 10 minutes.
                 </p>
             </div>
             `
@@ -333,11 +333,11 @@ const resendVerification = async (req, res) => {
             `Please click the following link to verify your email: ${verificationUrl}`,
             `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2 style="color: #2d89ef;">Email Verification</h2>
+                <h2 style="color: #A8BBA0;">Email Verification</h2>
                 <p>Please verify your email address to complete your registration.</p>
                 <p style="margin: 30px 0;">
                     <a href="${verificationUrl}" 
-                       style="background-color: #2d89ef; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                       style="background-color: #A8BBA0; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
                         Verify Email Address
                     </a>
                 </p>
@@ -346,7 +346,7 @@ const resendVerification = async (req, res) => {
                     <a href="${verificationUrl}">${verificationUrl}</a>
                 </p>
                 <p style="color: #667; font-size: 14px;">
-                    This verification link will expire in 24 hours.
+                    This verification link will expire in 10 minutes.
                 </p>
             </div>
             `
