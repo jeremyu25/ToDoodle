@@ -228,4 +228,43 @@ export const authApi = {
     });
     return handleResponse(response);
   },
+
+  // Update username (placeholder - needs backend implementation)
+  updateUsername: async (userId: string, username: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/update-username`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, username }),
+    });
+    return handleResponse(response);
+  },
+
+  // Update email (placeholder - needs backend implementation)
+  updateEmail: async (userId: string, email: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/update-email`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, email }),
+    });
+    return handleResponse(response);
+  },
+
+  // Update password (placeholder - needs backend implementation)
+  updatePassword: async (userId: string, currentPassword: string, newPassword: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/update-password`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, currentPassword, newPassword }),
+    });
+    return handleResponse(response);
+  },
 };

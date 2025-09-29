@@ -14,7 +14,6 @@ router.get("/verify", verifyToken, authController.verifyUser)
 router.delete("/delete", verifyToken, authController.deleteUser)
 router.get("/verify-email", authController.verifyEmail)
 router.post("/resend-verification", authController.resendVerification)
-
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }))
 router.get("/google/callback", 
     passport.authenticate("google", { failureRedirect: "/auth/auth-failure" }),
@@ -23,6 +22,9 @@ router.get("/google/callback",
 router.get("/login-failure", (req, res) => {
     res.status(401).json({ message: "Authentication failed" })
 })
+router.patch("/update-username", verifyToken, authController.updateUsername)
+router.patch("/update-email", verifyToken, authController.updateEmail)
+router.patch("/update-password", verifyToken, authController.updatePassword)
 
 router.post("/test_mail", async (req, res) => {
     try {

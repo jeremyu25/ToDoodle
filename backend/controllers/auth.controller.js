@@ -365,6 +365,146 @@ const resendVerification = async (req, res) => {
     }
 }
 
+const updateUsername = async (req, res) => {
+    try {
+        const { userId, username } = req.body
+        
+        if (!userId || !username) {
+            return res.status(400).json({ message: "User ID and username are required" })
+        }
+
+        // Check if user is authorized to update this account
+        if (req.user.id !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this account" })
+        }
+
+        // Validate username
+        if (username.length < 3 || username.length > 100) {
+            return res.status(400).json({ message: "Username must be between 3 and 100 characters" })
+        }
+
+        if (!/^[a-zA-Z0-9]+$/.test(username)) {
+            return res.status(400).json({ message: "Username must contain only letters and numbers" })
+        }
+
+        // Check if username is already taken
+        const existingUser = await AuthModel.getUserByUsername(username)
+        if (existingUser && existingUser.id !== userId) {
+            return res.status(409).json({ message: "Username is already taken" })
+        }
+
+        // Update username
+        const updatedUser = await AuthModel.updateUsername(userId, username)
+        
+        res.status(200).json({
+            message: "Username updated successfully",
+            user: updatedUser
+        })
+    } catch (error) {
+        console.error("Update username error:", error.message)
+        return res.status(500).json({ message: "Error updating username" })
+    }
+}
+
+const updateEmail = async (req, res) => {
+    try {
+        const { userId, email } = req.body
+        
+        if (!userId || !email) {
+            return res.status(400).json({ message: "User ID and email are required" })
+        }
+
+        // Check if user is authorized to update this account
+        if (req.user.id !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this account" })
+        }
+
+        // Validate email
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ message: "Please enter a valid email address" })
+        }
+
+        if (email.length > 100) {
+            return res.status(400).json({ message: "Email must be less than 100 characters" })
+        }
+
+        // Check if email is already taken
+        const existingUser = await AuthModel.getUserByEmail(email)
+        if (existingUser && existingUser.id !== userId) {
+            return res.status(409).json({ message: "Email is already taken" })
+        }
+
+        // Update email
+        const updatedUser = await AuthModel.updateEmail(userId, email)
+        
+        res.status(200).json({
+            message: "Email updated successfully",
+            user: updatedUser
+        })
+    } catch (error) {
+        console.error("Update email error:", error.message)
+        return res.status(500).json({ message: "Error updating email" })
+    }
+}
+
+const updatePassword = async (req, res) => {
+    try {
+        const { userId, currentPassword, newPassword } = req.body
+        
+        if (!userId || !currentPassword || !newPassword) {
+            return res.status(400).json({ message: "User ID, current password, and new password are required" })
+        }
+
+        // Check if user is authorized to update this account
+        if (req.user.id !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this account" })
+        }
+
+        // Validate new password
+        if (newPassword.length < 8 || newPassword.length > 100) {
+            return res.status(400).json({ message: "Password must be between 8 and 100 characters" })
+        }
+
+        if (!/[A-Z]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one uppercase letter" })
+        }
+
+        if (!/[a-z]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one lowercase letter" })
+        }
+
+        if (!/[0-9]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one number" })
+        }
+
+        if (!/[!@#$%^&*]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one special character" })
+        }
+
+        // Verify current password
+        const user = await AuthModel.getUserWithPassword(userId)
+        if (!user || !user.password_hash) {
+            return res.status(404).json({ message: "User not found or invalid account type" })
+        }
+
+        const validPassword = bcryptjs.compareSync(currentPassword, user.password_hash)
+        if (!validPassword) {
+            return res.status(401).json({ message: "Current password is incorrect" })
+        }
+
+        // Hash new password and update
+        const hashedPassword = bcryptjs.hashSync(newPassword, 10)
+        await AuthModel.updatePassword(userId, hashedPassword)
+        
+        res.status(200).json({
+            message: "Password updated successfully"
+        })
+    } catch (error) {
+        console.error("Update password error:", error.message)
+        return res.status(500).json({ message: "Error updating password" })
+    }
+}
+
 export default {
     signUp,
     signIn,
@@ -373,5 +513,8 @@ export default {
     verifyUser,
     googleCallback,
     verifyEmail,
-    resendVerification
+    resendVerification,
+    updateUsername,
+    updateEmail,
+    updatePassword
 }

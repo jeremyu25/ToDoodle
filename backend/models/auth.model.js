@@ -354,6 +354,112 @@ const getUserAuthMethods = async (userId) => {
   }
 }
 
+// Get user by username
+const getUserByUsername = async (username) => {
+  try {
+    const results = await query(
+      `SELECT u.id, u.username, u.email 
+       FROM users u WHERE u.username = $1`,
+      [username]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error fetching user by username:", error.message)
+    throw new Error("DB error while fetching user by username.")
+  }
+}
+
+// Get user with password for verification
+const getUserWithPassword = async (userId) => {
+  try {
+    const results = await query(
+      `SELECT u.id, u.username, u.email, ai.password_hash 
+       FROM users u
+       LEFT JOIN auth_identities ai ON u.id = ai.user_id AND ai.provider = 'local'
+       WHERE u.id = $1`,
+      [userId]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error fetching user with password:", error.message)
+    throw new Error("DB error while fetching user with password.")
+  }
+}
+
+// Update username
+const updateUsername = async (userId, username) => {
+  try {
+    const results = await query(
+      `UPDATE users SET username = $1 WHERE id = $2 
+       RETURNING id, username, email`,
+      [username, userId]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("User not found.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error updating username:", error.message)
+    throw new Error("DB error while updating username.")
+  }
+}
+
+// Update email
+const updateEmail = async (userId, email) => {
+  try {
+    await query('BEGIN')
+    
+    // Update user email
+    const userResults = await query(
+      `UPDATE users SET email = $1 WHERE id = $2 
+       RETURNING id, username, email`,
+      [email, userId]
+    )
+
+    if (userResults.rows.length === 0) {
+      await query('ROLLBACK')
+      throw new Error("User not found.")
+    }
+
+    // Update auth identity provider_user_id for local accounts
+    await query(
+      `UPDATE auth_identities SET provider_user_id = $1 
+       WHERE user_id = $2 AND provider = 'local'`,
+      [email, userId]
+    )
+
+    await query('COMMIT')
+    return userResults.rows[0]
+  } catch (error) {
+    await query('ROLLBACK')
+    console.error("Error updating email:", error.message)
+    throw new Error("DB error while updating email.")
+  }
+}
+
+// Update password
+const updatePassword = async (userId, hashedPassword) => {
+  try {
+    const results = await query(
+      `UPDATE auth_identities SET password_hash = $1 
+       WHERE user_id = $2 AND provider = 'local'
+       RETURNING user_id`,
+      [hashedPassword, userId]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("Local auth identity not found for user.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error updating password:", error.message)
+    throw new Error("DB error while updating password.")
+  }
+}
+
 export default {
   signUp,
   getUser,
@@ -368,5 +474,10 @@ export default {
   verifyEmailAndCreateUser,
   getStagingUserByEmail,
   regenerateVerificationToken,
-  cleanupExpiredStagingUsers
+  cleanupExpiredStagingUsers,
+  getUserByUsername,
+  getUserWithPassword,
+  updateUsername,
+  updateEmail,
+  updatePassword
 }
