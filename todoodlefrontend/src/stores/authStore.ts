@@ -9,8 +9,14 @@ interface User {
   // Add other user properties as needed
 }
 
+interface AuthMethod {
+  provider: string;
+  provider_user_id: string;
+}
+
 interface AuthState {
   user: User | null;
+  authMethods: AuthMethod[] | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (userData: User) => void;
@@ -18,12 +24,14 @@ interface AuthState {
   setLoading: (loading: boolean) => void;
   checkAuthStatus: () => Promise<void>;
   refreshUserData: () => Promise<void>;
+  hasLocalAuth: () => boolean;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
       user: null,
+      authMethods: null,
       isAuthenticated: false,
       isLoading: true,
 
@@ -42,12 +50,17 @@ export const useAuthStore = create<AuthState>()(
           console.error('Error in logout:', error);
         }
         finally {
-          set({ user: null, isAuthenticated: false, isLoading: false });
+          set({ user: null, authMethods: null, isAuthenticated: false, isLoading: false });
         }
       },
 
       setLoading: (loading: boolean) => {
         set({ isLoading: loading });
+      },
+
+      hasLocalAuth: () => {
+        const { authMethods } = get();
+        return authMethods?.some(method => method.provider === 'local') ?? false;
       },
 
       checkAuthStatus: async () => {
@@ -94,16 +107,22 @@ export const useAuthStore = create<AuthState>()(
           const userData = await authApi.getCurrentUser();
           console.log('Fetched user data:', userData);
           
+          // Also fetch auth methods
+          const authMethodsData = await authApi.getUserAuthMethods();
+          console.log('Fetched auth methods:', authMethodsData);
+          
           if (userData.user) {
             set({ 
-              user: userData.user, 
+              user: userData.user,
+              authMethods: authMethodsData.authMethods || [],
               isAuthenticated: true, 
               isLoading: false 
             });
           } else if (userData.id) {
             // If the response structure is different
             set({ 
-              user: userData, 
+              user: userData,
+              authMethods: authMethodsData.authMethods || [],
               isAuthenticated: true, 
               isLoading: false 
             });
@@ -124,11 +143,24 @@ export const useAuthStore = create<AuthState>()(
               const verifyData = await verifyResponse.json();
               console.log('Verify endpoint data:', verifyData);
               if (verifyData.user) {
-                set({ 
-                  user: verifyData.user, 
-                  isAuthenticated: true, 
-                  isLoading: false 
-                });
+                // Try to get auth methods for fallback too
+                try {
+                  const authMethodsData = await authApi.getUserAuthMethods();
+                  set({ 
+                    user: verifyData.user,
+                    authMethods: authMethodsData.authMethods || [],
+                    isAuthenticated: true, 
+                    isLoading: false 
+                  });
+                } catch (authError) {
+                  // If auth methods fail, at least set user data
+                  set({ 
+                    user: verifyData.user,
+                    authMethods: [],
+                    isAuthenticated: true, 
+                    isLoading: false 
+                  });
+                }
               }
             }
           } catch (fallbackError) {
@@ -141,11 +173,16 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth-storage',
       partialize: (state) => ({ 
         user: state.user, 
+        authMethods: state.authMethods,
         isAuthenticated: state.isAuthenticated,
         isLoading: false
       }),
       onRehydrateStorage: () => (state) => {
         console.log('Store rehydrated from localStorage:', state);
+        // Ensure authMethods is initialized if not present
+        if (state && !state.authMethods) {
+          state.authMethods = null;
+        }
         // After rehydration, we'll check auth status in checkAuthStatus
       },
     }

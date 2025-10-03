@@ -303,4 +303,26 @@ export const authApi = {
     });
     return handleResponse(response);
   },
+
+  // Get user authentication methods
+  getUserAuthMethods: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/user/auth-methods`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Add local password for OAuth users
+  addLocalPassword: async (password: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/add-local-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ password }),
+    });
+    return handleResponse(response);
+  },
 };

@@ -44,7 +44,7 @@ const useMessages = () => {
 const UserProfilePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, logout, refreshUserData } = useAuthStore()
+  const { user, logout, refreshUserData, hasLocalAuth } = useAuthStore()
   const { errors, success, showError, showSuccess, clearMessages } = useMessages()
   
   // Form states
@@ -53,14 +53,17 @@ const UserProfilePage = () => {
     email: '',
     currentPassword: '',
     newPassword: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    addPassword: '',
+    confirmAddPassword: ''
   })
   
   // UI states
   const [editMode, setEditMode] = useState({
     username: false,
     email: false,
-    password: false
+    password: false,
+    addPassword: false
   })
   
   const [showPasswords, setShowPasswords] = useState({
@@ -72,12 +75,19 @@ const UserProfilePage = () => {
     username: false,
     email: false,
     password: false,
+    addPassword: false,
     delete: false
   })
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const [pendingEmailChange, setPendingEmailChange] = useState<any>(null)
+
+  // Check if user has local authentication (password)
+  const userHasLocalAuth = hasLocalAuth()
+  
+  // Debug logging
+  console.log('UserProfilePage - User has local auth:', userHasLocalAuth)
 
   // Initialize data and fetch user profile on mount
   useEffect(() => {
@@ -90,7 +100,9 @@ const UserProfilePage = () => {
         email: user.email || '',
         currentPassword: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        addPassword: '',
+        confirmAddPassword: ''
       })
 
       // Refresh user data to ensure we have the latest information
@@ -196,7 +208,7 @@ const UserProfilePage = () => {
     clearMessages()
   }
 
-  const toggleEditMode = (field: 'username' | 'email' | 'password') => {
+  const toggleEditMode = (field: 'username' | 'email' | 'password' | 'addPassword') => {
     setEditMode(prev => ({ ...prev, [field]: !prev[field] }))
     clearMessages()
     
@@ -214,6 +226,13 @@ const UserProfilePage = () => {
           currentPassword: '',
           newPassword: '',
           confirmPassword: ''
+        }))
+      }
+      if (field === 'addPassword') {
+        setFormData(prev => ({
+          ...prev,
+          addPassword: '',
+          confirmAddPassword: ''
         }))
       }
     }
@@ -327,6 +346,45 @@ const UserProfilePage = () => {
       showError(error instanceof Error ? error.message : 'Failed to update password')
     } finally {
       setLoading(prev => ({ ...prev, password: false }))
+    }
+  }
+
+  const addLocalPassword = async () => {
+    if (!user) {
+      showError('User not found')
+      return
+    }
+
+    const validationErrors = validatePassword(formData.addPassword)
+    if (validationErrors.length > 0) {
+      showError(validationErrors)
+      return
+    }
+
+    if (formData.addPassword !== formData.confirmAddPassword) {
+      showError('Passwords do not match')
+      return
+    }
+
+    setLoading(prev => ({ ...prev, addPassword: true }))
+    try {
+      await authApi.addLocalPassword(formData.addPassword)
+      
+      showSuccess('Password added successfully! You can now sign in with your username/email and password.')
+      setEditMode(prev => ({ ...prev, addPassword: false }))
+      setFormData(prev => ({
+        ...prev,
+        addPassword: '',
+        confirmAddPassword: ''
+      }))
+      
+      // Refresh user data to update auth methods
+      await refreshUserData()
+      
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to add password')
+    } finally {
+      setLoading(prev => ({ ...prev, addPassword: false }))
     }
   }
 
@@ -626,143 +684,270 @@ const UserProfilePage = () => {
               </div>
             </div>
 
-            <div className="profile-section">
-              <div className="section-header">
-                <div className="section-icon">
-                  <FaLock />
+            {userHasLocalAuth && (
+              <div className="profile-section">
+                <div className="section-header">
+                  <div className="section-icon">
+                    <FaLock />
+                  </div>
+                  <div className="section-info">
+                    <h3 className="section-title">Password</h3>
+                    <p className="section-description">Update your account password</p>
+                  </div>
+                  {!editMode.password && (
+                    <button
+                      className="edit-button"
+                      onClick={() => toggleEditMode('password')}
+                      disabled={Object.values(loading).some(Boolean)}
+                    >
+                      <FaEdit />
+                    </button>
+                  )}
                 </div>
-                <div className="section-info">
-                  <h3 className="section-title">Password</h3>
-                  <p className="section-description">Update your account password</p>
-                </div>
-                {!editMode.password && (
-                  <button
-                    className="edit-button"
-                    onClick={() => toggleEditMode('password')}
-                    disabled={Object.values(loading).some(Boolean)}
-                  >
-                    <FaEdit />
-                  </button>
-                )}
-              </div>
-              
-              <div className="section-content">
-                {editMode.password ? (
-                  <div className="edit-form">
-                    <div className="input-group">
-                      <label className="form-label">Current Password</label>
-                      <div className="password-input-container">
-                        <input
-                          type={showPasswords.current ? "text" : "password"}
-                          value={formData.currentPassword}
-                          onChange={(e) => handleInputChange('currentPassword', e.target.value)}
-                          className="form-input"
-                          placeholder="Enter current password"
-                        />
-                        <button
-                          type="button"
-                          className="eye-icon"
-                          onClick={() => togglePasswordVisibility('current')}
-                        >
-                          {showPasswords.current ? <FaEye /> : <FaEyeSlash />}
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="input-group">
-                      <label className="form-label">New Password</label>
-                      <div className="password-input-container">
-                        <input
-                          type={showPasswords.newAndConfirm ? "text" : "password"}
-                          value={formData.newPassword}
-                          onChange={(e) => handleInputChange('newPassword', e.target.value)}
-                          className={`form-input ${validatePassword(formData.newPassword).length > 0 ? 'input-error' : ''}`}
-                          placeholder="Enter new password"
-                        />
-                        <button
-                          type="button"
-                          className="eye-icon"
-                          onClick={() => togglePasswordVisibility('newAndConfirm')}
-                        >
-                          {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
-                        </button>
-                      </div>
-                      {formData.newPassword && validatePassword(formData.newPassword).length > 0 && (
-                        <div className="input-error-message">
-                          {validatePassword(formData.newPassword).map((error, index) => (
-                            <span key={index} className="error-dot">• {error}</span>
-                          ))}
+                
+                <div className="section-content">
+                  {editMode.password ? (
+                    <div className="edit-form">
+                      <div className="input-group">
+                        <label className="form-label">Current Password</label>
+                        <div className="password-input-container">
+                          <input
+                            type={showPasswords.current ? "text" : "password"}
+                            value={formData.currentPassword}
+                            onChange={(e) => handleInputChange('currentPassword', e.target.value)}
+                            className="form-input"
+                            placeholder="Enter current password"
+                          />
+                          <button
+                            type="button"
+                            className="eye-icon"
+                            onClick={() => togglePasswordVisibility('current')}
+                          >
+                            {showPasswords.current ? <FaEye /> : <FaEyeSlash />}
+                          </button>
                         </div>
-                      )}
-                    </div>
-
-                    <div className="input-group">
-                      <label className="form-label">Confirm New Password</label>
-                      <div className="password-input-container">
-                        <input
-                          type={showPasswords.newAndConfirm ? "text" : "password"}
-                          value={formData.confirmPassword}
-                          onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                          className={`form-input ${formData.confirmPassword && formData.newPassword !== formData.confirmPassword ? 'input-error' : ''}`}
-                          placeholder="Confirm new password"
-                        />
-                        <button
-                          type="button"
-                          className="eye-icon"
-                          onClick={() => togglePasswordVisibility('newAndConfirm')}
-                        >
-                          {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
-                        </button>
                       </div>
-                      {formData.confirmPassword && formData.newPassword !== formData.confirmPassword && (
-                        <div className="input-error-message">
-                          <span className="error-dot">• Passwords do not match</span>
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="form-actions">
-                      <button
-                        className="save-button"
-                        onClick={updatePassword}
-                        disabled={
-                          loading.password ||
-                          !formData.currentPassword ||
-                          !formData.newPassword ||
-                          !formData.confirmPassword ||
-                          validatePassword(formData.newPassword).length > 0 ||
-                          formData.newPassword !== formData.confirmPassword
-                        }
-                      >
-                        {loading.password ? (
-                          <>
-                            <span className="spinner"></span>
-                            Updating...
-                          </>
-                        ) : (
-                          <>
-                            <FaSave />
-                            Update Password
-                          </>
+                      <div className="input-group">
+                        <label className="form-label">New Password</label>
+                        <div className="password-input-container">
+                          <input
+                            type={showPasswords.newAndConfirm ? "text" : "password"}
+                            value={formData.newPassword}
+                            onChange={(e) => handleInputChange('newPassword', e.target.value)}
+                            className={`form-input ${validatePassword(formData.newPassword).length > 0 ? 'input-error' : ''}`}
+                            placeholder="Enter new password"
+                          />
+                          <button
+                            type="button"
+                            className="eye-icon"
+                            onClick={() => togglePasswordVisibility('newAndConfirm')}
+                          >
+                            {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
+                          </button>
+                        </div>
+                        {formData.newPassword && validatePassword(formData.newPassword).length > 0 && (
+                          <div className="input-error-message">
+                            {validatePassword(formData.newPassword).map((error, index) => (
+                              <span key={index} className="error-dot">• {error}</span>
+                            ))}
+                          </div>
                         )}
-                      </button>
-                      <button
-                        className="cancel-button"
-                        onClick={() => toggleEditMode('password')}
-                        disabled={loading.password}
-                      >
-                        <FaTimes />
-                        Cancel
-                      </button>
+                      </div>
+
+                      <div className="input-group">
+                        <label className="form-label">Confirm New Password</label>
+                        <div className="password-input-container">
+                          <input
+                            type={showPasswords.newAndConfirm ? "text" : "password"}
+                            value={formData.confirmPassword}
+                            onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
+                            className={`form-input ${formData.confirmPassword && formData.newPassword !== formData.confirmPassword ? 'input-error' : ''}`}
+                            placeholder="Confirm new password"
+                          />
+                          <button
+                            type="button"
+                            className="eye-icon"
+                            onClick={() => togglePasswordVisibility('newAndConfirm')}
+                          >
+                            {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
+                          </button>
+                        </div>
+                        {formData.confirmPassword && formData.newPassword !== formData.confirmPassword && (
+                          <div className="input-error-message">
+                            <span className="error-dot">• Passwords do not match</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="form-actions">
+                        <button
+                          className="save-button"
+                          onClick={updatePassword}
+                          disabled={
+                            loading.password ||
+                            !formData.currentPassword ||
+                            !formData.newPassword ||
+                            !formData.confirmPassword ||
+                            validatePassword(formData.newPassword).length > 0 ||
+                            formData.newPassword !== formData.confirmPassword
+                          }
+                        >
+                          {loading.password ? (
+                            <>
+                              <span className="spinner"></span>
+                              Updating...
+                            </>
+                          ) : (
+                            <>
+                              <FaSave />
+                              Update Password
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="cancel-button"
+                          onClick={() => toggleEditMode('password')}
+                          disabled={loading.password}
+                        >
+                          <FaTimes />
+                          Cancel
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className="display-value">
-                    ••••••••••••
-                  </div>
-                )}
+                  ) : (
+                    <div className="display-value">
+                      ••••••••••••
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* OAuth Info Section - Only show for users without local authentication */}
+            {!userHasLocalAuth && (
+              <div className="profile-section">
+                <div className="section-header">
+                  <div className="section-icon">
+                    <FaLock />
+                  </div>
+                  <div className="section-info">
+                    <h3 className="section-title">Authentication</h3>
+                    <p className="section-description">
+                      {editMode.addPassword 
+                        ? "Add a password to enable username/password login" 
+                        : "You signed in using OAuth (Google). You can optionally add a password for traditional login."
+                      }
+                    </p>
+                  </div>
+                  {!editMode.addPassword && (
+                    <button
+                      className="edit-button"
+                      onClick={() => toggleEditMode('addPassword')}
+                      disabled={Object.values(loading).some(Boolean)}
+                    >
+                      <FaEdit />
+                    </button>
+                  )}
+                </div>
+                
+                <div className="section-content">
+                  {editMode.addPassword ? (
+                    <div className="edit-form">
+                      <div className="input-group">
+                        <label className="form-label">New Password</label>
+                        <div className="password-input-container">
+                          <input
+                            type={showPasswords.newAndConfirm ? "text" : "password"}
+                            value={formData.addPassword}
+                            onChange={(e) => handleInputChange('addPassword', e.target.value)}
+                            className={`form-input ${validatePassword(formData.addPassword).length > 0 ? 'input-error' : ''}`}
+                            placeholder="Enter password"
+                          />
+                          <button
+                            type="button"
+                            className="eye-icon"
+                            onClick={() => togglePasswordVisibility('newAndConfirm')}
+                          >
+                            {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
+                          </button>
+                        </div>
+                        {formData.addPassword && validatePassword(formData.addPassword).length > 0 && (
+                          <div className="input-error-message">
+                            {validatePassword(formData.addPassword).map((error, index) => (
+                              <span key={index} className="error-dot">• {error}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="input-group">
+                        <label className="form-label">Confirm Password</label>
+                        <div className="password-input-container">
+                          <input
+                            type={showPasswords.newAndConfirm ? "text" : "password"}
+                            value={formData.confirmAddPassword}
+                            onChange={(e) => handleInputChange('confirmAddPassword', e.target.value)}
+                            className={`form-input ${formData.confirmAddPassword && formData.addPassword !== formData.confirmAddPassword ? 'input-error' : ''}`}
+                            placeholder="Confirm password"
+                          />
+                          <button
+                            type="button"
+                            className="eye-icon"
+                            onClick={() => togglePasswordVisibility('newAndConfirm')}
+                          >
+                            {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
+                          </button>
+                        </div>
+                        {formData.confirmAddPassword && formData.addPassword !== formData.confirmAddPassword && (
+                          <div className="input-error-message">
+                            <span className="error-dot">• Passwords do not match</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="form-actions">
+                        <button
+                          className="save-button"
+                          onClick={addLocalPassword}
+                          disabled={
+                            loading.addPassword ||
+                            !formData.addPassword ||
+                            !formData.confirmAddPassword ||
+                            validatePassword(formData.addPassword).length > 0 ||
+                            formData.addPassword !== formData.confirmAddPassword
+                          }
+                        >
+                          {loading.addPassword ? (
+                            <>
+                              <span className="spinner"></span>
+                              Adding...
+                            </>
+                          ) : (
+                            <>
+                              <FaSave />
+                              Add Password
+                            </>
+                          )}
+                        </button>
+                        <button
+                          className="cancel-button"
+                          onClick={() => toggleEditMode('addPassword')}
+                          disabled={loading.addPassword}
+                        >
+                          <FaTimes />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="display-value">
+                      No password
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Danger Zone */}
             <div className="profile-section danger-section">

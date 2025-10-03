@@ -661,6 +661,79 @@ const getCurrentUser = async (req, res) => {
     }
 }
 
+const getUserAuthMethods = async (req, res) => {
+    try {
+        const userId = req.user.id
+        
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        
+        res.status(200).json({
+            success: true,
+            authMethods: authMethods
+        })
+    } catch (error) {
+        console.error("Get user auth methods error:", error.message)
+        return res.status(500).json({ message: "Error fetching user auth methods" })
+    }
+}
+
+const addLocalPassword = async (req, res) => {
+    try {
+        const { password } = req.body
+        const userId = req.user.id
+        
+        if (!password) {
+            return res.status(400).json({ message: "Password is required" })
+        }
+
+        // Validate password
+        if (password.length < 8 || password.length > 100) {
+            return res.status(400).json({ message: "Password must be between 8 and 100 characters" })
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one uppercase letter" })
+        }
+
+        if (!/[a-z]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one lowercase letter" })
+        }
+
+        if (!/[0-9]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one number" })
+        }
+
+        if (!/[!@#$%^&*]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one special character" })
+        }
+
+        // Check if user already has local auth
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        const hasLocalAuth = authMethods.some(method => method.provider === 'local')
+        
+        if (hasLocalAuth) {
+            return res.status(400).json({ message: "User already has a local password" })
+        }
+
+        // Get user data to use email as provider_user_id
+        const user = await AuthModel.getUserById(userId)
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+
+        // Hash password and create local auth identity
+        const hashedPassword = bcryptjs.hashSync(password, 10)
+        await AuthModel.linkAuthProvider(userId, 'local', user.email, hashedPassword)
+        
+        res.status(200).json({
+            message: "Local password added successfully"
+        })
+    } catch (error) {
+        console.error("Add local password error:", error.message)
+        return res.status(500).json({ message: "Error adding local password" })
+    }
+}
+
 export default {
     signUp,
     signIn,
@@ -676,5 +749,7 @@ export default {
     verifyEmailChange,
     getPendingEmailChange,
     cancelPendingEmailChange,
-    getCurrentUser
+    getCurrentUser,
+    getUserAuthMethods,
+    addLocalPassword
 }
