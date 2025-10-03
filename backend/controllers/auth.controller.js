@@ -196,8 +196,11 @@ const googleCallback = async (req, res) => {
                 user = existingUser
             }
             else {
+                // Generate base username for OAuth users  
+                const baseUsername = googleUser.displayName || email.split('@')[0]
+                
                 user = await AuthModel.createGoogleUser({
-                    username: (googleUser.displayName || email.split('@')[0]).replace(/\s+/g, '_'),
+                    username: baseUsername,
                     email: email,
                     googleId: googleUser.id
                 })

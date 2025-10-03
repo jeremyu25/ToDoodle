@@ -1,5 +1,6 @@
 import query from "../db/index.js"
 import crypto from "crypto"
+import { createOAuthUsername } from "../utils/usernameUtils.js"
 
 const TIMEOUT_DURATION = 9 * 60 * 1000 // 9 mins
 
@@ -230,6 +231,9 @@ const createGoogleUser = async (userData) => {
   try {
     const { username, email, googleId } = userData
     
+    // Generate username with 5-digit hash for OAuth users
+    const finalUsername = createOAuthUsername(username, email)
+    
     // Start a transaction
     await query('BEGIN')
     
@@ -237,7 +241,7 @@ const createGoogleUser = async (userData) => {
     const userResults = await query(
       `INSERT INTO users(username, email) 
        VALUES($1, $2) RETURNING id, username, email`,
-      [username, email]
+      [finalUsername, email]
     )
 
     if (userResults.rows.length === 0) {
@@ -285,6 +289,9 @@ const createOAuthUser = async (userData) => {
   try {
     const { username, email, provider, providerUserId } = userData
     
+    // Generate username with 5-digit hash for OAuth users
+    const finalUsername = createOAuthUsername(username, email)
+    
     // Start a transaction
     await query('BEGIN')
     
@@ -292,7 +299,7 @@ const createOAuthUser = async (userData) => {
     const userResults = await query(
       `INSERT INTO users(username, email) 
        VALUES($1, $2) RETURNING id, username, email`,
-      [username, email]
+      [finalUsername, email]
     )
 
     if (userResults.rows.length === 0) {
