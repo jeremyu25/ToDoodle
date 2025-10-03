@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock, FaTrash, FaEdit, FaSave, FaTimes } from 'react-icons/fa'
-import { useNavigate } from 'react-router-dom'
+import { FaEye, FaEyeSlash, FaUser, FaEnvelope, FaLock, FaTrash, FaEdit, FaSave, FaTimes, FaSync } from 'react-icons/fa'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../../stores/authStore'
 import { authApi } from '../../services/api'
 import NavBar from '../../components/NavBar/NavBar'
@@ -8,9 +8,44 @@ import '../../styles/globals.css'
 import '../../styles/utilities.css'
 import './UserProfilePage.css'
 
+// Custom hook for managing temporary messages
+const useMessages = () => {
+  const [errors, setErrors] = useState<string[]>([])
+  const [success, setSuccess] = useState<string>('')
+
+  useEffect(() => {
+    if (success || errors.length > 0) {
+      const timer = setTimeout(() => {
+        setSuccess('')
+        setErrors([])
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [success, errors.length])
+
+  const showError = (error: string | string[]) => {
+    setErrors(Array.isArray(error) ? error : [error])
+    setSuccess('')
+  }
+
+  const showSuccess = (message: string) => {
+    setSuccess(message)
+    setErrors([])
+  }
+
+  const clearMessages = () => {
+    setErrors([])
+    setSuccess('')
+  }
+
+  return { errors, success, showError, showSuccess, clearMessages }
+}
+
 const UserProfilePage = () => {
   const navigate = useNavigate()
-  const { user, logout, login } = useAuthStore()
+  const location = useLocation()
+  const { user, logout, refreshUserData } = useAuthStore()
+  const { errors, success, showError, showSuccess, clearMessages } = useMessages()
   
   // Form states
   const [formData, setFormData] = useState({
@@ -40,51 +75,65 @@ const UserProfilePage = () => {
     delete: false
   })
   
-  const [errors, setErrors] = useState<string[]>([])
-  const [success, setSuccess] = useState<string>('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [pendingEmailChange, setPendingEmailChange] = useState<any>(null)
 
-  // Store original values for comparison
-  const [originalValues, setOriginalValues] = useState({
-    username: '',
-    email: ''
-  })
+  // Initialize data and fetch user profile on mount
+  useEffect(() => {
+    const initializeData = async () => {
+      if (!user) return
 
-  // Initialize form data with user info
+      // Set form data from user
+      setFormData({
+        username: user.username || '',
+        email: user.email || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      })
+
+      // Refresh user data to ensure we have the latest information
+      console.log('Refreshing user data on profile page mount...')
+      try {
+        await refreshUserData()
+        console.log('User data refreshed successfully')
+      } catch (error) {
+        console.error('Failed to refresh user data:', error)
+      }
+
+      // Check for pending email changes
+      try {
+        const response = await authApi.getPendingEmailChange()
+        setPendingEmailChange(response.pendingChange)
+      } catch (error) {
+        setPendingEmailChange(null)
+      }
+    }
+
+    initializeData()
+  }, [user?.id])
+
+  // Update form data when user data changes
   useEffect(() => {
     if (user) {
-      const username = user.username || ''
-      const email = user.email || ''
-      
       setFormData(prev => ({
         ...prev,
-        username,
-        email
+        username: user.username || '',
+        email: user.email || ''
       }))
-      
-      setOriginalValues({
-        username,
-        email
-      })
     }
-  }, [user])
+  }, [user?.username, user?.email])
 
-  // TODO: think about replacing this with toastify
-  // Clear messages after 5 seconds
+  // Check if user is returning from email verification
   useEffect(() => {
-    if (success) {
-      const timer = setTimeout(() => setSuccess(''), 5000)
-      return () => clearTimeout(timer)
+    const state = location.state as { emailChanged?: boolean } | null
+    if (state?.emailChanged) {
+      showSuccess('Email address updated successfully!')
+      // Clear the state to prevent showing the message again on refresh
+      navigate('/profile', { replace: true, state: {} })
     }
-  }, [success])
-
-  useEffect(() => {
-    if (errors.length > 0) {
-      const timer = setTimeout(() => setErrors([]), 5000)
-      return () => clearTimeout(timer)
-    }
-  }, [errors])
+  }, [location.state, showSuccess, navigate])
 
   // Validation functions
   const validateUsername = (username: string): string[] => {
@@ -98,7 +147,7 @@ const UserProfilePage = () => {
     if (!/^[a-zA-Z0-9]+$/.test(username)) {
       errors.push("Username must contain only letters and numbers")
     }
-    if (username === originalValues.username) {
+    if (username === user?.username) {
       errors.push("Username must be different from the current one")
     }
     return errors
@@ -112,7 +161,7 @@ const UserProfilePage = () => {
     if (email.length > 100) {
       errors.push("Email must be less than 100 characters long")
     }
-    if (email === originalValues.email) {
+    if (email === user?.email) {
       errors.push("Email must be different from the current one")
     }
     return errors
@@ -144,21 +193,20 @@ const UserProfilePage = () => {
   // Handler functions
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
-    setErrors([])
+    clearMessages()
   }
 
   const toggleEditMode = (field: 'username' | 'email' | 'password') => {
     setEditMode(prev => ({ ...prev, [field]: !prev[field] }))
-    setErrors([])
-    setSuccess('')
+    clearMessages()
     
     // Reset form data when canceling
     if (editMode[field]) {
       if (field === 'username') {
-        setFormData(prev => ({ ...prev, username: originalValues.username }))
+        setFormData(prev => ({ ...prev, username: user?.username || '' }))
       }
       if (field === 'email') {
-        setFormData(prev => ({ ...prev, email: originalValues.email }))
+        setFormData(prev => ({ ...prev, email: user?.email || '' }))
       }
       if (field === 'password') {
         setFormData(prev => ({
@@ -175,16 +223,16 @@ const UserProfilePage = () => {
     setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }))
   }
 
-  // API calls (placeholder functions - need backend implementation)
+  // API calls
   const updateUsername = async () => {
     if (!user) {
-      setErrors(['User not found'])
+      showError('User not found')
       return
     }
 
     const validationErrors = validateUsername(formData.username)
     if (validationErrors.length > 0) {
-      setErrors(validationErrors)
+      showError(validationErrors)
       return
     }
 
@@ -192,14 +240,14 @@ const UserProfilePage = () => {
     try {
       await authApi.updateUsername(user.id, formData.username)
       
-      setSuccess('Username updated successfully!')
+      showSuccess('Username updated successfully!')
       setEditMode(prev => ({ ...prev, username: false }))
       
-      // Update original values and user in store with new username
-      setOriginalValues(prev => ({ ...prev, username: formData.username }))
-      login({ ...user, username: formData.username })
+      // Refresh user data from server to ensure we have the latest information
+      await refreshUserData()
+      
     } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to update username'])
+      showError(error instanceof Error ? error.message : 'Failed to update username')
     } finally {
       setLoading(prev => ({ ...prev, username: false }))
     }
@@ -207,28 +255,35 @@ const UserProfilePage = () => {
 
   const updateEmail = async () => {
     if (!user) {
-      setErrors(['User not found'])
+      showError('User not found')
       return
     }
 
     const validationErrors = validateEmail(formData.email)
     if (validationErrors.length > 0) {
-      setErrors(validationErrors)
+      showError(validationErrors)
       return
     }
 
     setLoading(prev => ({ ...prev, email: true }))
     try {
-      await authApi.updateEmail(user.id, formData.email)
+      const response = await authApi.updateEmail(user.id, formData.email)
       
-      setSuccess('Email updated successfully! Please verify your new email address.')
+      showSuccess(response.message || 'Verification email sent to your new email address!')
       setEditMode(prev => ({ ...prev, email: false }))
       
-      // Update original values and user in store with new email
-      setOriginalValues(prev => ({ ...prev, email: formData.email }))
-      login({ ...user, email: formData.email })
+      // Reset form data to current email
+      setFormData(prev => ({ ...prev, email: user?.email || '' }))
+      
+      // Check for pending email change to update UI
+      try {
+        const pendingResponse = await authApi.getPendingEmailChange()
+        setPendingEmailChange(pendingResponse.pendingChange)
+      } catch (error) {
+        // Ignore error if no pending change
+      }
     } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to update email'])
+      showError(error instanceof Error ? error.message : 'Failed to initiate email change')
     } finally {
       setLoading(prev => ({ ...prev, email: false }))
     }
@@ -236,23 +291,23 @@ const UserProfilePage = () => {
 
   const updatePassword = async () => {
     if (!user) {
-      setErrors(['User not found'])
+      showError('User not found')
       return
     }
 
     const validationErrors = validatePassword(formData.newPassword)
     if (validationErrors.length > 0) {
-      setErrors(validationErrors)
+      showError(validationErrors)
       return
     }
 
     if (formData.newPassword !== formData.confirmPassword) {
-      setErrors(['Passwords do not match'])
+      showError('Passwords do not match')
       return
     }
 
     if (!formData.currentPassword) {
-      setErrors(['Current password is required'])
+      showError('Current password is required')
       return
     }
 
@@ -260,7 +315,7 @@ const UserProfilePage = () => {
     try {
       await authApi.updatePassword(user.id, formData.currentPassword, formData.newPassword)
       
-      setSuccess('Password updated successfully!')
+      showSuccess('Password updated successfully!')
       setEditMode(prev => ({ ...prev, password: false }))
       setFormData(prev => ({
         ...prev,
@@ -269,7 +324,7 @@ const UserProfilePage = () => {
         confirmPassword: ''
       }))
     } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to update password'])
+      showError(error instanceof Error ? error.message : 'Failed to update password')
     } finally {
       setLoading(prev => ({ ...prev, password: false }))
     }
@@ -277,12 +332,12 @@ const UserProfilePage = () => {
 
   const deleteAccount = async () => {
     if (deleteConfirmText !== 'DELETE') {
-      setErrors(['Please type "DELETE" to confirm account deletion'])
+      showError('Please type "DELETE" to confirm account deletion')
       return
     }
 
     if (!user) {
-      setErrors(['User not found'])
+      showError('User not found')
       return
     }
 
@@ -292,9 +347,43 @@ const UserProfilePage = () => {
       logout()
       navigate('/')
     } catch (error) {
-      setErrors([error instanceof Error ? error.message : 'Failed to delete account'])
+      showError(error instanceof Error ? error.message : 'Failed to delete account')
     } finally {
       setLoading(prev => ({ ...prev, delete: false }))
+    }
+  }
+
+  const cancelEmailChange = async () => {
+    setLoading(prev => ({ ...prev, email: true }))
+    try {
+      await authApi.cancelPendingEmailChange()
+      setPendingEmailChange(null)
+      showSuccess('Email change request cancelled successfully.')
+    } catch (error) {
+      showError(error instanceof Error ? error.message : 'Failed to cancel email change')
+    } finally {
+      setLoading(prev => ({ ...prev, email: false }))
+    }
+  }
+
+  const handleRefreshData = async () => {
+    try {
+      setLoading(prev => ({ ...prev, username: true, email: true }))
+      await refreshUserData()
+      
+      // Also refresh pending email changes
+      try {
+        const response = await authApi.getPendingEmailChange()
+        setPendingEmailChange(response.pendingChange)
+      } catch (error) {
+        setPendingEmailChange(null)
+      }
+      
+      showSuccess('Profile data refreshed successfully!')
+    } catch (error) {
+      showError('Failed to refresh profile data')
+    } finally {
+      setLoading(prev => ({ ...prev, username: false, email: false }))
     }
   }
 
@@ -322,9 +411,17 @@ const UserProfilePage = () => {
               <h1 className="profile-title">Account Settings</h1>
               <p className="profile-subtitle">Manage your account information and preferences</p>
             </div>
+            <button
+              className="refresh-button"
+              onClick={handleRefreshData}
+              disabled={Object.values(loading).some(Boolean)}
+              title="Refresh profile data"
+            >
+              <FaSync />
+            </button>
           </div>
 
-          {/* TODO: find a better placement */}
+          {/* Messages */}
           {success && (
             <div className="success-message">
               {success}
@@ -412,7 +509,7 @@ const UserProfilePage = () => {
                   </div>
                 ) : (
                   <div className="display-value">
-                    {user.username}
+                    {user.username || 'Loading...'}
                   </div>
                 )}
               </div>
@@ -427,7 +524,7 @@ const UserProfilePage = () => {
                   <h3 className="section-title">Email Address</h3>
                   <p className="section-description">Your email address for notifications and login</p>
                 </div>
-                {!editMode.email && (
+                {!editMode.email && !pendingEmailChange && (
                   <button
                     className="edit-button"
                     onClick={() => toggleEditMode('email')}
@@ -439,7 +536,43 @@ const UserProfilePage = () => {
               </div>
               
               <div className="section-content">
-                {editMode.email ? (
+                {pendingEmailChange ? (
+                  <div className="pending-email-change">
+                    <div className="current-email">
+                      <strong>Current:</strong> {user.email}
+                    </div>
+                    <div className="pending-email">
+                      <strong>Pending:</strong> {pendingEmailChange.new_email}
+                      <span className="pending-badge">Verification Required</span>
+                    </div>
+                    <div className="pending-info">
+                      <p>A verification email has been sent to <strong>{pendingEmailChange.new_email}</strong>.</p>
+                      <p>Please check your email and click the verification link to complete the change.</p>
+                      <small>
+                        Request expires: {new Date(pendingEmailChange.verification_expires).toLocaleString()}
+                      </small>
+                    </div>
+                    <div className="pending-actions">
+                      <button
+                        className="cancel-button"
+                        onClick={cancelEmailChange}
+                        disabled={loading.email}
+                      >
+                        {loading.email ? (
+                          <>
+                            <span className="spinner"></span>
+                            Cancelling...
+                          </>
+                        ) : (
+                          <>
+                            <FaTimes />
+                            Cancel Request
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                ) : editMode.email ? (
                   <div className="edit-form">
                     <div className="input-group">
                       <input
@@ -466,12 +599,12 @@ const UserProfilePage = () => {
                         {loading.email ? (
                           <>
                             <span className="spinner"></span>
-                            Saving...
+                            Sending...
                           </>
                         ) : (
                           <>
                             <FaSave />
-                            Save
+                            Send Verification
                           </>
                         )}
                       </button>
@@ -487,7 +620,7 @@ const UserProfilePage = () => {
                   </div>
                 ) : (
                   <div className="display-value">
-                    {user.email}
+                    {user.email || 'Loading...'}
                   </div>
                 )}
               </div>

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { authApi } from '../services/api';
 
 interface User {
   id: string;
@@ -16,6 +17,7 @@ interface AuthState {
   logout: () => void;
   setLoading: (loading: boolean) => void;
   checkAuthStatus: () => Promise<void>;
+  refreshUserData: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -83,6 +85,55 @@ export const useAuthStore = create<AuthState>()(
         } catch (error) {
           console.error('Auth check failed:', error);
           set({ user: null, isAuthenticated: false, isLoading: false });
+        }
+      },
+
+      refreshUserData: async () => {
+        try {
+          // Use the authApi instead of direct fetch for consistency
+          const userData = await authApi.getCurrentUser();
+          console.log('Fetched user data:', userData);
+          
+          if (userData.user) {
+            set({ 
+              user: userData.user, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+          } else if (userData.id) {
+            // If the response structure is different
+            set({ 
+              user: userData, 
+              isAuthenticated: true, 
+              isLoading: false 
+            });
+          }
+        } catch (error) {
+          console.error('Error refreshing user data:', error);
+          // Try fallback to verify endpoint if getCurrentUser fails
+          try {
+            const verifyResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/verify`, {
+              method: 'GET',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+              }
+            });
+            
+            if (verifyResponse.ok) {
+              const verifyData = await verifyResponse.json();
+              console.log('Verify endpoint data:', verifyData);
+              if (verifyData.user) {
+                set({ 
+                  user: verifyData.user, 
+                  isAuthenticated: true, 
+                  isLoading: false 
+                });
+              }
+            }
+          } catch (fallbackError) {
+            console.error('Fallback verify endpoint also failed:', fallbackError);
+          }
         }
       },
     }),

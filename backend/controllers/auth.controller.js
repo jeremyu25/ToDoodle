@@ -428,22 +428,67 @@ const updateEmail = async (req, res) => {
             return res.status(400).json({ message: "Email must be less than 100 characters" })
         }
 
-        // Check if email is already taken
+        // Get current user info
+        const currentUser = await AuthModel.getUserById(req.user.id)
+        if (!currentUser) {
+            return res.status(404).json({ message: "Current user not found" })
+        }
+
+        // Check if email is the same as current
+        if (email === currentUser.email) {
+            return res.status(400).json({ message: "New email must be different from current email" })
+        }
+
+        // Check if email is already taken by another user
         const existingUser = await AuthModel.getUserByEmail(email)
         if (existingUser && existingUser.id !== userId) {
             return res.status(409).json({ message: "Email is already taken" })
         }
 
-        // Update email
-        const updatedUser = await AuthModel.updateEmail(userId, email)
+        // Create pending email change request
+        const pendingChange = await AuthModel.createPendingEmailChange(userId, currentUser.email, email)
+        
+        // Send verification email to NEW email address
+        const verificationUrl = `${process.env.CLIENT_URL}/verify-email-change?token=${pendingChange.verification_token}`
+        
+        await sendEmail(
+            email,
+            'Verify Your New Email Address - ToDoodle',
+            `Please click the following link to verify your new email address: ${verificationUrl}`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #A8BBA0;">Email Address Change Verification</h2>
+                <p>You have requested to change your email address on ToDoodle.</p>
+                <p><strong>Current email:</strong> ${currentUser.email}</p>
+                <p><strong>New email:</strong> ${email}</p>
+                <p>Please click the button below to verify your new email address and complete the change:</p>
+                <p style="margin: 30px 0;">
+                    <a href="${verificationUrl}" 
+                       style="background-color: #A8BBA0; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Verify New Email Address
+                    </a>
+                </p>
+                <p style="color: #667; font-size: 14px;">
+                    If the button doesn't work, copy and paste this link into your browser:<br>
+                    <a href="${verificationUrl}">${verificationUrl}</a>
+                </p>
+                <p style="color: #667; font-size: 14px;">
+                    This verification link will expire in 10 minutes.
+                </p>
+                <p style="color: #667; font-size: 14px;">
+                    If you did not request this email change, please ignore this email.
+                </p>
+            </div>
+            `
+        )
         
         res.status(200).json({
-            message: "Email updated successfully",
-            user: updatedUser
+            message: "Verification email sent to your new email address. Please check your email to complete the change.",
+            newEmail: email
         })
     } catch (error) {
         console.error("Update email error:", error.message)
-        return res.status(500).json({ message: "Error updating email" })
+        return res.status(500).json({ message: "Error initiating email change" })
     }
 }
 
@@ -505,6 +550,117 @@ const updatePassword = async (req, res) => {
     }
 }
 
+const verifyEmailChange = async (req, res) => {
+    try {
+        const { token } = req.query
+        
+        if (!token) {
+            return res.status(400).json({ message: "Email change verification token is required" })
+        }
+
+        // Verify email change
+        const result = await AuthModel.verifyEmailChange(token)
+        
+        // Send notification email to the OLD email address
+        await sendEmail(
+            result.oldEmail,
+            'Email Address Changed - ToDoodle',
+            `Your email address has been successfully changed from ${result.oldEmail} to ${result.newEmail}.`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #A8BBA0;">Email Address Changed</h2>
+                <p>This is to notify you that your email address on ToDoodle has been successfully changed.</p>
+                <p><strong>Previous email:</strong> ${result.oldEmail}</p>
+                <p><strong>New email:</strong> ${result.newEmail}</p>
+                <p><strong>Changed on:</strong> ${new Date().toLocaleString()}</p>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <p style="margin: 0; color: #66; font-size: 14px;">
+                        <strong>Security Notice:</strong> If you did not make this change, please contact our support team immediately.
+                    </p>
+                </div>
+                <p style="color: #667; font-size: 14px;">
+                    You will now need to use your new email address (${result.newEmail}) to sign in to your account.
+                </p>
+            </div>
+            `
+        )
+        
+        res.status(200).json({ 
+            message: "Email address changed successfully! A notification has been sent to your previous email address.",
+            user: result.user
+        })
+    } catch (error) {
+        console.error("Email change verification error:", error.message)
+        if (error.message.includes("Invalid or expired")) {
+            return res.status(400).json({ message: "Invalid or expired email change verification token" })
+        }
+        return res.status(500).json({ message: "Error verifying email change" })
+    }
+}
+
+const getPendingEmailChange = async (req, res) => {
+    try {
+        const userId = req.user.id
+        
+        const pendingChange = await AuthModel.getPendingEmailChange(userId)
+        
+        if (!pendingChange) {
+            return res.status(404).json({ message: "No pending email change found" })
+        }
+
+        // Don't send the verification token to the client
+        const { verification_token, ...safePendingChange } = pendingChange
+        
+        res.status(200).json({
+            pendingChange: safePendingChange
+        })
+    } catch (error) {
+        console.error("Get pending email change error:", error.message)
+        return res.status(500).json({ message: "Error fetching pending email change" })
+    }
+}
+
+const cancelPendingEmailChange = async (req, res) => {
+    try {
+        const userId = req.user.id
+        
+        const cancelledChange = await AuthModel.cancelPendingEmailChange(userId)
+        
+        if (!cancelledChange) {
+            return res.status(404).json({ message: "No pending email change found to cancel" })
+        }
+        
+        res.status(200).json({
+            message: "Email change request cancelled successfully"
+        })
+    } catch (error) {
+        console.error("Cancel pending email change error:", error.message)
+        return res.status(500).json({ message: "Error cancelling email change" })
+    }
+}
+
+const getCurrentUser = async (req, res) => {
+    try {
+        // The verifyToken middleware already verified the token and set req.user with basic info
+        // Now fetch the complete user data from the database
+        const userId = req.user.id
+        
+        const user = await AuthModel.getUserById(userId)
+        
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+        
+        res.status(200).json({
+            success: true,
+            user: user
+        })
+    } catch (error) {
+        console.error("Get current user error:", error.message)
+        return res.status(500).json({ message: "Error fetching user data" })
+    }
+}
+
 export default {
     signUp,
     signIn,
@@ -516,5 +672,9 @@ export default {
     resendVerification,
     updateUsername,
     updateEmail,
-    updatePassword
+    updatePassword,
+    verifyEmailChange,
+    getPendingEmailChange,
+    cancelPendingEmailChange,
+    getCurrentUser
 }

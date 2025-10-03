@@ -267,4 +267,40 @@ export const authApi = {
     });
     return handleResponse(response);
   },
+
+  // Verify email change with token
+  verifyEmailChange: async (token: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-email-change?token=${token}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Get pending email change
+  getPendingEmailChange: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/pending-email-change`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Cancel pending email change
+  cancelPendingEmailChange: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/pending-email-change`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Get current user data
+  getCurrentUser: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/user`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
 };
