@@ -419,6 +419,14 @@ const updateEmail = async (req, res) => {
             return res.status(403).json({ message: "You are not authorized to update this account" })
         }
 
+        // Check if user has local auth before allowing email change
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        const hasLocalAuth = authMethods.some(method => method.provider === 'local')
+        
+        if (!hasLocalAuth) {
+            return res.status(400).json({ message: "You must add a password to your account before changing your email address" })
+        }
+
         // Validate email
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             return res.status(400).json({ message: "Please enter a valid email address" })

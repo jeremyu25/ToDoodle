@@ -278,6 +278,12 @@ const UserProfilePage = () => {
       return
     }
 
+    // Check if user has local auth before allowing email change
+    if (!userHasLocalAuth) {
+      showError('You must add a password to your account before changing your email address.')
+      return
+    }
+
     const validationErrors = validateEmail(formData.email)
     if (validationErrors.length > 0) {
       showError(validationErrors)
@@ -580,9 +586,14 @@ const UserProfilePage = () => {
                 </div>
                 <div className="section-info">
                   <h3 className="section-title">Email Address</h3>
-                  <p className="section-description">Your email address for notifications and login</p>
+                  <p className="section-description">
+                    {!userHasLocalAuth 
+                      ? "Your email address for notifications and login (requires password to change)"
+                      : "Your email address for notifications and login"
+                    }
+                  </p>
                 </div>
-                {!editMode.email && !pendingEmailChange && (
+                {!editMode.email && !pendingEmailChange && userHasLocalAuth && (
                   <button
                     className="edit-button"
                     onClick={() => toggleEditMode('email')}
@@ -679,6 +690,11 @@ const UserProfilePage = () => {
                 ) : (
                   <div className="display-value">
                     {user.email || 'Loading...'}
+                    {!userHasLocalAuth && (
+                      <div className="display-value-italic">
+                        Add a password to enable email changes
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

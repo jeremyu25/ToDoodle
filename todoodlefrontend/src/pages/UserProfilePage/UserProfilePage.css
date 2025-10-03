@@ -235,6 +235,13 @@
   font-weight: 500;
 }
 
+.display-value-italic {
+  margin-top: 8px;
+  font-size: 14px; 
+  color: #667;
+  font-style: italic;
+}
+
 /* Edit Form */
 .edit-form {
   display: flex;
