@@ -777,7 +777,7 @@ const UserProfilePage = () => {
                           />
                           <button
                             type="button"
-                            className="eye-icon"
+                            className="eye-icon-profile"
                             onClick={() => togglePasswordVisibility('current')}
                           >
                             {showPasswords.current ? <FaEye /> : <FaEyeSlash />}
@@ -797,7 +797,7 @@ const UserProfilePage = () => {
                           />
                           <button
                             type="button"
-                            className="eye-icon"
+                            className="eye-icon-profile"
                             onClick={() => togglePasswordVisibility('newAndConfirm')}
                           >
                             {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
@@ -824,7 +824,7 @@ const UserProfilePage = () => {
                           />
                           <button
                             type="button"
-                            className="eye-icon"
+                            className="eye-icon-profile"
                             onClick={() => togglePasswordVisibility('newAndConfirm')}
                           >
                             {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
@@ -923,7 +923,7 @@ const UserProfilePage = () => {
                           />
                           <button
                             type="button"
-                            className="eye-icon"
+                            className="eye-icon-profile"
                             onClick={() => togglePasswordVisibility('newAndConfirm')}
                           >
                             {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}
@@ -950,7 +950,7 @@ const UserProfilePage = () => {
                           />
                           <button
                             type="button"
-                            className="eye-icon"
+                            className="eye-icon-profile"
                             onClick={() => togglePasswordVisibility('newAndConfirm')}
                           >
                             {showPasswords.newAndConfirm ? <FaEye /> : <FaEyeSlash />}

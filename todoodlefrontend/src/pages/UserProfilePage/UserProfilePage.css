@@ -306,7 +306,7 @@
   padding-right: 3rem;
 }
 
-.eye-icon {
+.eye-icon-profile {
   position: absolute;
   right: 1rem;
   top: 0;
@@ -323,7 +323,7 @@
   transition: all 0.2s ease;
 }
 
-.eye-icon:hover {
+.eye-icon-profile:hover {
   color: var(--color-primary);
   background: rgba(168, 187, 160, 0.1);
 }
