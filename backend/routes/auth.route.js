@@ -27,6 +27,7 @@ router.get("/login-failure", (req, res) => {
 router.patch("/update-username", verifyToken, authController.updateUsername)
 router.patch("/update-password", verifyToken, authController.updatePassword)
 router.post("/add-local-password", verifyToken, authController.addLocalPassword)
+router.delete("/remove-oauth-method", verifyToken, authController.removeOAuthMethod)
 router.patch("/update-email", verifyToken, authController.updateEmail)
 router.get("/verify-email-change", authController.verifyEmailChange)
 router.get("/pending-email-change", verifyToken, authController.getPendingEmailChange)

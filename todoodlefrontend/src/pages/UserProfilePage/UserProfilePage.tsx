@@ -44,7 +44,7 @@ const useMessages = () => {
 const UserProfilePage = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, logout, refreshUserData, hasLocalAuth } = useAuthStore()
+  const { user, logout, refreshUserData, hasLocalAuth, authMethods } = useAuthStore()
   const { errors, success, showError, showSuccess, clearMessages } = useMessages()
   
   // Form states
@@ -76,8 +76,9 @@ const UserProfilePage = () => {
     email: false,
     password: false,
     addPassword: false,
-    delete: false
-  })
+    delete: false,
+    google: false, // Add specific OAuth providers as needed
+  } as Record<string, boolean>)
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
@@ -391,6 +392,46 @@ const UserProfilePage = () => {
       showError(error instanceof Error ? error.message : 'Failed to add password')
     } finally {
       setLoading(prev => ({ ...prev, addPassword: false }))
+    }
+  }
+
+  const removeOAuthMethod = async (provider: string) => {
+    if (!user) {
+      showError('User not found')
+      return
+    }
+
+    if (!authMethods) {
+      showError('Unable to determine authentication methods')
+      return
+    }
+
+    // Check if this is the only auth method
+    if (authMethods.length <= 1) {
+      showError('Cannot remove your only authentication method')
+      return
+    }
+
+    // Confirm the action
+    const confirmed = window.confirm(
+      `Are you sure you want to remove ${provider} authentication? You will no longer be able to sign in using ${provider}.`
+    )
+    
+    if (!confirmed) return
+
+    setLoading(prev => ({ ...prev, [provider]: true }))
+    try {
+      await authApi.removeOAuthMethod(provider)
+      
+      showSuccess(`${provider} authentication removed successfully`)
+      
+      // Refresh user data to update auth methods
+      await refreshUserData()
+      
+    } catch (error) {
+      showError(error instanceof Error ? error.message : `Failed to remove ${provider} authentication`)
+    } finally {
+      setLoading(prev => ({ ...prev, [provider]: false }))
     }
   }
 
@@ -964,6 +1005,78 @@ const UserProfilePage = () => {
                 </div>
               </div>
             )}
+
+            {/* Authentication Methods Management */}
+            <div className="profile-section">
+              <div className="section-header">
+                <div className="section-icon">
+                  <FaLock />
+                </div>
+                <div className="section-info">
+                  <h3 className="section-title">Authentication Methods</h3>
+                  <p className="section-description">Manage how you sign in to your account</p>
+                </div>
+              </div>
+              
+              <div className="section-content">
+                <div className="auth-methods-list">
+                  {authMethods?.map((method) => (
+                    <div key={method.provider} className="auth-method-item" style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '12px',
+                      border: '1px solid #e1e5e9',
+                      borderRadius: '6px',
+                      marginBottom: '8px'
+                    }}>
+                      <div className="auth-method-info">
+                        <span className="auth-method-provider" style={{ fontWeight: 'bold' }}>
+                          {method.provider === 'local' ? 'Password' : method.provider.charAt(0).toUpperCase() + method.provider.slice(1)}
+                        </span>
+                        <span style={{ color: '#666', fontSize: '14px', marginLeft: '8px' }}>
+                          {method.provider === 'local' 
+                            ? 'Username/Email and password'
+                            : `OAuth via ${method.provider}`
+                          }
+                        </span>
+                      </div>
+                      {authMethods && authMethods.length > 1 && method.provider !== 'local' && (
+                        <button
+                          className="remove-auth-button"
+                          onClick={() => removeOAuthMethod(method.provider)}
+                          disabled={loading[method.provider as keyof typeof loading]}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          {loading[method.provider as keyof typeof loading] ? 'Removing...' : 'Remove'}
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {(!authMethods || authMethods.length === 0) && (
+                    <div style={{ color: '#666', fontStyle: 'italic' }}>
+                      Loading authentication methods...
+                    </div>
+                  )}
+                </div>
+                
+                <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
+                  <div style={{ fontSize: '14px', color: '#666' }}>
+                    <strong>Security Note:</strong> When you change your email address, consider whether you want to keep OAuth methods 
+                    that were originally linked to your old email address. You can remove them here for enhanced security.
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Danger Zone */}
             <div className="profile-section danger-section">

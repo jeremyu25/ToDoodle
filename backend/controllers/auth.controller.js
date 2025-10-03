@@ -742,6 +742,48 @@ const addLocalPassword = async (req, res) => {
     }
 }
 
+const removeOAuthMethod = async (req, res) => {
+    try {
+        const { provider } = req.body
+        const userId = req.user.id
+        
+        if (!provider) {
+            return res.status(400).json({ message: "Provider is required" })
+        }
+
+        // Don't allow removing local auth if it's the only auth method
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        const hasLocal = authMethods.some(method => method.provider === 'local')
+        const oauthMethods = authMethods.filter(method => method.provider !== 'local')
+        
+        if (provider === 'local') {
+            if (oauthMethods.length === 0) {
+                return res.status(400).json({ message: "Cannot remove local authentication - it's your only login method" })
+            }
+        } else {
+            // Removing OAuth method - make sure it exists
+            const hasThisOAuth = authMethods.some(method => method.provider === provider)
+            if (!hasThisOAuth) {
+                return res.status(404).json({ message: "OAuth method not found" })
+            }
+        }
+
+        // Remove the auth method
+        const removedMethod = await AuthModel.removeAuthMethod(userId, provider)
+        
+        if (!removedMethod) {
+            return res.status(404).json({ message: "Authentication method not found" })
+        }
+        
+        res.status(200).json({
+            message: `${provider} authentication removed successfully`
+        })
+    } catch (error) {
+        console.error("Remove OAuth method error:", error.message)
+        return res.status(500).json({ message: "Error removing authentication method" })
+    }
+}
+
 export default {
     signUp,
     signIn,
@@ -759,5 +801,6 @@ export default {
     cancelPendingEmailChange,
     getCurrentUser,
     getUserAuthMethods,
-    addLocalPassword
+    addLocalPassword,
+    removeOAuthMethod
 }

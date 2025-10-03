@@ -354,6 +354,22 @@ const getUserAuthMethods = async (userId) => {
   }
 }
 
+// Function to remove a specific auth method
+const removeAuthMethod = async (userId, provider) => {
+  try {
+    const results = await query(
+      `DELETE FROM auth_identities 
+       WHERE user_id = $1 AND provider = $2 
+       RETURNING provider`,
+      [userId, provider]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error removing auth method:", error.message)
+    throw new Error("DB error while removing auth method.")
+  }
+}
+
 // Get user by username
 const getUserByUsername = async (username) => {
   try {
@@ -616,6 +632,7 @@ export default {
   createOAuthUser,
   linkAuthProvider,
   getUserAuthMethods,
+  removeAuthMethod,
   createStagingUser,
   verifyEmailAndCreateUser,
   getStagingUserByEmail,
