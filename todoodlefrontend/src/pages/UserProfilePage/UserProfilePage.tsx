@@ -1006,7 +1006,6 @@ const UserProfilePage = () => {
               </div>
             )}
 
-            {/* Authentication Methods Management */}
             <div className="profile-section">
               <div className="section-header">
                 <div className="section-icon">
@@ -1021,20 +1020,12 @@ const UserProfilePage = () => {
               <div className="section-content">
                 <div className="auth-methods-list">
                   {authMethods?.map((method) => (
-                    <div key={method.provider} className="auth-method-item" style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '12px',
-                      border: '1px solid #e1e5e9',
-                      borderRadius: '6px',
-                      marginBottom: '8px'
-                    }}>
+                    <div key={method.provider} className="auth-method-item">
                       <div className="auth-method-info">
-                        <span className="auth-method-provider" style={{ fontWeight: 'bold' }}>
+                        <span className="auth-method-provider">
                           {method.provider === 'local' ? 'Password' : method.provider.charAt(0).toUpperCase() + method.provider.slice(1)}
                         </span>
-                        <span style={{ color: '#666', fontSize: '14px', marginLeft: '8px' }}>
+                        <span className="auth-method-description">
                           {method.provider === 'local' 
                             ? 'Username/Email and password'
                             : `OAuth via ${method.provider}`
@@ -1046,15 +1037,6 @@ const UserProfilePage = () => {
                           className="remove-auth-button"
                           onClick={() => removeOAuthMethod(method.provider)}
                           disabled={loading[method.provider as keyof typeof loading]}
-                          style={{
-                            padding: '6px 12px',
-                            backgroundColor: '#dc3545',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            fontSize: '12px'
-                          }}
                         >
                           {loading[method.provider as keyof typeof loading] ? 'Removing...' : 'Remove'}
                         </button>
@@ -1063,14 +1045,14 @@ const UserProfilePage = () => {
                   ))}
                   
                   {(!authMethods || authMethods.length === 0) && (
-                    <div style={{ color: '#666', fontStyle: 'italic' }}>
+                    <div className="auth-methods-loading">
                       Loading authentication methods...
                     </div>
                   )}
                 </div>
                 
-                <div style={{ marginTop: '16px', padding: '12px', backgroundColor: '#f8f9fa', borderRadius: '6px' }}>
-                  <div style={{ fontSize: '14px', color: '#666' }}>
+                <div className="auth-methods-security-note">
+                  <div className="auth-methods-security-note-text">
                     <strong>Security Note:</strong> When you change your email address, consider whether you want to keep OAuth methods 
                     that were originally linked to your old email address. You can remove them here for enhanced security.
                   </div>
