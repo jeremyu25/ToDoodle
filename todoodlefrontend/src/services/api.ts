@@ -228,4 +228,114 @@ export const authApi = {
     });
     return handleResponse(response);
   },
+
+  // Update username (placeholder - needs backend implementation)
+  updateUsername: async (userId: string, username: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/update-username`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, username }),
+    });
+    return handleResponse(response);
+  },
+
+  // Update email (placeholder - needs backend implementation)
+  updateEmail: async (userId: string, email: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/update-email`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, email }),
+    });
+    return handleResponse(response);
+  },
+
+  // Update password (placeholder - needs backend implementation)
+  updatePassword: async (userId: string, currentPassword: string, newPassword: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/update-password`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ userId, currentPassword, newPassword }),
+    });
+    return handleResponse(response);
+  },
+
+  // Verify email change with token
+  verifyEmailChange: async (token: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/verify-email-change?token=${token}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Get pending email change
+  getPendingEmailChange: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/pending-email-change`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Cancel pending email change
+  cancelPendingEmailChange: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/pending-email-change`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Get current user data
+  getCurrentUser: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/user`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Get user authentication methods
+  getUserAuthMethods: async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/user/auth-methods`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+    return handleResponse(response);
+  },
+
+  // Add local password for OAuth users
+  addLocalPassword: async (password: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/add-local-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ password }),
+    });
+    return handleResponse(response);
+  },
+
+  // Remove OAuth authentication method
+  removeOAuthMethod: async (provider: string) => {
+    const response = await fetch(`${API_BASE_URL}/auth/remove-oauth-method`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ provider }),
+    });
+    return handleResponse(response);
+  },
 };

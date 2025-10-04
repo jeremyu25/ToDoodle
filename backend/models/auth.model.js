@@ -361,6 +361,274 @@ const getUserAuthMethods = async (userId) => {
   }
 }
 
+// Function to remove a specific auth method
+const removeAuthMethod = async (userId, provider) => {
+  try {
+    const results = await query(
+      `DELETE FROM auth_identities 
+       WHERE user_id = $1 AND provider = $2 
+       RETURNING provider`,
+      [userId, provider]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error removing auth method:", error.message)
+    throw new Error("DB error while removing auth method.")
+  }
+}
+
+// Get user by username
+const getUserByUsername = async (username) => {
+  try {
+    const results = await query(
+      `SELECT u.id, u.username, u.email 
+       FROM users u WHERE u.username = $1`,
+      [username]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error fetching user by username:", error.message)
+    throw new Error("DB error while fetching user by username.")
+  }
+}
+
+// Get user by ID
+const getUserById = async (userId) => {
+  try {
+    const results = await query(
+      `SELECT u.id, u.username, u.email 
+       FROM users u WHERE u.id = $1`,
+      [userId]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error fetching user by ID:", error.message)
+    throw new Error("DB error while fetching user by ID.")
+  }
+}
+
+// Get user with password for verification
+const getUserWithPassword = async (userId) => {
+  try {
+    const results = await query(
+      `SELECT u.id, u.username, u.email, ai.password_hash 
+       FROM users u
+       LEFT JOIN auth_identities ai ON u.id = ai.user_id AND ai.provider = 'local'
+       WHERE u.id = $1`,
+      [userId]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error fetching user with password:", error.message)
+    throw new Error("DB error while fetching user with password.")
+  }
+}
+
+// Update username
+const updateUsername = async (userId, username) => {
+  try {
+    const results = await query(
+      `UPDATE users SET username = $1 WHERE id = $2 
+       RETURNING id, username, email`,
+      [username, userId]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("User not found.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error updating username:", error.message)
+    throw new Error("DB error while updating username.")
+  }
+}
+
+// Update email
+const updateEmail = async (userId, email) => {
+  try {
+    await query('BEGIN')
+    
+    // Update user email
+    const userResults = await query(
+      `UPDATE users SET email = $1 WHERE id = $2 
+       RETURNING id, username, email`,
+      [email, userId]
+    )
+
+    if (userResults.rows.length === 0) {
+      await query('ROLLBACK')
+      throw new Error("User not found.")
+    }
+
+    // Update auth identity provider_user_id for local accounts
+    await query(
+      `UPDATE auth_identities SET provider_user_id = $1 
+       WHERE user_id = $2 AND provider = 'local'`,
+      [email, userId]
+    )
+
+    await query('COMMIT')
+    return userResults.rows[0]
+  } catch (error) {
+    await query('ROLLBACK')
+    console.error("Error updating email:", error.message)
+    throw new Error("DB error while updating email.")
+  }
+}
+
+// Update password
+const updatePassword = async (userId, hashedPassword) => {
+  try {
+    const results = await query(
+      `UPDATE auth_identities SET password_hash = $1 
+       WHERE user_id = $2 AND provider = 'local'
+       RETURNING user_id`,
+      [hashedPassword, userId]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("Local auth identity not found for user.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error updating password:", error.message)
+    throw new Error("DB error while updating password.")
+  }
+}
+
+// Create pending email change request
+const createPendingEmailChange = async (userId, oldEmail, newEmail) => {
+  try {
+    const verificationToken = crypto.randomBytes(32).toString('hex')
+    const verificationExpires = new Date(Date.now() + TIMEOUT_DURATION)
+
+    const results = await query(
+      `INSERT INTO pending_email_changes(user_id, old_email, new_email, verification_token, verification_expires) 
+       VALUES($1, $2, $3, $4, $5) 
+       ON CONFLICT (user_id) DO UPDATE SET 
+         old_email = EXCLUDED.old_email,
+         new_email = EXCLUDED.new_email,
+         verification_token = EXCLUDED.verification_token,
+         verification_expires = EXCLUDED.verification_expires,
+         created_at = NOW()
+       RETURNING id, user_id, old_email, new_email, verification_token`,
+      [userId, oldEmail, newEmail, verificationToken, verificationExpires]
+    )
+
+    if (results.rows.length === 0) {
+      throw new Error("Unable to create pending email change.")
+    }
+
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error creating pending email change:", error.message)
+    throw new Error("DB error while creating pending email change.")
+  }
+}
+
+// Verify email change and update user's email
+const verifyEmailChange = async (verificationToken) => {
+  try {
+    await query('BEGIN')
+    
+    // Find pending email change by verification token
+    const pendingResult = await query(
+      `SELECT * FROM pending_email_changes 
+       WHERE verification_token = $1 AND verification_expires > NOW()`,
+      [verificationToken]
+    )
+
+    if (pendingResult.rows.length === 0) {
+      await query('ROLLBACK')
+      throw new Error("Invalid or expired email change verification token.")
+    }
+
+    const pendingChange = pendingResult.rows[0]
+    
+    // Update user email
+    const userResults = await query(
+      `UPDATE users SET email = $1 WHERE id = $2 
+       RETURNING id, username, email`,
+      [pendingChange.new_email, pendingChange.user_id]
+    )
+
+    if (userResults.rows.length === 0) {
+      await query('ROLLBACK')
+      throw new Error("User not found.")
+    }
+
+    // Update auth identity provider_user_id for local accounts
+    await query(
+      `UPDATE auth_identities SET provider_user_id = $1 
+       WHERE user_id = $2 AND provider = 'local'`,
+      [pendingChange.new_email, pendingChange.user_id]
+    )
+
+    // Remove the pending email change
+    await query(
+      `DELETE FROM pending_email_changes WHERE id = $1`,
+      [pendingChange.id]
+    )
+
+    await query('COMMIT')
+    return {
+      user: userResults.rows[0],
+      oldEmail: pendingChange.old_email,
+      newEmail: pendingChange.new_email
+    }
+  } catch (error) {
+    await query('ROLLBACK')
+    console.error("Error verifying email change:", error.message)
+    throw error
+  }
+}
+
+// Get pending email change by user ID
+const getPendingEmailChange = async (userId) => {
+  try {
+    const results = await query(
+      `SELECT id, user_id, old_email, new_email, verification_token, verification_expires, created_at
+       FROM pending_email_changes WHERE user_id = $1`,
+      [userId]
+    )
+    return results.rows[0]
+  } catch (error) {
+    console.error("Error fetching pending email change:", error.message)
+    throw new Error("DB error while fetching pending email change.")
+  }
+}
+
+// Cancel pending email change
+const cancelPendingEmailChange = async (userId) => {
+  try {
+    const results = await query(
+      `DELETE FROM pending_email_changes WHERE user_id = $1 
+       RETURNING id, old_email, new_email`,
+      [userId]
+    )
+
+    return results.rows[0] // Will be undefined if no pending change found
+  } catch (error) {
+    console.error("Error canceling pending email change:", error.message)
+    throw new Error("DB error while canceling pending email change.")
+  }
+}
+
+// Clean up expired pending email changes (called by cron job)
+const cleanupExpiredEmailChanges = async () => {
+  try {
+    const result = await query(
+      `DELETE FROM pending_email_changes WHERE verification_expires < NOW() RETURNING id`
+    )
+    return result.rows.length
+  } catch (error) {
+    console.error("Error cleaning up expired email changes:", error.message)
+    throw error
+  }
+}
+
 export default {
   signUp,
   getUser,
@@ -371,9 +639,21 @@ export default {
   createOAuthUser,
   linkAuthProvider,
   getUserAuthMethods,
+  removeAuthMethod,
   createStagingUser,
   verifyEmailAndCreateUser,
   getStagingUserByEmail,
   regenerateVerificationToken,
-  cleanupExpiredStagingUsers
+  cleanupExpiredStagingUsers,
+  getUserByUsername,
+  getUserById,
+  getUserWithPassword,
+  updateUsername,
+  updateEmail,
+  updatePassword,
+  createPendingEmailChange,
+  verifyEmailChange,
+  getPendingEmailChange,
+  cancelPendingEmailChange,
+  cleanupExpiredEmailChanges
 }

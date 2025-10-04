@@ -1,11 +1,17 @@
 import { CronJob } from 'cron'
 import AuthModel from '../models/auth.model.js'
 
-// Function to cleanup expired staging users
+// Function to cleanup expired staging users and email changes
 const cleanupExpiredUsers = async () => {
     try {
-        const cleanedCount = await AuthModel.cleanupExpiredStagingUsers()
-        console.log(`🧹 Cleanup job ran at ${new Date().toISOString()} - Cleaned up ${cleanedCount} expired staging users`)
+        const [cleanedStagingUsers, cleanedEmailChanges] = await Promise.all([
+            AuthModel.cleanupExpiredStagingUsers(),
+            AuthModel.cleanupExpiredEmailChanges()
+        ])
+        
+        console.log(`🧹 Cleanup job ran at ${new Date().toISOString()}`)
+        console.log(`   - Cleaned up ${cleanedStagingUsers} expired staging users`)
+        console.log(`   - Cleaned up ${cleanedEmailChanges} expired email changes`)
     } catch (error) {
         console.error('❌ Error in cleanup job:', error.message)
     }
