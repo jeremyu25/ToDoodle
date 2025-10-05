@@ -368,6 +368,425 @@ const resendVerification = async (req, res) => {
     }
 }
 
+const updateUsername = async (req, res) => {
+    try {
+        const { userId, username } = req.body
+        
+        if (!userId || !username) {
+            return res.status(400).json({ message: "User ID and username are required" })
+        }
+
+        // Check if user is authorized to update this account
+        if (req.user.id !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this account" })
+        }
+
+        // Validate username
+        if (username.length < 3 || username.length > 100) {
+            return res.status(400).json({ message: "Username must be between 3 and 100 characters" })
+        }
+
+        if (!/^[a-zA-Z0-9]+$/.test(username)) {
+            return res.status(400).json({ message: "Username must contain only letters and numbers" })
+        }
+
+        // Check if username is already taken
+        const existingUser = await AuthModel.getUserByUsername(username)
+        if (existingUser && existingUser.id !== userId) {
+            return res.status(409).json({ message: "Username is already taken" })
+        }
+
+        // Update username
+        const updatedUser = await AuthModel.updateUsername(userId, username)
+        
+        res.status(200).json({
+            message: "Username updated successfully",
+            user: updatedUser
+        })
+    } catch (error) {
+        console.error("Update username error:", error.message)
+        return res.status(500).json({ message: "Error updating username" })
+    }
+}
+
+const updateEmail = async (req, res) => {
+    try {
+        const { userId, email } = req.body
+        
+        if (!userId || !email) {
+            return res.status(400).json({ message: "User ID and email are required" })
+        }
+
+        // Check if user is authorized to update this account
+        if (req.user.id !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this account" })
+        }
+
+        // Check if user has local auth before allowing email change
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        const hasLocalAuth = authMethods.some(method => method.provider === 'local')
+        
+        if (!hasLocalAuth) {
+            return res.status(400).json({ message: "You must add a password to your account before changing your email address" })
+        }
+
+        // Validate email
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return res.status(400).json({ message: "Please enter a valid email address" })
+        }
+
+        if (email.length > 100) {
+            return res.status(400).json({ message: "Email must be less than 100 characters" })
+        }
+
+        // Get current user info
+        const currentUser = await AuthModel.getUserById(req.user.id)
+        if (!currentUser) {
+            return res.status(404).json({ message: "Current user not found" })
+        }
+
+        // Check if email is the same as current
+        if (email === currentUser.email) {
+            return res.status(400).json({ message: "New email must be different from current email" })
+        }
+
+        // Check if email is already taken by another user
+        const existingUser = await AuthModel.getUserByEmail(email)
+        if (existingUser && existingUser.id !== userId) {
+            return res.status(409).json({ message: "Email is already taken" })
+        }
+
+        // Create pending email change request
+        const pendingChange = await AuthModel.createPendingEmailChange(userId, currentUser.email, email)
+        
+        // Send verification email to NEW email address
+        const verificationUrl = `${process.env.CLIENT_URL}/verify-email-change?token=${pendingChange.verification_token}`
+        
+        await sendEmail(
+            email,
+            'Verify Your New Email Address - ToDoodle',
+            `Please click the following link to verify your new email address: ${verificationUrl}`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #A8BBA0;">Email Address Change Verification</h2>
+                <p>You have requested to change your email address on ToDoodle.</p>
+                <p><strong>Current email:</strong> ${currentUser.email}</p>
+                <p><strong>New email:</strong> ${email}</p>
+                <p>Please click the button below to verify your new email address and complete the change:</p>
+                <p style="margin: 30px 0;">
+                    <a href="${verificationUrl}" 
+                       style="background-color: #A8BBA0; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+                        Verify New Email Address
+                    </a>
+                </p>
+                <p style="color: #667; font-size: 14px;">
+                    If the button doesn't work, copy and paste this link into your browser:<br>
+                    <a href="${verificationUrl}">${verificationUrl}</a>
+                </p>
+                <p style="color: #667; font-size: 14px;">
+                    This verification link will expire in 10 minutes.
+                </p>
+                <p style="color: #667; font-size: 14px;">
+                    If you did not request this email change, please ignore this email.
+                </p>
+            </div>
+            `
+        )
+        
+        res.status(200).json({
+            message: "Verification email sent to your new email address. Please check your email to complete the change.",
+            newEmail: email
+        })
+    } catch (error) {
+        console.error("Update email error:", error.message)
+        return res.status(500).json({ message: "Error initiating email change" })
+    }
+}
+
+const updatePassword = async (req, res) => {
+    try {
+        const { userId, currentPassword, newPassword } = req.body
+        
+        if (!userId || !currentPassword || !newPassword) {
+            return res.status(400).json({ message: "User ID, current password, and new password are required" })
+        }
+
+        // Check if user is authorized to update this account
+        if (req.user.id !== userId) {
+            return res.status(403).json({ message: "You are not authorized to update this account" })
+        }
+
+        // Validate new password
+        if (newPassword.length < 8 || newPassword.length > 100) {
+            return res.status(400).json({ message: "Password must be between 8 and 100 characters" })
+        }
+
+        if (!/[A-Z]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one uppercase letter" })
+        }
+
+        if (!/[a-z]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one lowercase letter" })
+        }
+
+        if (!/[0-9]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one number" })
+        }
+
+        if (!/[!@#$%^&*]/.test(newPassword)) {
+            return res.status(400).json({ message: "Password must contain at least one special character" })
+        }
+
+        // Verify current password
+        const user = await AuthModel.getUserWithPassword(userId)
+        if (!user || !user.password_hash) {
+            return res.status(404).json({ message: "User not found or invalid account type" })
+        }
+
+        const validPassword = bcryptjs.compareSync(currentPassword, user.password_hash)
+        if (!validPassword) {
+            return res.status(401).json({ message: "Current password is incorrect" })
+        }
+
+        // Hash new password and update
+        const hashedPassword = bcryptjs.hashSync(newPassword, 10)
+        await AuthModel.updatePassword(userId, hashedPassword)
+        
+        res.status(200).json({
+            message: "Password updated successfully"
+        })
+    } catch (error) {
+        console.error("Update password error:", error.message)
+        return res.status(500).json({ message: "Error updating password" })
+    }
+}
+
+const verifyEmailChange = async (req, res) => {
+    try {
+        const { token } = req.query
+        
+        if (!token) {
+            return res.status(400).json({ message: "Email change verification token is required" })
+        }
+
+        // Verify email change
+        const result = await AuthModel.verifyEmailChange(token)
+        
+        // Send notification email to the OLD email address
+        await sendEmail(
+            result.oldEmail,
+            'Email Address Changed - ToDoodle',
+            `Your email address has been successfully changed from ${result.oldEmail} to ${result.newEmail}.`,
+            `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #A8BBA0;">Email Address Changed</h2>
+                <p>This is to notify you that your email address on ToDoodle has been successfully changed.</p>
+                <p><strong>Previous email:</strong> ${result.oldEmail}</p>
+                <p><strong>New email:</strong> ${result.newEmail}</p>
+                <p><strong>Changed on:</strong> ${new Date().toLocaleString()}</p>
+                <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                    <p style="margin: 0; color: #66; font-size: 14px;">
+                        <strong>Security Notice:</strong> If you did not make this change, please contact our support team immediately.
+                    </p>
+                </div>
+                <p style="color: #667; font-size: 14px;">
+                    You will now need to use your new email address (${result.newEmail}) to sign in to your account.
+                </p>
+            </div>
+            `
+        )
+        
+        res.status(200).json({ 
+            message: "Email address changed successfully! A notification has been sent to your previous email address.",
+            user: result.user
+        })
+    } catch (error) {
+        console.error("Email change verification error:", error.message)
+        if (error.message.includes("Invalid or expired")) {
+            return res.status(400).json({ message: "Invalid or expired email change verification token" })
+        }
+        return res.status(500).json({ message: "Error verifying email change" })
+    }
+}
+
+const getPendingEmailChange = async (req, res) => {
+    try {
+        const userId = req.user.id
+        
+        const pendingChange = await AuthModel.getPendingEmailChange(userId)
+        
+        if (!pendingChange) {
+            return res.status(404).json({ message: "No pending email change found" })
+        }
+
+        // Don't send the verification token to the client
+        const { verification_token, ...safePendingChange } = pendingChange
+        
+        res.status(200).json({
+            pendingChange: safePendingChange
+        })
+    } catch (error) {
+        console.error("Get pending email change error:", error.message)
+        return res.status(500).json({ message: "Error fetching pending email change" })
+    }
+}
+
+const cancelPendingEmailChange = async (req, res) => {
+    try {
+        const userId = req.user.id
+        
+        const cancelledChange = await AuthModel.cancelPendingEmailChange(userId)
+        
+        if (!cancelledChange) {
+            return res.status(404).json({ message: "No pending email change found to cancel" })
+        }
+        
+        res.status(200).json({
+            message: "Email change request cancelled successfully"
+        })
+    } catch (error) {
+        console.error("Cancel pending email change error:", error.message)
+        return res.status(500).json({ message: "Error cancelling email change" })
+    }
+}
+
+const getCurrentUser = async (req, res) => {
+    try {
+        // The verifyToken middleware already verified the token and set req.user with basic info
+        // Now fetch the complete user data from the database
+        const userId = req.user.id
+        
+        const user = await AuthModel.getUserById(userId)
+        
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+        
+        res.status(200).json({
+            success: true,
+            user: user
+        })
+    } catch (error) {
+        console.error("Get current user error:", error.message)
+        return res.status(500).json({ message: "Error fetching user data" })
+    }
+}
+
+const getUserAuthMethods = async (req, res) => {
+    try {
+        const userId = req.user.id
+        
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        
+        res.status(200).json({
+            success: true,
+            authMethods: authMethods
+        })
+    } catch (error) {
+        console.error("Get user auth methods error:", error.message)
+        return res.status(500).json({ message: "Error fetching user auth methods" })
+    }
+}
+
+const addLocalPassword = async (req, res) => {
+    try {
+        const { password } = req.body
+        const userId = req.user.id
+        
+        if (!password) {
+            return res.status(400).json({ message: "Password is required" })
+        }
+
+        // Validate password
+        if (password.length < 8 || password.length > 100) {
+            return res.status(400).json({ message: "Password must be between 8 and 100 characters" })
+        }
+
+        if (!/[A-Z]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one uppercase letter" })
+        }
+
+        if (!/[a-z]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one lowercase letter" })
+        }
+
+        if (!/[0-9]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one number" })
+        }
+
+        if (!/[!@#$%^&*]/.test(password)) {
+            return res.status(400).json({ message: "Password must contain at least one special character" })
+        }
+
+        // Check if user already has local auth
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        const hasLocalAuth = authMethods.some(method => method.provider === 'local')
+        
+        if (hasLocalAuth) {
+            return res.status(400).json({ message: "User already has a local password" })
+        }
+
+        // Get user data to use email as provider_user_id
+        const user = await AuthModel.getUserById(userId)
+        if (!user) {
+            return res.status(404).json({ message: "User not found" })
+        }
+
+        // Hash password and create local auth identity
+        const hashedPassword = bcryptjs.hashSync(password, 10)
+        await AuthModel.linkAuthProvider(userId, 'local', user.email, hashedPassword)
+        
+        res.status(200).json({
+            message: "Local password added successfully"
+        })
+    } catch (error) {
+        console.error("Add local password error:", error.message)
+        return res.status(500).json({ message: "Error adding local password" })
+    }
+}
+
+const removeOAuthMethod = async (req, res) => {
+    try {
+        const { provider } = req.body
+        const userId = req.user.id
+        
+        if (!provider) {
+            return res.status(400).json({ message: "Provider is required" })
+        }
+
+        // Don't allow removing local auth if it's the only auth method
+        const authMethods = await AuthModel.getUserAuthMethods(userId)
+        const hasLocal = authMethods.some(method => method.provider === 'local')
+        const oauthMethods = authMethods.filter(method => method.provider !== 'local')
+        
+        if (provider === 'local') {
+            if (oauthMethods.length === 0) {
+                return res.status(400).json({ message: "Cannot remove local authentication - it's your only login method" })
+            }
+        } else {
+            // Removing OAuth method - make sure it exists
+            const hasThisOAuth = authMethods.some(method => method.provider === provider)
+            if (!hasThisOAuth) {
+                return res.status(404).json({ message: "OAuth method not found" })
+            }
+        }
+
+        // Remove the auth method
+        const removedMethod = await AuthModel.removeAuthMethod(userId, provider)
+        
+        if (!removedMethod) {
+            return res.status(404).json({ message: "Authentication method not found" })
+        }
+        
+        res.status(200).json({
+            message: `${provider} authentication removed successfully`
+        })
+    } catch (error) {
+        console.error("Remove OAuth method error:", error.message)
+        return res.status(500).json({ message: "Error removing authentication method" })
+    }
+}
+
 export default {
     signUp,
     signIn,
@@ -376,5 +795,15 @@ export default {
     verifyUser,
     googleCallback,
     verifyEmail,
-    resendVerification
+    resendVerification,
+    updateUsername,
+    updateEmail,
+    updatePassword,
+    verifyEmailChange,
+    getPendingEmailChange,
+    cancelPendingEmailChange,
+    getCurrentUser,
+    getUserAuthMethods,
+    addLocalPassword,
+    removeOAuthMethod
 }

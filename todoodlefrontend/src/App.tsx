@@ -8,6 +8,7 @@ import FeedBackPage from './pages/FeedBackPage/FeedBackPage'
 import UserProfilePage from './pages/UserProfilePage/UserProfilePage'
 import TodoPage from './pages/TodoPage/TodoPage'
 import EmailVerificationPage from './pages/EmailVerificationPage/EmailVerificationPage'
+import EmailChangeVerificationPage from './pages/EmailChangeVerificationPage/EmailChangeVerificationPage'
 import ProtectedRoute from './components/ProtectedRoute/ProtectedRoute'
 import { useAuthStore } from './stores/authStore'
 
@@ -26,6 +27,7 @@ function App() {
         <Route path="/sign_up" element={<UserSignUpPage />} />
         <Route path="/sign_in" element={<UserSignInPage />} />
         <Route path="/verify-email" element={<EmailVerificationPage />} />
+        <Route path="/verify-email-change" element={<EmailChangeVerificationPage />} />
         <Route 
           path="/feedback" 
           element={
