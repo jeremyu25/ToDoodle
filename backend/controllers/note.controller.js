@@ -175,7 +175,7 @@ const updateNoteStatus = async(req, res) => {
  const deleteAllNotes = async(req, res) => {
     try{
         const note = await NoteModel.deleteAllNotes(req.query.user_id)
-        if (note.length === 0) {
+        if (!note || note.length === 0) {
             return res.status(404).json({
                 message: "User doesn't exist, or has no notes."
             })
