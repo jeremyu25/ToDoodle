@@ -110,7 +110,7 @@ const updateNoteTitle = async(req, res) => {
     try{
                 if (!req.query.id || !req.query.title) {
             return res.status(400).json({
-                message: "Note ID and content are required."
+                message: "Note ID and title are required."
             })
         }
         const note = await NoteModel.updateNoteTitle(req.query.id, req.query.title)
