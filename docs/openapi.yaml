@@ -1,7 +1,8 @@
 openapi: 3.0.0
 info:
-  title: Notes API
-  version: 1.0.0
+  title: ToDoodle API
+  version: 2.0.0
+  description: A comprehensive API for managing notes, folders, user authentication, and feedback in the ToDoodle application
 servers:
   - url: http://localhost:3001/api/v1
     description: Local development server
@@ -11,14 +12,17 @@ tags:
   - name: folder
     description: Everything about folders
   - name: auth
-    description: Operations relating to users
+    description: Operations relating to user authentication and account management
+  - name: feedback
+    description: User feedback and support operations
 paths:
   /note:
     get:
       tags:
         - notes
-        
       summary: Get a single note by passing in the note ID
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -79,6 +83,8 @@ paths:
       tags:
         - notes
       summary: Create a new note
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: user_id
@@ -154,6 +160,8 @@ paths:
       tags:
       - notes
       summary: Delete a note
+      security:
+        - cookieAuth: []
       parameters:
         - name: id
           in: query
@@ -196,6 +204,8 @@ paths:
       tags:
         - notes
       summary: Get all notes
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: user_id
@@ -290,6 +300,8 @@ paths:
       tags:
         - notes
       summary: Delete all notes
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: user_id
@@ -350,6 +362,8 @@ paths:
       tags:
         - notes
       summary: Update a note's content
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -408,6 +422,8 @@ paths:
       tags:
         - notes
       summary: Update a note's title
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -465,6 +481,8 @@ paths:
       tags:
       - notes
       summary: Update a note's status
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -522,6 +540,8 @@ paths:
       tags:
         - folder
       summary: Get a single folder by ID
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -581,6 +601,8 @@ paths:
       tags:
         - folder
       summary: Create a new folder
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: user_id
@@ -638,6 +660,8 @@ paths:
       tags:
         - folder
       summary: Delete a single folder
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -681,6 +705,8 @@ paths:
       tags:
         - folder
       summary: Get all folders for a user
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: user_id
@@ -746,6 +772,8 @@ paths:
       tags:
         - folder
       summary: Delete all folders for a user
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: user_id
@@ -801,6 +829,8 @@ paths:
       tags:
         - folder
       summary: Update a folder's name
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -857,6 +887,8 @@ paths:
       tags:
         - folder
       summary: Update a folder's description
+      security:
+        - cookieAuth: []
       parameters:
         - in: query
           name: id
@@ -925,13 +957,19 @@ paths:
     post:
       tags:
         - auth
-      summary: Register a new user
+      summary: Register a new user (requires email verification)
+      description: |
+        Registers a new user and sends an email verification link. The user account will be created in a staging area until email is verified.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - username
+                - password
+                - email
               properties:
                 username:
                   type: string
@@ -940,13 +978,14 @@ paths:
                   type: string
                   format: password
                   example: StrongP@ssw0rd!
+                  description: Password must be 8-100 characters with uppercase, lowercase, number, and special character
                 email:
                   type: string
                   format: email
                   example: johndoe@example.com
       responses:
-        '201':
-          description: User registered successfully
+        '200':
+          description: User registration initiated, verification email sent
           content:
             application/json:
               schema:
@@ -954,23 +993,13 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: User created successfully
-                  data:
-                    type: object
-                    properties:
-                      id:
-                        type: string
-                        format: uuid
-                        example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
-                      username:
-                        type: string
-                        example: "johndoe"
-                      email:
-                        type: string
-                        format: email
-                        example: "johndoe@example.com"
+                    example: Registration successful! Please check your email to verify your account.
+                  email:
+                    type: string
+                    format: email
+                    example: johndoe@example.com
         '400':
-          description: Bad request
+          description: Bad request - Invalid input or password requirements not met
           content:
             application/json:
               schema:
@@ -978,9 +1007,9 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Username, password, and email are required.
+                    example: Username, password, and email are required
         '409':
-          description: Conflict - Username or email already exists
+          description: Conflict - Email already registered or pending verification
           content:
             application/json:
               schema:
@@ -988,7 +1017,7 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Username or email already exists.
+                    example: Email already registered.
         '500':
           description: Internal server error
           content:
@@ -1075,7 +1104,7 @@ paths:
                     type: string
                     example: Either username or email, and password are required
         '401':
-          description: Unauthorized - Invalid credentials
+          description: Unauthorized - Invalid credentials or account issues
           content:
             application/json:
               schema:
@@ -1083,7 +1112,16 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Wrong password entered
+                    example: Wrong Password entered
+              examples:
+                wrongPassword:
+                  summary: Incorrect password
+                  value:
+                    message: "Wrong Password entered"
+                notLocalAccount:
+                  summary: OAuth-only account
+                  value:
+                    message: "This is not a local password account"
         '404':
           description: User not found or credentials don't match
           content:
@@ -1141,6 +1179,8 @@ paths:
       tags:
         - auth
       summary: Verify the JWT token and return user info
+      security:
+        - cookieAuth: []
       responses:
         '200':
           description: Token is valid
@@ -1175,44 +1215,1239 @@ paths:
                   message:
                     type: string
                     example: You are not authenticated!
+        '403':
+          description: Forbidden - Invalid token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Token is not valid!
+  /auth/user:
+    get:
+      tags:
+        - auth
+      summary: Get current authenticated user's complete profile
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/User'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User not found
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error fetching user data
+  /auth/user/auth-methods:
+    get:
+      tags:
+        - auth
+      summary: Get user's available authentication methods
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Authentication methods retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  authMethods:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuthMethod'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error fetching user auth methods
   /auth/delete:
-      delete:
-        tags:
-          - auth
-        summary: Delete the authenticated user's account
-        parameters:
-          - in: query
-            name: id
-            required: true
+    delete:
+      tags:
+        - auth
+      summary: Delete the authenticated user's account
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: User ID to delete
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User deleted successfully
+                  data:
+                    $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden - Cannot delete another user's account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authorized to delete this user
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+  /auth/verify-email:
+    get:
+      tags:
+        - auth
+      summary: Verify email address with verification token
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Email verification token
+      responses:
+        '200':
+          description: Email verified successfully and user signed in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Email verified successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+          headers:
+            Set-Cookie:
+              description: JWT token set in HttpOnly cookie
+              schema:
+                type: string
+                example: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly;
+        '400':
+          description: Bad request - Token required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Verification token is required
+        '404':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid or expired verification token
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error verifying email
+  /auth/resend-verification:
+    post:
+      tags:
+        - auth
+      summary: Resend email verification
+      requestBody:
+        required: true
+        content:
+          application/json:
             schema:
-              type: string
-              format: uuid
-        responses:
-          '200':
-            description: User deleted successfully
-            content:
-              application/json:
-                schema:
-                  type: object
-                  properties:
-                    message:
-                      type: string
-                      example: User deleted successfully
-                    data:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                          format: uuid
-                          example: "2ef2042c-fdcd-4373-856c-db4573b041c2"
-                        username:
-                          type: string
-                          example: "johndoe"
-                        email:
-                          type: string
-                          format: email
-                          example: "johndoe@example.com"
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        '200':
+          description: Verification email sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Verification email sent successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email is required
+        '404':
+          description: User not found in staging
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No pending verification found for this email
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error sending verification email
+  /auth/google:
+    get:
+      tags:
+        - auth
+      summary: Initiate Google OAuth authentication
+      description: Redirects to Google OAuth consent screen
+      responses:
+        '302':
+          description: Redirect to Google OAuth
+  /auth/google/callback:
+    get:
+      tags:
+        - auth
+      summary: Google OAuth callback endpoint
+      description: Handles the callback from Google OAuth and completes authentication
+      parameters:
+        - in: query
+          name: code
+          schema:
+            type: string
+          description: Authorization code from Google
+        - in: query
+          name: state
+          schema:
+            type: string
+          description: State parameter for security
+      responses:
+        '200':
+          description: OAuth authentication successful
+          content:
+            text/html:
+              schema:
+                type: string
+                example: HTML page with JavaScript to handle OAuth completion
+        '401':
+          description: OAuth authentication failed
+          content:
+            text/html:
+              schema:
+                type: string
+                example: HTML page indicating authentication failure
+  /auth/update-username:
+    patch:
+      tags:
+        - auth
+      summary: Update user's username
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - username
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+                username:
+                  type: string
+                  example: "newusername"
+      responses:
+        '200':
+          description: Username updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Username updated successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User ID and username are required
+        '403':
+          description: Forbidden - Cannot update another user's account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authorized to update this account
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Username already exists
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error updating username
+  /auth/update-email:
+    patch:
+      tags:
+        - auth
+      summary: Initiate email change process
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - email
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+                email:
+                  type: string
+                  format: email
+                  example: "newemail@example.com"
+      responses:
+        '200':
+          description: Email change verification sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Verification email sent to your new email address. Please check your email to complete the change.
+                  newEmail:
+                    type: string
+                    format: email
+                    example: "newemail@example.com"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User ID and email are required
+        '403':
+          description: Forbidden - Cannot update another user's account or insufficient authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authorized to update this account
+        '409':
+          description: Email already in use
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email already in use
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error initiating email change
+  /auth/verify-email-change:
+    get:
+      tags:
+        - auth
+      summary: Verify and complete email change
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Email change verification token
+      responses:
+        '200':
+          description: Email changed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email updated successfully
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Bad request - Token required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email change verification token is required
+        '404':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Invalid or expired email change token
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error verifying email change
+  /auth/pending-email-change:
+    get:
+      tags:
+        - auth
+      summary: Get pending email change information
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Pending email change information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasPendingChange:
+                    type: boolean
+                    example: true
+                  newEmail:
+                    type: string
+                    format: email
+                    example: "newemail@example.com"
+                  expiresAt:
+                    type: string
+                    format: date-time
+                    example: "2023-03-16T12:00:00Z"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error fetching pending email change
+    delete:
+      tags:
+        - auth
+      summary: Cancel pending email change
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Email change cancelled successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Email change cancelled successfully
+        '404':
+          description: No pending email change found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: No pending email change found
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error cancelling email change
+  /auth/update-password:
+    patch:
+      tags:
+        - auth
+      summary: Update user's password
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - currentPassword
+                - newPassword
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+                currentPassword:
+                  type: string
+                  format: password
+                  example: "CurrentP@ssw0rd!"
+                newPassword:
+                  type: string
+                  format: password
+                  example: "NewP@ssw0rd!"
+      responses:
+        '200':
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password updated successfully
+        '400':
+          description: Bad request - Invalid password requirements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password must be between 8 and 100 characters
+        '401':
+          description: Current password incorrect
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Current password is incorrect
+        '403':
+          description: Forbidden - Cannot update another user's account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authorized to update this account
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error updating password
+  /auth/add-local-password:
+    post:
+      tags:
+        - auth
+      summary: Add local password authentication for OAuth-only users
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+              properties:
+                password:
+                  type: string
+                  format: password
+                  example: "NewP@ssw0rd!"
+                  description: Password must be 8-100 characters with uppercase, lowercase, number, and special character
+      responses:
+        '200':
+          description: Local password added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Local password authentication added successfully
+        '400':
+          description: Bad request - Invalid password requirements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Password must contain at least one uppercase letter
+        '409':
+          description: User already has local authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User already has local authentication
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error adding local password
+  /auth/remove-oauth-method:
+    delete:
+      tags:
+        - auth
+      summary: Remove OAuth authentication method
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - provider
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+                provider:
+                  type: string
+                  enum: [google, local]
+                  example: "google"
+      responses:
+        '200':
+          description: Authentication method removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: google authentication removed successfully
+        '400':
+          description: Bad request - Cannot remove only authentication method
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Cannot remove local authentication - it's your only login method
+        '403':
+          description: Forbidden - Cannot update another user's account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authorized to update this account
+        '404':
+          description: Authentication method not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Authentication method not found
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: You are not authenticated!
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Error removing authentication method
+  /feedback:
+    get:
+      tags:
+        - feedback
+      summary: Get a single feedback entry by ID
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: id
+          description: The ID of the feedback entry to retrieve
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Feedback retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results_length:
+                    type: integer
+                    example: 1
+                  data:
+                    type: object
+                    properties:
+                      feedbackdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+    post:
+      tags:
+        - feedback
+      summary: Create a new feedback entry
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: title
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: description
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Feedback created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    example: 1
+                  data:
+                    type: object
+                    properties:
+                      feedbackdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+    delete:
+      tags:
+        - feedback
+      summary: Delete a feedback entry
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Feedback deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    example: 1
+                  data:
+                    type: object
+                    properties:
+                      feedbackdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '404':
+          description: Feedback not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User feedback not found.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+  /feedback/all:
+    get:
+      tags:
+        - feedback
+      summary: Get all feedback entries for a user
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of feedback entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results_length:
+                    type: integer
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      feedbackdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+    delete:
+      tags:
+        - feedback
+      summary: Delete all feedback entries for a user
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: user_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: All feedback entries deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      feedbackdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '404':
+          description: No feedback entries found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User has no feedback entries.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+  /feedback/title:
+    patch:
+      tags:
+        - feedback
+      summary: Update a feedback entry's title
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: title
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Feedback title updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    example: 1
+                  data:
+                    type: object
+                    properties:
+                      feedbackdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '404':
+          description: Feedback not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User feedback not found.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
+  /feedback/description:
+    patch:
+      tags:
+        - feedback
+      summary: Update a feedback entry's description
+      security:
+        - cookieAuth: []
+      parameters:
+        - in: query
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: description
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Feedback description updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results_length:
+                    type: integer
+                    example: 1
+                  data:
+                    type: object
+                    properties:
+                      feedbackdata:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Feedback'
+        '404':
+          description: Feedback not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User feedback not found.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal server error
 components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+      description: JWT token stored in HttpOnly cookie
   schemas:
     Note:
       type: object
@@ -1307,3 +2542,56 @@ components:
           type: string
           format: email
           example: "johndoe@example.com"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-03-15T12:00:00Z"
+        email_verified:
+          type: boolean
+          example: true
+        pending_email:
+          type: string
+          format: email
+          nullable: true
+          example: null
+        pending_email_expires:
+          type: string
+          format: date-time
+          nullable: true
+          example: null
+    AuthMethod:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum: [local, google]
+          example: "local"
+        has_password:
+          type: boolean
+          example: true
+          description: "Indicates if the user has a local password (only relevant for local provider)"
+    Feedback:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-abcd-ef0123456789"
+        user_id:
+          type: string
+          format: uuid
+          example: "2ef2042c-fdcd-4377-856c-db4573b041c2"
+        title:
+          type: string
+          example: "Bug Report: Login Issue"
+        description:
+          type: string
+          example: "Unable to login with Google OAuth on mobile devices"
+        created_at:
+          type: string
+          format: date-time
+          example: "2023-03-15T12:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2023-03-15T12:00:00Z"
