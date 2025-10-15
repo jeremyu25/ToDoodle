@@ -1,7 +1,11 @@
 import express from "express"
 import folderController from "../controllers/folder.controller.js"
+import { verifyToken } from "../utils/verify.js"
 
 const router = express.Router()
+
+// Apply authentication middleware to all folder routes
+router.use(verifyToken)
 
 router.get("/", folderController.getFolder)
 router.get("/all", folderController.getAllFolders)
