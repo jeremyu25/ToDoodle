@@ -7,13 +7,19 @@ const signUp = async (req, res) => {
     try {
         const { username, password, email } = req.body
         if (!username || !password || !email) {
-            return res.status(400).json({ message: "Username, password, and email are required" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "Username, password, and email are required" 
+            })
         }
 
         // Check if user already exists in main users table
         const existingUser = await AuthModel.getUserByEmail(email)
         if (existingUser) {
-            return res.status(409).json({ message: "Email already registered." })
+            return res.status(409).json({ 
+                status: "fail",
+                message: "Email already registered." 
+            })
         }
 
         // Check if user already exists in staging table
@@ -22,6 +28,7 @@ const signUp = async (req, res) => {
             // If token is still valid, inform user to check email
             if (new Date() < new Date(existingStagingUser.verification_expires)) {
                 return res.status(409).json({ 
+                    status: "fail",
                     message: "Verification email already sent. Please check your email or request a new verification link." 
                 })
             }
@@ -62,20 +69,35 @@ const signUp = async (req, res) => {
         )
 
         res.status(201).json({ 
+            status: "success",
             message: "Registration successful! Please check your email to verify your account.",
-            email: email
+            data: {
+                email: email
+            }
         })
     } catch (error) {
         switch (error.code) {
             case '23505': // unique_violation
-                return res.status(409).json({ message: "Username or email already exists." })
+                return res.status(409).json({ 
+                    status: "fail",
+                    message: "Username or email already exists." 
+                })
             case '22P02': // invalid_text_representation
-                return res.status(400).json({ message: "Invalid data type provided." })
+                return res.status(400).json({ 
+                    status: "fail",
+                    message: "Invalid data type provided." 
+                })
             case '23514': // check_violation
-                return res.status(400).json({ message: "Data failed a check constraint." })
+                return res.status(400).json({ 
+                    status: "fail",
+                    message: "Data failed a check constraint." 
+                })
             default:
                 console.error("Error creating user in database:", error.message)
-                return res.status(500).json({ message: "DB error while creating user." })
+                return res.status(500).json({ 
+                    status: "error",
+                    message: "DB error while creating user." 
+                })
         }
     }
 }
@@ -85,7 +107,10 @@ const signIn = async (req, res) => {
         const { username, password, email } = req.body
         
         if ((!username && !email) || !password) {
-            return res.status(400).json({message: "Either username or email, and password are required"})
+            return res.status(400).json({
+                status: "fail",
+                message: "Either username or email, and password are required"
+            })
         }
         
         let validUser;
@@ -97,16 +122,25 @@ const signIn = async (req, res) => {
         }
         
         if (!validUser) {
-            return res.status(404).json({message: "User not found or credentials don't match"})
+            return res.status(404).json({
+                status: "fail",
+                message: "User not found or credentials don't match"
+            })
         }
 
         if (!validUser.password_hash) {
-            return res.status(401).json({message: "This is not a local password account"})
+            return res.status(401).json({
+                status: "fail",
+                message: "This is not a local password account"
+            })
         }
 
         const validPassword = bcryptjs.compareSync(password, validUser.password_hash)
         if (!validPassword) {
-            return res.status(401).json({message: "Wrong Password entered"})
+            return res.status(401).json({
+                status: "fail",
+                message: "Wrong Password entered"
+            })
         }
         const token = jwt.sign({id: validUser.id}, process.env.JWT_SECRET)
         const {password_hash, ...rest} = validUser
@@ -115,21 +149,32 @@ const signIn = async (req, res) => {
             .cookie("access_token", token, {httpOnly: true, expires: expiryDate})
             .status(200)
             .json({
-                success: true,
-                user: rest
+                status: "success",
+                data: {
+                    user: rest
+                }
             })
     }
     catch (error) {
-        return res.status(500).json({ message: error.message })
+        return res.status(500).json({ 
+            status: "error",
+            message: error.message 
+        })
     }
 }
 
 const signOut = async (req, res) => {
     try {
         res.clearCookie("access_token")
-        res.status(200).json({ message: "User signed out successfully" })
+        res.status(200).json({ 
+            status: "success",
+            message: "User signed out successfully" 
+        })
     } catch (error) {
-        return res.status(500).json({ message: error.message })
+        return res.status(500).json({ 
+            status: "error",
+            message: error.message 
+        })
     }
 }
 
@@ -138,28 +183,42 @@ const verifyUser = async (req, res) => {
         // The verifyToken middleware already verified the token and set req.user
         // We just need to return success
         res.status(200).json({ 
-            success: true, 
+            status: "success",
             message: "User is authenticated",
-            user: req.user
+            data: {
+                user: req.user
+            }
         })
     } catch (error) {
-        return res.status(500).json({ message: error.message })
+        return res.status(500).json({ 
+            status: "error",
+            message: error.message 
+        })
     }
 }
 
 
 const deleteUser = async (req, res) => {
-    if (req.user.id !== req.query.id) {
-        return res.status(403).json({message: "You are not authorized to delete this user"})
+    const { id } = req.params;
+    
+    if (req.user.id !== id) {
+        return res.status(403).json({
+            status: "fail",
+            message: "You are not authorized to delete this user"
+        })
     }
     try {
-        const results = await AuthModel.deleteUser(req.query.id)
+        const results = await AuthModel.deleteUser(id)
         return res.status(200).json({
+            status: "success",
             message: "User deleted successfully",
             data: results
         })
     } catch (error) {
-        return res.status(500).json({ message: error.message })
+        return res.status(500).json({ 
+            status: "error",
+            message: error.message 
+        })
     }
 }
 
@@ -285,7 +344,10 @@ const verifyEmail = async (req, res) => {
         const { token } = req.query
         
         if (!token) {
-            return res.status(400).json({ message: "Verification token is required" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "Verification token is required" 
+            })
         }
 
         // Verify email and create user
@@ -298,15 +360,24 @@ const verifyEmail = async (req, res) => {
         res.cookie("access_token", authToken, {httpOnly: true, expires: expiryDate})
         
         res.status(200).json({ 
+            status: "success",
             message: "Email verified successfully! You are now signed in.",
-            user: user
+            data: {
+                user: user
+            }
         })
     } catch (error) {
         console.error("Email verification error:", error.message)
         if (error.message.includes("Invalid or expired")) {
-            return res.status(400).json({ message: "Invalid or expired verification token" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "Invalid or expired verification token" 
+            })
         }
-        return res.status(500).json({ message: "Error verifying email" })
+        return res.status(500).json({ 
+            status: "error",
+            message: "Error verifying email" 
+        })
     }
 }
 
@@ -414,12 +485,18 @@ const updateEmail = async (req, res) => {
         const { userId, email } = req.body
         
         if (!userId || !email) {
-            return res.status(400).json({ message: "User ID and email are required" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "User ID and email are required" 
+            })
         }
 
         // Check if user is authorized to update this account
         if (req.user.id !== userId) {
-            return res.status(403).json({ message: "You are not authorized to update this account" })
+            return res.status(403).json({ 
+                status: "fail",
+                message: "You are not authorized to update this account" 
+            })
         }
 
         // Check if user has local auth before allowing email change
@@ -427,33 +504,51 @@ const updateEmail = async (req, res) => {
         const hasLocalAuth = authMethods.some(method => method.provider === 'local')
         
         if (!hasLocalAuth) {
-            return res.status(400).json({ message: "You must add a password to your account before changing your email address" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "You must add a password to your account before changing your email address" 
+            })
         }
 
         // Validate email
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return res.status(400).json({ message: "Please enter a valid email address" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "Please enter a valid email address" 
+            })
         }
 
         if (email.length > 100) {
-            return res.status(400).json({ message: "Email must be less than 100 characters" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "Email must be less than 100 characters" 
+            })
         }
 
         // Get current user info
         const currentUser = await AuthModel.getUserById(req.user.id)
         if (!currentUser) {
-            return res.status(404).json({ message: "Current user not found" })
+            return res.status(404).json({ 
+                status: "fail",
+                message: "Current user not found" 
+            })
         }
 
         // Check if email is the same as current
         if (email === currentUser.email) {
-            return res.status(400).json({ message: "New email must be different from current email" })
+            return res.status(400).json({ 
+                status: "fail",
+                message: "New email must be different from current email" 
+            })
         }
 
         // Check if email is already taken by another user
         const existingUser = await AuthModel.getUserByEmail(email)
         if (existingUser && existingUser.id !== userId) {
-            return res.status(409).json({ message: "Email is already taken" })
+            return res.status(409).json({ 
+                status: "fail",
+                message: "Email is already taken" 
+            })
         }
 
         // Create pending email change request
@@ -494,12 +589,18 @@ const updateEmail = async (req, res) => {
         )
         
         res.status(200).json({
+            status: "success",
             message: "Verification email sent to your new email address. Please check your email to complete the change.",
-            newEmail: email
+            data: {
+                newEmail: email
+            }
         })
     } catch (error) {
         console.error("Update email error:", error.message)
-        return res.status(500).json({ message: "Error initiating email change" })
+        return res.status(500).json({ 
+            status: "error",
+            message: "Error initiating email change" 
+        })
     }
 }
 
@@ -659,16 +760,24 @@ const getCurrentUser = async (req, res) => {
         const user = await AuthModel.getUserById(userId)
         
         if (!user) {
-            return res.status(404).json({ message: "User not found" })
+            return res.status(404).json({ 
+                status: "fail",
+                message: "User not found" 
+            })
         }
         
         res.status(200).json({
-            success: true,
-            user: user
+            status: "success",
+            data: {
+                user: user
+            }
         })
     } catch (error) {
         console.error("Get current user error:", error.message)
-        return res.status(500).json({ message: "Error fetching user data" })
+        return res.status(500).json({ 
+            status: "error",
+            message: "Error fetching user data" 
+        })
     }
 }
 

@@ -7,13 +7,13 @@ const router = express.Router()
 // Apply authentication middleware to all note routes
 router.use(verifyToken)
 
-router.get("/", noteController.getNote)
-router.get("/all", noteController.getAllNotes)
+router.get("/:id", noteController.getNote)
+router.get("/", noteController.getAllNotes)
 router.post("/", noteController.createNote)
-router.patch("/content", noteController.updateNoteContent)
-router.patch("/title", noteController.updateNoteTitle)
-router.patch("/status", noteController.updateNoteStatus)
-router.delete("/", noteController.deleteNote)
-router.delete("/all", noteController.deleteAllNotes)
+router.patch("/:id/content", noteController.updateNoteContent)
+router.patch("/:id/title", noteController.updateNoteTitle)
+router.patch("/:id/status", noteController.updateNoteStatus)
+router.delete("/:id", noteController.deleteNote)
+router.delete("/", noteController.deleteAllNotes)
 
 export default router

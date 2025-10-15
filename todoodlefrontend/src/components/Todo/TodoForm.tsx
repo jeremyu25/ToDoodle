@@ -3,11 +3,9 @@ import { useState } from "react"
 import type { Task } from "../../types/types"
 import { useTodoStore } from "../../stores/toDoStore"
 import { useUIStore } from "../../stores/uiStore"
-import { useAuthStore } from "../../stores/authStore"
 import "./TodoForm.css"
 
 const TodoForm = () => {
-	const { user } = useAuthStore()
 	const { folders, addTask } = useTodoStore()
 	const { setShowTaskForm } = useUIStore()
 	
@@ -28,8 +26,8 @@ const TodoForm = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (formData.title.trim() && formData.description.trim() && user?.id) {
-          await addTask(user.id, formData);
+        if (formData.title.trim() && formData.description.trim()) {
+          await addTask(formData);
           // Reset form
           setFormData({
             title: "",

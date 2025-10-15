@@ -111,17 +111,16 @@ export const useAuthStore = create<AuthState>()(
           const authMethodsData = await authApi.getUserAuthMethods();
           console.log('Fetched auth methods:', authMethodsData);
           
-          if (userData.user) {
+          if (userData.data?.user) {
             set({ 
-              user: userData.user,
+              user: userData.data.user,
               authMethods: authMethodsData.authMethods || [],
               isAuthenticated: true, 
               isLoading: false 
             });
-          } else if (userData.id) {
-            // If the response structure is different
+          } else if (userData.user) {
             set({ 
-              user: userData,
+              user: userData.user,
               authMethods: authMethodsData.authMethods || [],
               isAuthenticated: true, 
               isLoading: false 
@@ -142,12 +141,12 @@ export const useAuthStore = create<AuthState>()(
             if (verifyResponse.ok) {
               const verifyData = await verifyResponse.json();
               console.log('Verify endpoint data:', verifyData);
-              if (verifyData.user) {
+              if (verifyData.data?.user) {
                 // Try to get auth methods for fallback too
                 try {
                   const authMethodsData = await authApi.getUserAuthMethods();
                   set({ 
-                    user: verifyData.user,
+                    user: verifyData.data.user,
                     authMethods: authMethodsData.authMethods || [],
                     isAuthenticated: true, 
                     isLoading: false 

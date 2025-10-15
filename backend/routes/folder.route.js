@@ -7,12 +7,12 @@ const router = express.Router()
 // Apply authentication middleware to all folder routes
 router.use(verifyToken)
 
-router.get("/", folderController.getFolder)
-router.get("/all", folderController.getAllFolders)
+router.get("/:id", folderController.getFolder)
+router.get("/", folderController.getAllFolders)
 router.post("/", folderController.createFolder)
-router.patch("/name", folderController.updateFolderName)
-router.patch("/description", folderController.updateFolderDescription)
-router.delete("/", folderController.deleteFolder)
-router.delete("/all", folderController.deleteAllFolders)
+router.patch("/:id/name", folderController.updateFolderName)
+router.patch("/:id/description", folderController.updateFolderDescription)
+router.delete("/:id", folderController.deleteFolder)
+router.delete("/", folderController.deleteAllFolders)
 
 export default router
