@@ -2,13 +2,14 @@ import FolderModel from "../models/folder.model.js"
 
 const getFolder = async(req, res) => {
     try{
-        if (!req.query.id) {
+        const { id } = req.params; // Use path parameter
+        if (!id) {
             return res.status(400).json({
                 status: "fail",
                 message: "Folder ID is required."
             })
         }
-        const folder = await FolderModel.getFolderById(req.query.id)
+        const folder = await FolderModel.getFolderById(id)
         if (!folder) {
             return res.status(404).json({
                 status: "fail",
@@ -16,24 +17,23 @@ const getFolder = async(req, res) => {
             })
         }
         return res.status(200).json({
-        status: "success",
-        data: folder
-    })
+            status: "success",
+            data: folder
+        })
     }
     catch(err){
-        return res.status(500).json({message: err.message})
+        return res.status(500).json({
+            status: "error",
+            message: err.message
+        })
     }
 }
 
 const getAllFolders = async(req, res) => {
     try{
-        if (!req.query.user_id) {
-            return res.status(400).json({
-                status: "fail",
-                message: "User ID is required."
-            })
-        }
-        const folders = await FolderModel.getAllFolders(req.query.user_id)
+        const user_id = req.user.id;
+        
+        const folders = await FolderModel.getAllFolders(user_id)
         if (folders.length === 0) {
             return res.status(200).json({
                 status: "success",
@@ -41,50 +41,65 @@ const getAllFolders = async(req, res) => {
                 data: {
                     folderdata: []
                 },
-                message: `No folders found for user ${req.query.user_id}`
+                message: `No folders found for user ${user_id}`
             })
         }
         return res.status(200).json({
-        status: "success",
-        results_length: folders.length, 
-        data: {
-            folderdata: folders
-        }
-    })
+            status: "success",
+            results_length: folders.length, 
+            data: {
+                folderdata: folders
+            }
+        })
     }
     catch(err){
-        return res.status(500).json({message: err.message})
+        return res.status(500).json({
+            status: "error",
+            message: err.message
+        })
     }
 }
 
 const createFolder = async(req, res) => {
     try{
-        if (!req.query.user_id || !req.query.name) {
+        // Get user_id from authenticated token and data from body
+        const user_id = req.user.id;
+        const { name, description } = req.body;
+        
+        if (!name) {
             return res.status(400).json({
                 status: "fail",
-                message: "User ID and folder name are required."
+                message: "Folder name is required."
             })
         }
-        const folder = await FolderModel.createFolder(req.query.user_id, req.query.name, req.query.description)
+        
+        const folder = await FolderModel.createFolder(user_id, name, description)
         return res.status(201).json({
             status: "success",
             data: folder
         })
     }
     catch(err){
-        return res.status(500).json({message: err.message})
+        return res.status(500).json({
+            status: "error",
+            message: err.message
+        })
     }
 }
 
 const updateFolderName = async(req, res) => {
     try{
-        if (!req.query.id || !req.query.name) {
+        const { id } = req.params; // Use path parameter
+        const { name } = req.body; // Use request body
+        
+        if (!id || !name) {
             return res.status(400).json({
                 status: "fail",
                 message: "Folder ID and new folder name are required."
             })
         }
-        const folder = await FolderModel.updateFolderName(req.query.id, req.query.name)
+        
+        const folder = await FolderModel.updateFolderName(id, name)
         if (!folder) {
             return res.status(404).json({
                 status: "fail",
@@ -97,20 +112,29 @@ const updateFolderName = async(req, res) => {
         })
     }
     catch(err){
-        return res.status(500).json({message:err.message})
+        return res.status(500).json({
+            status: "error",
+            message: err.message
+        })
     }
 }
 
 const updateFolderDescription = async(req, res) => {
     try{
-        if (!req.query.id || !req.query.description) {
+        const { id } = req.params;
+        const { description } = req.body;
+        
+        if (!id || description === undefined) {
             return res.status(400).json({
+                status: "fail",
                 message: "Folder ID and new folder description are required."
             })
         }
-        const folder = await FolderModel.updateFolderDescription(req.query.id, req.query.description)
+        
+        const folder = await FolderModel.updateFolderDescription(id, description)
         if (!folder) {
             return res.status(404).json({
+                status: "fail",
                 message: "User folder not found."
             })
         }
@@ -120,36 +144,57 @@ const updateFolderDescription = async(req, res) => {
         })
     }
     catch(err){
-        return res.status(500).json({message:err.message})
+        return res.status(500).json({
+            status: "error",
+            message: err.message
+        })
     }
 }
 
 const deleteFolder = async(req, res) => {
     try{
-        const folder = await FolderModel.deleteFolder(req.query.id)
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({
+                status: "fail",
+                message: "Folder ID is required."
+            })
+        }
+        
+        const folder = await FolderModel.deleteFolder(id)
         if (!folder) {
             return res.status(404).json({
+                status: "fail",
                 message: "User folder not found."
             })
         }
         return res.status(200).json({
+            status: "success",
             data: folder
         })
     }
     catch(err){
-        return res.status(500).json({message: err.message})
+        return res.status(500).json({
+            status: "error",
+            message: err.message
+        })
     }
 }
 
 const deleteAllFolders = async(req, res) => {
     try{
-        const folder = await FolderModel.deleteAllFolders(req.query.user_id)
+        const user_id = req.user.id;
+        
+        const folder = await FolderModel.deleteAllFolders(user_id)
         if (folder.length === 0) {
             return res.status(404).json({
+                status: "fail",
                 message: "User doesn't exist, or has no folders."
             })
         }
         return res.status(200).json({
+            status: "success",
             results_length: folder.length,
             data: {
                 folderdata: folder
@@ -157,7 +202,10 @@ const deleteAllFolders = async(req, res) => {
         })
     }
     catch(err){
-        return res.status(500).json({message: err.message})
+        return res.status(500).json({
+            status: "error",
+            message: err.message
+        })
     }
 }
 export default {

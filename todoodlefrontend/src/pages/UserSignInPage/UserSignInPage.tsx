@@ -4,6 +4,7 @@ import { useNavigate, Link } from "react-router-dom"
 import "../../styles/globals.css"
 import "../../styles/utilities.css"
 import "./UserSignInPage.css"
+import { authApi } from "../../services/api"
 import NavBar from "../../components/NavBar/NavBar"
 import logo from "../../assets/virtual-learning-background-with-design-space.png"
 import { useAuthStore } from "../../stores/authStore"
@@ -69,36 +70,22 @@ const UserSignInPage = () => {
 		setIsSubmitting(true)
 
 		// Determine if identifier is email or username
-		const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier)
-		const requestBody = isEmail 
-			? { email: identifier, password }
-			: { username: identifier, password }
-
-		fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/signin`, {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-			},
-			credentials: "include",
-			body: JSON.stringify(requestBody),
-		})
-			.then((response) => response.json())
-			.then((data) => {
-				console.log(data)
-				if (data.success) {
-					login(data.user)
-					navigate("/todo")
-				} else {
-					setErrors([data.message || "Login failed"])
-				}
-			})
-			.catch((error) => {
-				setErrors([error.message])
-				console.error("Error:", error)
-			})
-			.finally(() => {
-				setIsSubmitting(false)
-			})
+		try {
+			const data = await authApi.signIn(identifier, password)
+			
+			console.log(data)
+			if (data.status === 'success') {
+				login(data.data.user)
+				navigate("/todo")
+			} else {
+				setErrors([data.message || "Login failed"])
+			}
+		} catch (error) {
+			setErrors([error instanceof Error ? error.message : "Login failed"])
+			console.error("Error:", error)
+		} finally {
+			setIsSubmitting(false)
+		}
 	}
 
 	const loginWithGooglePopup = async () => {

@@ -1,7 +1,11 @@
 import express from "express"
 import feedbackController from "../controllers/feedback.controller.js"
+import { verifyToken } from "../utils/verify.js"
 
 const router = express.Router()
+
+// Apply authentication middleware to all feedback routes
+router.use(verifyToken)
 
 router.get("/", feedbackController.getFeedback)
 router.get("/all", feedbackController.getAllFeedback)

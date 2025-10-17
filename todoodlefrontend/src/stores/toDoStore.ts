@@ -16,13 +16,13 @@ interface TodoState {
   loadData: (userId: string) => Promise<void>
   
   // Task actions
-  addTask: (userId: string, newTask: Omit<Task, "id" | "createdAt">) => Promise<void>
+  addTask: (newTask: Omit<Task, "id" | "createdAt">) => Promise<void>
   updateTask: (updatedTask: Task, userId: string) => Promise<void>
   updateTaskStatus: (id: string, newStatus: Status, userId: string) => Promise<void>
   deleteTask: (id: string) => Promise<void>
   
   // Folder actions
-  createFolder: (userId: string, folderName: string) => Promise<void>
+  createFolder: (folderName: string) => Promise<void>
   updateFolder: (folderId: string, folderName: string) => Promise<void>
   deleteFolder: (folderId: string) => Promise<void>
   
@@ -53,12 +53,12 @@ export const useTodoStore = create<TodoState>()(
           set({ isLoading: true, error: null })
 
           // Load folders first
-          const foldersResponse = await foldersApi.getAllFolders(userId)
+          const foldersResponse = await foldersApi.getAllFolders()
           const backendFolders = foldersResponse.data.folderdata || []
           const foldersWithColors = addDefaultColors(backendFolders)
 
           // Load notes/tasks
-          const notesResponse = await notesApi.getAllNotes(userId)
+          const notesResponse = await notesApi.getAllNotes()
           const backendNotes = notesResponse.data.notedata || []
           const tasksFromNotes = backendNotes.map((note: any) => 
             noteToTask(note, foldersWithColors)
@@ -79,17 +79,14 @@ export const useTodoStore = create<TodoState>()(
       },
 
       // Task actions
-      addTask: async (userId: string, newTask: Omit<Task, "id" | "createdAt">) => {
-        if (!userId) return
-
+      addTask: async (newTask: Omit<Task, "id" | "createdAt">) => {
         try {
           set({ isLoading: true })
           const response = await notesApi.createNote(
-            userId,
             newTask.folderId || '',
             newTask.title,
             newTask.description,
-            newTask.status || 'not_started'
+            newTask.status?.toLowerCase() || 'not_started'
           )
 
           const createdNote = response.data
@@ -195,12 +192,12 @@ export const useTodoStore = create<TodoState>()(
       },
 
       // Folder actions
-      createFolder: async (userId: string, folderName: string) => {
-        if (!userId || !folderName.trim()) return
+      createFolder: async (folderName: string) => {
+        if (!folderName.trim()) return
 
         try {
           set({ isLoading: true })
-          const response = await foldersApi.createFolder(userId, folderName.trim())
+          const response = await foldersApi.createFolder(folderName.trim())
           const createdFolder = response.data
           const folderWithColor = addDefaultColors([createdFolder])[0]
 
@@ -222,7 +219,7 @@ export const useTodoStore = create<TodoState>()(
 
         try {
           set({ isLoading: true })
-          await foldersApi.updateFolder(folderId, folderName.trim())
+          await foldersApi.updateFolderName(folderId, folderName.trim())
 
           set(state => ({
             folders: state.folders.map(folder =>

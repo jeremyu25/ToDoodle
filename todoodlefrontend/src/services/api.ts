@@ -17,9 +17,9 @@ const getAuthHeaders = () => ({
 
 // Notes API
 export const notesApi = {
-  // Get all notes for a user
-  getAllNotes: async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/note/all?user_id=${userId}`, {
+  // Get all notes for a user (no userId needed since we use auth token)
+  getAllNotes: async () => {
+    const response = await fetch(`${API_BASE_URL}/note`, {
       method: 'GET',
       ...getAuthHeaders(),
     });
@@ -28,7 +28,7 @@ export const notesApi = {
 
   // Get a single note by ID
   getNote: async (noteId: string) => {
-    const response = await fetch(`${API_BASE_URL}/note?id=${noteId}`, {
+    const response = await fetch(`${API_BASE_URL}/note/${noteId}`, {
       method: 'GET',
       ...getAuthHeaders(),
     });
@@ -36,44 +36,60 @@ export const notesApi = {
   },
 
   // Create a new note
-  createNote: async (userId: string, folderId: string, title: string, content: string, status: string = 'not_started') => {
-    const response = await fetch(`${API_BASE_URL}/note?user_id=${userId}&folder_id=${folderId}&title=${encodeURIComponent(title)}&content=${encodeURIComponent(content)}&status=${encodeURIComponent(status)}`, {
+  createNote: async (folderId: string, title: string, content: string, status: string = 'not_started') => {
+    const response = await fetch(`${API_BASE_URL}/note`, {
       method: 'POST',
-      ...getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ folder_id: folderId, title, content, status }),
     });
     return handleResponse(response);
   },
 
   // Update note content
   updateNoteContent: async (noteId: string, content: string) => {
-    const response = await fetch(`${API_BASE_URL}/note/content?id=${noteId}&content=${encodeURIComponent(content)}`, {
+    const response = await fetch(`${API_BASE_URL}/note/${noteId}/content`, {
       method: 'PATCH',
-      ...getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ content }),
     });
     return handleResponse(response);
   },
 
   // Update note status
   updateNoteStatus: async (noteId: string, status: string) => {
-    const response = await fetch(`${API_BASE_URL}/note/status/?id=${noteId}&status=${encodeURIComponent(status)}`, {
+    const response = await fetch(`${API_BASE_URL}/note/${noteId}/status`, {
       method: 'PATCH',
-      ...getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ status }),
     });
     return handleResponse(response);
   },
 
   // Update note title
   updateNoteTitle: async (noteId: string, title: string) => {
-    const response = await fetch(`${API_BASE_URL}/note/title?id=${noteId}&title=${encodeURIComponent(title)}`, {
+    const response = await fetch(`${API_BASE_URL}/note/${noteId}/title`, {
       method: 'PATCH',
-      ...getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ title }),
     });
     return handleResponse(response);
   },
 
   // Delete a note
   deleteNote: async (noteId: string) => {
-    const response = await fetch(`${API_BASE_URL}/note?id=${noteId}`, {
+    const response = await fetch(`${API_BASE_URL}/note/${noteId}`, {
       method: 'DELETE',
       ...getAuthHeaders(),
     });
@@ -81,8 +97,8 @@ export const notesApi = {
   },
 
   // Delete all notes for a user
-  deleteAllNotes: async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/note/all?user_id=${userId}`, {
+  deleteAllNotes: async () => {
+    const response = await fetch(`${API_BASE_URL}/note`, {
       method: 'DELETE',
       ...getAuthHeaders(),
     });
@@ -93,8 +109,8 @@ export const notesApi = {
 // Folders API
 export const foldersApi = {
   // Get all folders for a user
-  getAllFolders: async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/folder/all?user_id=${userId}`, {
+  getAllFolders: async () => {
+    const response = await fetch(`${API_BASE_URL}/folder`, {
       method: 'GET',
       ...getAuthHeaders(),
     });
@@ -103,7 +119,7 @@ export const foldersApi = {
 
   // Get a single folder by ID
   getFolder: async (folderId: string) => {
-    const response = await fetch(`${API_BASE_URL}/folder?id=${folderId}`, {
+    const response = await fetch(`${API_BASE_URL}/folder/${folderId}`, {
       method: 'GET',
       ...getAuthHeaders(),
     });
@@ -111,26 +127,47 @@ export const foldersApi = {
   },
 
   // Create a new folder
-  createFolder: async (userId: string, name: string) => {
-    const response = await fetch(`${API_BASE_URL}/folder?user_id=${userId}&name=${encodeURIComponent(name)}`, {
+  createFolder: async (name: string, description?: string) => {
+    const response = await fetch(`${API_BASE_URL}/folder`, {
       method: 'POST',
-      ...getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ name, description }),
     });
     return handleResponse(response);
   },
 
   // Update folder name
-  updateFolder: async (folderId: string, name: string) => {
-    const response = await fetch(`${API_BASE_URL}/folder/name?id=${folderId}&name=${encodeURIComponent(name)}`, {
+  updateFolderName: async (folderId: string, name: string) => {
+    const response = await fetch(`${API_BASE_URL}/folder/${folderId}/name`, {
       method: 'PATCH',
-      ...getAuthHeaders(),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ name }),
+    });
+    return handleResponse(response);
+  },
+
+  // Update folder description
+  updateFolderDescription: async (folderId: string, description: string) => {
+    const response = await fetch(`${API_BASE_URL}/folder/${folderId}/description`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ description }),
     });
     return handleResponse(response);
   },
 
   // Delete a folder
   deleteFolder: async (folderId: string) => {
-    const response = await fetch(`${API_BASE_URL}/folder?id=${folderId}`, {
+    const response = await fetch(`${API_BASE_URL}/folder/${folderId}`, {
       method: 'DELETE',
       ...getAuthHeaders(),
     });
@@ -138,8 +175,8 @@ export const foldersApi = {
   },
 
   // Delete all folders for a user
-  deleteAllFolders: async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/folder/all?user_id=${userId}`, {
+  deleteAllFolders: async () => {
+    const response = await fetch(`${API_BASE_URL}/folder`, {
       method: 'DELETE',
       ...getAuthHeaders(),
     });
@@ -222,7 +259,7 @@ export const authApi = {
 
   // Delete user account
   deleteUser: async (userId: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/delete?id=${userId}`, {
+    const response = await fetch(`${API_BASE_URL}/auth/delete/${userId}`, {
       method: 'DELETE',
       credentials: 'include',
     });

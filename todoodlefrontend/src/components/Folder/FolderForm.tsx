@@ -1,19 +1,17 @@
 import { useState } from "react"
 import { useTodoStore } from "../../stores/toDoStore"
 import { useUIStore } from "../../stores/uiStore"
-import { useAuthStore } from "../../stores/authStore"
 import "./FolderForm.css"
 
 const FolderForm = () => {
-	const { user } = useAuthStore()
 	const { createFolder } = useTodoStore()
 	const { setShowFolderForm } = useUIStore()
 	const [folderName, setFolderName] = useState("")
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		if (folderName.trim() && user?.id) {
-			await createFolder(user.id, folderName.trim())
+		if (folderName.trim()) {
+			await createFolder(folderName.trim())
 			setFolderName("")
 			setShowFolderForm(false)
 		}
