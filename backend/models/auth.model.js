@@ -69,8 +69,8 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
       [user.id, stagingUser.email, stagingUser.password_hash]
     )
 
-    // Create default folder for new user
-    await folderModel.createFolder(user.id, "Default", null)
+  // Create default folder for new user (mark as default)
+  await folderModel.createFolder(user.id, "Default", null, true)
 
     // Remove from staging users
     await query(
@@ -262,8 +262,8 @@ const createGoogleUser = async (userData) => {
       [user.id, googleId]
     )
 
-    // Create default folder for new user
-    await folderModel.createFolder(user.id, "Default", null)
+  // Create default folder for new user (mark as default)
+  await folderModel.createFolder(user.id, "Default", null, true)
 
     await query('COMMIT')
     return user
@@ -323,8 +323,8 @@ const createOAuthUser = async (userData) => {
       [user.id, provider, providerUserId]
     )
 
-    // Create default folder for new user
-    await folderModel.createFolder(user.id, "Default", null)
+  // Create default folder for new user (mark as default)
+  await folderModel.createFolder(user.id, "Default", null, true)
 
     await query('COMMIT')
     return user

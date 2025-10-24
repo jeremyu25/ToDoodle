@@ -20,12 +20,12 @@ const getAllFolders = async (user_id) => {
     }
 }
 
-const createFolder = async (user_id, name, description) => {
+const createFolder = async (user_id, name, description, is_default = false) => {
 
     try {
         const results = await query(
-            `INSERT INTO folders (user_id, name, description) VALUES ($1, $2, $3) RETURNING *`,
-            [user_id, name, description]
+            `INSERT INTO folders (user_id, name, description, is_default) VALUES ($1, $2, $3, $4) RETURNING *`,
+            [user_id, name, description, is_default]
         )
         return results.rows[0]
     } catch (error) {
@@ -67,6 +67,15 @@ const updateFolderDescription = async (id, description) => {
 const deleteFolder = async (id) => {
 
     try {
+        // Prevent deleting the default folder
+        const folder = await getFolderById(id)
+        if (!folder) {
+            throw new Error("Folder not found.")
+        }
+        if (folder.is_default) {
+            throw new Error("Cannot delete default folder.")
+        }
+
         const results = await query(`DELETE FROM folders WHERE id = $1 RETURNING *`, [id])
         return results.rows[0]
     } catch (error) {
@@ -78,7 +87,8 @@ const deleteFolder = async (id) => {
 
 const deleteAllFolders = async (user_id) => {
     try {
-        const results = await query(`DELETE FROM folders WHERE user_id = $1 RETURNING *`, [user_id])
+        // Do not delete the default folder for the user
+        const results = await query(`DELETE FROM folders WHERE user_id = $1 AND (is_default IS NULL OR is_default = false) RETURNING *`, [user_id])
         return results.rows
     } catch (error) {
         console.error("Error in deleting all folders of a user from database:", error.message)
