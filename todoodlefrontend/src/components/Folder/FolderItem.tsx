@@ -23,23 +23,42 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
 
     const handleUpdateFolder = async () => {
         if (!editingFolder || !editFolderName.trim()) return;
+        const normalized = editFolderName.trim().toLowerCase()
+        if (normalized === 'default') {
+            // Guard anyway in case
+            alert('You cannot rename a folder to "Default".')
+            return
+        }
         await updateFolder(editingFolder.id, editFolderName.trim());
         cancelEditingFolder();
     };
 
     const handleDeleteFolder = async () => {
+        if (isDefault) {
+            // Guard anyway in case
+            alert("The default folder cannot be deleted.")
+            return
+        }
+
         if (window.confirm("Are you sure you want to delete this folder and all its contents?")) {
             await deleteFolder(folder.id);
         }
     };
 
     const handleEditFolder = () => {
+        if (isDefault) {
+            // Prevent editing the default folder
+            alert("The default folder cannot be renamed.")
+            return
+        }
         startEditingFolder(folder);
     };
 
     const handleCancelEdit = () => {
         cancelEditingFolder();
     };
+    const isDefault = Boolean(folder.is_default || (folder.name || '').toString().trim().toLowerCase() === 'default')
+
     return (
         <div
             key={folder.id}
@@ -89,24 +108,33 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
                             <span className="folder-count">{getFolderCount(folder.id)} tasks</span>
                         </div>
                         <div className="folder-actions">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditFolder();
-                                }}
-                                className="folder-edit-btn"
-                            >
-                                ✏️
-                            </button>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteFolder();
-                                }}
-                                className="folder-delete-btn"
-                            >
-                                🗑️
-                            </button>
+                            {isDefault ? (
+                                <>
+                                    <button className="folder-edit-btn" disabled title="Default folder cannot be renamed">✏️</button>
+                                    <button className="folder-delete-btn" disabled title="Default folder cannot be deleted">🗑️</button>
+                                </>
+                            ) : (
+                                <>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEditFolder();
+                                        }}
+                                        className="folder-edit-btn"
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteFolder();
+                                        }}
+                                        className="folder-delete-btn"
+                                    >
+                                        🗑️
+                                    </button>
+                                </>
+                            )}
                         </div>
                     </>
                 )}

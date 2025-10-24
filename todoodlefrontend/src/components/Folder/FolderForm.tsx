@@ -10,11 +10,15 @@ const FolderForm = () => {
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
-		if (folderName.trim()) {
-			await createFolder(folderName.trim())
-			setFolderName("")
-			setShowFolderForm(false)
+		const normalized = folderName.trim().toLowerCase()
+		if (!folderName.trim()) return
+		if (normalized === 'default') {
+			alert('You cannot create another folder named "Default".')
+			return
 		}
+		await createFolder(folderName.trim())
+		setFolderName("")
+		setShowFolderForm(false)
 	}
 
 	const handleCancel = () => {

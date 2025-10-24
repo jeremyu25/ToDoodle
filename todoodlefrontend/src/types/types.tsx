@@ -13,6 +13,7 @@ export type Folder = {
     color?: string;
     description?: string;
     created_at?: string;
+    is_default: boolean;
 };
 
 export type Note = {
