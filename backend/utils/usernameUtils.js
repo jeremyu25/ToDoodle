@@ -24,13 +24,13 @@ const generateUsernameHash = (baseString) => {
  */
 const createOAuthUsername = (baseUsername, uniqueIdentifier) => {
     // Clean the base username (remove spaces, special characters, etc.)
-    const cleanUsername = baseUsername.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '')
+    const cleanUsername = baseUsername.replace(/\s+/g, '').replace(/[^a-zA-Z0-9_]/g, '')
     
     // Generate 5-digit hash
     const hash = generateUsernameHash(uniqueIdentifier)
     
     // Combine username with hash
-    return `${cleanUsername}_${hash}`
+    return `${cleanUsername}${hash}`
 }
 
 export { generateUsernameHash, createOAuthUsername }
