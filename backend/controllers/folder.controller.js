@@ -80,6 +80,13 @@ const createFolder = async(req, res) => {
         })
     }
     catch(err){
+        if (err.message && err.message.includes("Default folder already exists")) {
+            return res.status(409).json({
+                status: "fail",
+                message: err.message
+            })
+        }
+
         return res.status(500).json({
             status: "error",
             message: err.message
@@ -112,6 +119,13 @@ const updateFolderName = async(req, res) => {
         })
     }
     catch(err){
+        if (err.message && err.message.includes("Cannot edit default folder")) {
+            return res.status(403).json({
+                status: "fail",
+                message: err.message
+            })
+        }
+
         return res.status(500).json({
             status: "error",
             message: err.message
@@ -144,6 +158,13 @@ const updateFolderDescription = async(req, res) => {
         })
     }
     catch(err){
+        if (err.message && err.message.includes("Cannot edit default folder")) {
+            return res.status(403).json({
+                status: "fail",
+                message: err.message
+            })
+        }
+
         return res.status(500).json({
             status: "error",
             message: err.message
@@ -175,6 +196,13 @@ const deleteFolder = async(req, res) => {
         })
     }
     catch(err){
+        if (err.message && err.message.includes("Cannot delete default folder")) {
+            return res.status(403).json({
+                status: "fail",
+                message: err.message
+            })
+        }
+
         return res.status(500).json({
             status: "error",
             message: err.message
