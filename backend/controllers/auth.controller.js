@@ -433,7 +433,7 @@ const resendVerification = async (req, res) => {
     } catch (error) {
         console.error("Resend verification error:", error.message)
         if (error.code === 'THROTTLED' || error.message.includes('throttled')) {
-            return res.status(429).json({ message: "Too many resend requests. Please try again later." })
+            return res.status(429).json({ message: "Too many resend requests. Please try again after 15 minutes." })
         }
         if (error.message.includes("not found")) {
             return res.status(404).json({ message: "No pending registration found for this email" })
