@@ -122,7 +122,6 @@ const TaskModal: React.FC = () => {
                   } : null)}
                   className="form-select"
                 >
-                  <option value="">No Folder</option>
                   {folders.map((folder) => (
                     <option key={folder.id} value={folder.id}>{folder.name}</option>
                   ))}

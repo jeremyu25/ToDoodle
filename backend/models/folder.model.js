@@ -20,12 +20,27 @@ const getAllFolders = async (user_id) => {
     }
 }
 
-const createFolder = async (user_id, name, description) => {
+const createFolder = async (user_id, name, description, is_default = false) => {
 
     try {
+        const normalized = (name || '').toString().trim().toLowerCase()
+
+        // If attempting to create a default folder, ensure one doesn't already exist
+        if (is_default || normalized === 'default') {
+            // Check by is_default flag first
+            const existingDefault = await query(`SELECT id FROM folders WHERE user_id = $1 AND is_default = true LIMIT 1`, [user_id])
+            if (existingDefault.rows.length > 0) {
+                throw new Error("Default folder already exists.")
+            }
+            // Also check by name collision (case-insensitive)
+            const existingByName = await query(`SELECT id FROM folders WHERE user_id = $1 AND LOWER(TRIM(name)) = $2 LIMIT 1`, [user_id, 'default'])
+            if (existingByName.rows.length > 0) {
+                throw new Error("Default folder already exists.")
+            }
+        }
         const results = await query(
-            `INSERT INTO folders (user_id, name, description) VALUES ($1, $2, $3) RETURNING *`,
-            [user_id, name, description]
+            `INSERT INTO folders (user_id, name, description, is_default) VALUES ($1, $2, $3, $4) RETURNING *`,
+            [user_id, name, description, is_default]
         )
         return results.rows[0]
     } catch (error) {
@@ -37,6 +52,15 @@ const createFolder = async (user_id, name, description) => {
 const updateFolderName = async (id, name) => {
 
     try {
+        // Prevent renaming default folder
+        const folder = await getFolderById(id)
+        if (!folder) {
+            throw new Error("Folder not found.")
+        }
+        if (folder.is_default) {
+            throw new Error("Cannot edit default folder.")
+        }
+
         const results = await query(`UPDATE folders SET name = $1 WHERE id = $2 RETURNING *`, [name, id])
 
         if (results.rows.length === 0) {
@@ -52,6 +76,15 @@ const updateFolderName = async (id, name) => {
 const updateFolderDescription = async (id, description) => {
 
     try {
+        // Prevent editing description of default folder
+        const folder = await getFolderById(id)
+        if (!folder) {
+            throw new Error("Folder not found.")
+        }
+        if (folder.is_default) {
+            throw new Error("Cannot edit default folder.")
+        }
+
         const results = await query(`UPDATE folders SET description = $1 WHERE id = $2 RETURNING *`, [description, id])
 
         if (results.rows.length === 0) {
@@ -67,6 +100,15 @@ const updateFolderDescription = async (id, description) => {
 const deleteFolder = async (id) => {
 
     try {
+        // Prevent deleting the default folder
+        const folder = await getFolderById(id)
+        if (!folder) {
+            throw new Error("Folder not found.")
+        }
+        if (folder.is_default) {
+            throw new Error("Cannot delete default folder.")
+        }
+
         const results = await query(`DELETE FROM folders WHERE id = $1 RETURNING *`, [id])
         return results.rows[0]
     } catch (error) {
@@ -78,7 +120,8 @@ const deleteFolder = async (id) => {
 
 const deleteAllFolders = async (user_id) => {
     try {
-        const results = await query(`DELETE FROM folders WHERE user_id = $1 RETURNING *`, [user_id])
+        // Do not delete the default folder for the user
+        const results = await query(`DELETE FROM folders WHERE user_id = $1 AND (is_default IS NULL OR is_default = false) RETURNING *`, [user_id])
         return results.rows
     } catch (error) {
         console.error("Error in deleting all folders of a user from database:", error.message)

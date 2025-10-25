@@ -1,6 +1,7 @@
 import query from "../db/index.js"
 import crypto from "crypto"
 import { createOAuthUsername } from "../utils/usernameUtils.js"
+import folderModel from "./folder.model.js"
 
 const TIMEOUT_DURATION = 9 * 60 * 1000 // 9 mins
 
@@ -67,6 +68,9 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
        VALUES($1, 'local', $2, $3)`,
       [user.id, stagingUser.email, stagingUser.password_hash]
     )
+
+  // Create default folder for new user (mark as default)
+  await folderModel.createFolder(user.id, "Default", null, true)
 
     // Remove from staging users
     await query(
@@ -258,6 +262,9 @@ const createGoogleUser = async (userData) => {
       [user.id, googleId]
     )
 
+  // Create default folder for new user (mark as default)
+  await folderModel.createFolder(user.id, "Default", null, true)
+
     await query('COMMIT')
     return user
   } catch (error) {
@@ -315,6 +322,9 @@ const createOAuthUser = async (userData) => {
        VALUES($1, $2, $3)`,
       [user.id, provider, providerUserId]
     )
+
+  // Create default folder for new user (mark as default)
+  await folderModel.createFolder(user.id, "Default", null, true)
 
     await query('COMMIT')
     return user

@@ -26,8 +26,12 @@ const TodoForm = () => {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        if (formData.title.trim() && formData.description.trim()) {
-          await addTask(formData);
+		if (formData.title.trim() && formData.description.trim()) {
+		  // Use the user's default folder when they selected the default option or left blank
+		  const defaultFolder = folders.find(f => f.is_default || (f.name || '').toString().trim().toLowerCase() === 'default')
+		  const folderIdToUse = formData.folderId ?? defaultFolder?.id
+		  const taskPayload = { ...formData, folderId: folderIdToUse }
+		  await addTask(taskPayload);
           // Reset form
           setFormData({
             title: "",
@@ -75,7 +79,6 @@ const TodoForm = () => {
 				<div className="form-group">
 					<label htmlFor="folderId">Folder</label>
 					<select id="folderId" value={formData.folderId || ''} onChange={handleInputChange}>
-						<option value="">No Folder</option>
 						{folders.map((folder) => (
 							<option key={folder.id} value={folder.id}>{folder.name}</option>
 						))}
