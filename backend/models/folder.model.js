@@ -4,7 +4,8 @@ const getFolderById = async (id) => {
     try {
         const results = await query(`select * from folders where id = $1`, [id])
         return results.rows[0]
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error in getting the folder of from database:", error.message)
         throw new Error("DB error while getting folder.")
     }
@@ -14,7 +15,8 @@ const getAllFolders = async (user_id) => {
     try {
         const results = await query(`select * from folders where user_id = $1`, [user_id])
         return results.rows
-    } catch (error) {
+    } 
+    catch (error) {
         console.error("Error in getting all folders of a user from database:", error.message)
         throw new Error("DB error while getting folders from user.")
     }
@@ -43,7 +45,8 @@ const createFolder = async (user_id, name, description, is_default = false, colo
             [user_id, name, description, is_default, color]
         )
         return results.rows[0]
-    } catch (error) {
+    } 
+    catch (error) {
         console.error("Error in creating folder in database:", error.message)
         throw new Error("DB error while creating folder.")
     }
@@ -67,7 +70,8 @@ const updateFolderName = async (id, name) => {
             throw new Error("Folder not found.")
         }
         return results.rows
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error in updating folder from database:", error.message)
         throw new Error("DB error while updating folder ID name.")
     }
@@ -91,7 +95,8 @@ const updateFolderDescription = async (id, description) => {
             throw new Error("Folder not found.")
         }
         return results.rows
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error in updating folder from database:", error.message)
         throw new Error("DB error while updating folder ID description.")
     }
@@ -114,7 +119,8 @@ const updateFolderColor = async (id, color) => {
             throw new Error("Folder not found.")
         }
         return results.rows
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error in updating folder color from database:", error.message)
         throw new Error("DB error while updating folder color.")
     }
@@ -134,7 +140,8 @@ const deleteFolder = async (id) => {
 
         const results = await query(`DELETE FROM folders WHERE id = $1 RETURNING *`, [id])
         return results.rows[0]
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error in deleting folder from database:", error.message)
         throw new Error("DB error while deleting folder.")
     }
@@ -146,7 +153,8 @@ const deleteAllFolders = async (user_id) => {
         // Do not delete the default folder for the user
         const results = await query(`DELETE FROM folders WHERE user_id = $1 AND (is_default IS NULL OR is_default = false) RETURNING *`, [user_id])
         return results.rows
-    } catch (error) {
+    }
+    catch (error) {
         console.error("Error in deleting all folders of a user from database:", error.message)
         throw new Error("DB error while deleting folders.")
     }
