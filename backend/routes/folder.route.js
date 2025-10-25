@@ -12,6 +12,7 @@ router.get("/", folderController.getAllFolders)
 router.post("/", folderController.createFolder)
 router.patch("/:id/name", folderController.updateFolderName)
 router.patch("/:id/description", folderController.updateFolderDescription)
+router.patch("/:id/color", folderController.updateFolderColor)
 router.delete("/:id", folderController.deleteFolder)
 router.delete("/", folderController.deleteAllFolders)
 

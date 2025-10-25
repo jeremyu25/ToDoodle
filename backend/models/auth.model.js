@@ -24,7 +24,8 @@ const createStagingUser = async (username, passwordhash, email) => {
     }
 
     return result.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     throw error
   }
 }
@@ -33,7 +34,7 @@ const createStagingUser = async (username, passwordhash, email) => {
 const verifyEmailAndCreateUser = async (verificationToken) => {
   try {
     await query('BEGIN')
-    
+
     // Find staging user by verification token
     const stagingUserResult = await query(
       `SELECT * FROM staging_users 
@@ -47,7 +48,7 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
     }
 
     const stagingUser = stagingUserResult.rows[0]
-    
+
     // Create verified user
     const userResult = await query(
       `INSERT INTO users(id, username, email) 
@@ -61,7 +62,7 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
     }
 
     const user = userResult.rows[0]
-    
+
     // Create local auth identity
     await query(
       `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
@@ -69,8 +70,8 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
       [user.id, stagingUser.email, stagingUser.password_hash]
     )
 
-  // Create default folder for new user (mark as default)
-  await folderModel.createFolder(user.id, "Default", null, true)
+    // Create default folder for new user (mark as default)
+    await folderModel.createFolder(user.id, "Default", null, true)
 
     // Remove from staging users
     await query(
@@ -79,8 +80,10 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
     )
 
     await query('COMMIT')
+
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     throw error
   }
@@ -95,7 +98,8 @@ const getStagingUserByEmail = async (email) => {
       [email]
     )
     return result.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching staging user by email:", error.message)
     throw new Error("DB error while fetching staging user.")
   }
@@ -120,7 +124,8 @@ const regenerateVerificationToken = async (email) => {
     }
 
     return result.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     throw error
   }
 }
@@ -132,7 +137,8 @@ const cleanupExpiredStagingUsers = async () => {
       `DELETE FROM staging_users WHERE verification_expires < NOW() RETURNING id`
     )
     return result.rows.length
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error cleaning up expired staging users:", error.message)
     throw error
   }
@@ -142,7 +148,7 @@ const signUp = async (username, passwordhash, email) => {
   try {
     // Start a transaction
     await query('BEGIN')
-    
+
     // Create user first
     const userResults = await query(
       `INSERT INTO users(username, email) 
@@ -156,7 +162,7 @@ const signUp = async (username, passwordhash, email) => {
     }
 
     const user = userResults.rows[0]
-    
+
     // Create local auth identity
     await query(
       `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
@@ -166,7 +172,8 @@ const signUp = async (username, passwordhash, email) => {
 
     await query('COMMIT')
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     throw error
   }
@@ -175,7 +182,7 @@ const signUp = async (username, passwordhash, email) => {
 const getUser = async (identifier, secondaryIdentifier = null) => {
   try {
     let query_text, params;
-    
+
     if (secondaryIdentifier) {
       // Both email and username provided - verify they belong to the same user
       query_text = `SELECT u.id, u.username, u.email, ai.password_hash 
@@ -190,10 +197,11 @@ const getUser = async (identifier, secondaryIdentifier = null) => {
                     WHERE u.username = $1 OR u.email = $1`;
       params = [identifier];
     }
-    
+
     const results = await query(query_text, params);
     return results.rows[0];
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user from database:", error.message)
     throw new Error("DB error while fetching user.")
   }
@@ -211,7 +219,8 @@ const deleteUser = async (id) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error deleting user from database:", error.message)
     throw new Error("DB error while deleting user.")
   }
@@ -225,7 +234,8 @@ const getUserByEmail = async (email) => {
       [email]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by email:", error.message)
     throw new Error("DB error while fetching user by email.")
   }
@@ -234,13 +244,13 @@ const getUserByEmail = async (email) => {
 const createGoogleUser = async (userData) => {
   try {
     const { username, email, googleId } = userData
-    
+
     // Generate username with 5-digit hash for OAuth users
     const finalUsername = createOAuthUsername(username, email)
-    
+
     // Start a transaction
     await query('BEGIN')
-    
+
     // Create user first
     const userResults = await query(
       `INSERT INTO users(username, email) 
@@ -254,7 +264,7 @@ const createGoogleUser = async (userData) => {
     }
 
     const user = userResults.rows[0]
-    
+
     // Create Google auth identity
     await query(
       `INSERT INTO auth_identities(user_id, provider, provider_user_id) 
@@ -262,12 +272,13 @@ const createGoogleUser = async (userData) => {
       [user.id, googleId]
     )
 
-  // Create default folder for new user (mark as default)
-  await folderModel.createFolder(user.id, "Default", null, true)
+    // Create default folder for new user (mark as default)
+    await folderModel.createFolder(user.id, "Default", null, true)
 
     await query('COMMIT')
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error creating Google user:", error.message)
     throw error
@@ -285,7 +296,8 @@ const getUserByProvider = async (provider, providerUserId) => {
       [provider, providerUserId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by provider:", error.message)
     throw new Error("DB error while fetching user by provider.")
   }
@@ -295,13 +307,13 @@ const getUserByProvider = async (provider, providerUserId) => {
 const createOAuthUser = async (userData) => {
   try {
     const { username, email, provider, providerUserId } = userData
-    
+
     // Generate username with 5-digit hash for OAuth users
     const finalUsername = createOAuthUsername(username, email)
-    
+
     // Start a transaction
     await query('BEGIN')
-    
+
     // Create user first
     const userResults = await query(
       `INSERT INTO users(username, email) 
@@ -315,7 +327,7 @@ const createOAuthUser = async (userData) => {
     }
 
     const user = userResults.rows[0]
-    
+
     // Create OAuth auth identity
     await query(
       `INSERT INTO auth_identities(user_id, provider, provider_user_id) 
@@ -323,12 +335,13 @@ const createOAuthUser = async (userData) => {
       [user.id, provider, providerUserId]
     )
 
-  // Create default folder for new user (mark as default)
-  await folderModel.createFolder(user.id, "Default", null, true)
+    // Create default folder for new user (mark as default)
+    await folderModel.createFolder(user.id, "Default", null, true)
 
     await query('COMMIT')
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error creating OAuth user:", error.message)
     throw error
@@ -349,7 +362,8 @@ const linkAuthProvider = async (userId, provider, providerUserId, passwordHash =
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error linking auth provider:", error.message)
     throw error
   }
@@ -365,7 +379,8 @@ const getUserAuthMethods = async (userId) => {
       [userId]
     )
     return results.rows
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user auth methods:", error.message)
     throw new Error("DB error while fetching user auth methods.")
   }
@@ -381,7 +396,8 @@ const removeAuthMethod = async (userId, provider) => {
       [userId, provider]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error removing auth method:", error.message)
     throw new Error("DB error while removing auth method.")
   }
@@ -396,7 +412,8 @@ const getUserByUsername = async (username) => {
       [username]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by username:", error.message)
     throw new Error("DB error while fetching user by username.")
   }
@@ -411,7 +428,8 @@ const getUserById = async (userId) => {
       [userId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by ID:", error.message)
     throw new Error("DB error while fetching user by ID.")
   }
@@ -428,7 +446,8 @@ const getUserWithPassword = async (userId) => {
       [userId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user with password:", error.message)
     throw new Error("DB error while fetching user with password.")
   }
@@ -448,7 +467,8 @@ const updateUsername = async (userId, username) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error updating username:", error.message)
     throw new Error("DB error while updating username.")
   }
@@ -458,7 +478,7 @@ const updateUsername = async (userId, username) => {
 const updateEmail = async (userId, email) => {
   try {
     await query('BEGIN')
-    
+
     // Update user email
     const userResults = await query(
       `UPDATE users SET email = $1 WHERE id = $2 
@@ -480,7 +500,8 @@ const updateEmail = async (userId, email) => {
 
     await query('COMMIT')
     return userResults.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error updating email:", error.message)
     throw new Error("DB error while updating email.")
@@ -502,7 +523,8 @@ const updatePassword = async (userId, hashedPassword) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error updating password:", error.message)
     throw new Error("DB error while updating password.")
   }
@@ -532,7 +554,8 @@ const createPendingEmailChange = async (userId, oldEmail, newEmail) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error creating pending email change:", error.message)
     throw new Error("DB error while creating pending email change.")
   }
@@ -542,7 +565,7 @@ const createPendingEmailChange = async (userId, oldEmail, newEmail) => {
 const verifyEmailChange = async (verificationToken) => {
   try {
     await query('BEGIN')
-    
+
     // Find pending email change by verification token
     const pendingResult = await query(
       `SELECT * FROM pending_email_changes 
@@ -556,7 +579,7 @@ const verifyEmailChange = async (verificationToken) => {
     }
 
     const pendingChange = pendingResult.rows[0]
-    
+
     // Update user email
     const userResults = await query(
       `UPDATE users SET email = $1 WHERE id = $2 
@@ -588,7 +611,8 @@ const verifyEmailChange = async (verificationToken) => {
       oldEmail: pendingChange.old_email,
       newEmail: pendingChange.new_email
     }
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error verifying email change:", error.message)
     throw error
@@ -604,7 +628,8 @@ const getPendingEmailChange = async (userId) => {
       [userId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching pending email change:", error.message)
     throw new Error("DB error while fetching pending email change.")
   }
@@ -620,7 +645,8 @@ const cancelPendingEmailChange = async (userId) => {
     )
 
     return results.rows[0] // Will be undefined if no pending change found
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error canceling pending email change:", error.message)
     throw new Error("DB error while canceling pending email change.")
   }
@@ -633,7 +659,8 @@ const cleanupExpiredEmailChanges = async () => {
       `DELETE FROM pending_email_changes WHERE verification_expires < NOW() RETURNING id`
     )
     return result.rows.length
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error cleaning up expired email changes:", error.message)
     throw error
   }
