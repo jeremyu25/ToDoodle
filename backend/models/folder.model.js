@@ -20,7 +20,7 @@ const getAllFolders = async (user_id) => {
     }
 }
 
-const createFolder = async (user_id, name, description, is_default = false) => {
+const createFolder = async (user_id, name, description, is_default = false, color = null) => {
 
     try {
         const normalized = (name || '').toString().trim().toLowerCase()
@@ -39,8 +39,8 @@ const createFolder = async (user_id, name, description, is_default = false) => {
             }
         }
         const results = await query(
-            `INSERT INTO folders (user_id, name, description, is_default) VALUES ($1, $2, $3, $4) RETURNING *`,
-            [user_id, name, description, is_default]
+            `INSERT INTO folders (user_id, name, description, is_default, color) VALUES ($1, $2, $3, $4, $5) RETURNING *`,
+            [user_id, name, description, is_default, color]
         )
         return results.rows[0]
     } catch (error) {
@@ -97,6 +97,29 @@ const updateFolderDescription = async (id, description) => {
     }
 }
 
+const updateFolderColor = async (id, color) => {
+    try {
+        // Prevent editing color of default folder
+        const folder = await getFolderById(id)
+        if (!folder) {
+            throw new Error("Folder not found.")
+        }
+        if (folder.is_default) {
+            throw new Error("Cannot edit default folder.")
+        }
+
+        const results = await query(`UPDATE folders SET color = $1 WHERE id = $2 RETURNING *`, [color, id])
+
+        if (results.rows.length === 0) {
+            throw new Error("Folder not found.")
+        }
+        return results.rows
+    } catch (error) {
+        console.error("Error in updating folder color from database:", error.message)
+        throw new Error("DB error while updating folder color.")
+    }
+}
+
 const deleteFolder = async (id) => {
 
     try {
@@ -134,6 +157,7 @@ export default {
     createFolder,
     updateFolderName,
     updateFolderDescription,
+    updateFolderColor,
     deleteFolder,
     deleteAllFolders
 }
