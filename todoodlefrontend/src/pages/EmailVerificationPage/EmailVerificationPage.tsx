@@ -24,6 +24,11 @@ const EmailVerificationPage = () => {
             setMessage("No verification token provided.")
             return
         }
+        // Remove the token from the address bar immediately so it isn't exposed in browser history
+        try {
+            window.history.replaceState(null, '', window.location.pathname)
+        }
+        catch (e) { }
         // needed due to checkAuthStatus in authStore.ts causing re-renders
         if (verificationAttempted.current) {
             return
