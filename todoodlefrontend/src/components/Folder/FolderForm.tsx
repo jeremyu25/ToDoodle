@@ -7,6 +7,7 @@ const FolderForm = () => {
 	const { createFolder } = useTodoStore()
 	const { setShowFolderForm } = useUIStore()
 	const [folderName, setFolderName] = useState("")
+	const [folderColor, setFolderColor] = useState<string>("#A8BBA0")
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -16,7 +17,7 @@ const FolderForm = () => {
 			alert('You cannot create another folder named "Default".')
 			return
 		}
-		await createFolder(folderName.trim())
+		await createFolder(folderName.trim(), folderColor)
 		setFolderName("")
 		setShowFolderForm(false)
 	}
@@ -37,6 +38,16 @@ const FolderForm = () => {
 					className="folder-input"
 					autoFocus
 				/>
+				<div className="folder-color-row">
+				  <label htmlFor="folder-color">Color</label>
+				  <input
+					id="folder-color"
+					type="color"
+					value={folderColor}
+					onChange={(e) => setFolderColor(e.target.value)}
+					className="folder-color-input"
+				  />
+				</div>
 				<div className="folder-form-buttons">
 					<button
 						type="submit"

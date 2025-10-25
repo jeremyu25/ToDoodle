@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { Task, Folder, Status } from '../types/types'
 import { notesApi, foldersApi } from '../services/api'
-import { noteToTask, taskToNote, addDefaultColors } from '../utils/dataTransformers'
+import { noteToTask, taskToNote, addDefaultColors, normalizeHexColor } from '../utils/dataTransformers'
 import { useUIStore } from './uiStore'
 
 interface TodoState {
@@ -22,8 +22,9 @@ interface TodoState {
   deleteTask: (id: string) => Promise<void>
   
   // Folder actions
-  createFolder: (folderName: string) => Promise<void>
+  createFolder: (folderName: string, color?: string) => Promise<void>
   updateFolder: (folderId: string, folderName: string) => Promise<void>
+  updateFolderColor: (folderId: string, color: string) => Promise<void>
   deleteFolder: (folderId: string) => Promise<void>
   
   // Utility functions
@@ -192,12 +193,13 @@ export const useTodoStore = create<TodoState>()(
       },
 
       // Folder actions
-      createFolder: async (folderName: string) => {
+      createFolder: async (folderName: string, color?: string) => {
         if (!folderName.trim()) return
 
         try {
           set({ isLoading: true })
-          const response = await foldersApi.createFolder(folderName.trim())
+          const normalizedColor = normalizeHexColor(color) // Will be null if invalid/empty
+          const response = await foldersApi.createFolder(folderName.trim(), undefined, normalizedColor || undefined)
           const createdFolder = response.data
           const folderWithColor = addDefaultColors([createdFolder])[0]
 
@@ -227,6 +229,12 @@ export const useTodoStore = create<TodoState>()(
                 ? { ...folder, name: folderName.trim() }
                 : folder
             ),
+            // Keep task.folder in sync when a folder is renamed
+            tasks: state.tasks.map(task =>
+              task.folderId === folderId && task.folder
+                ? { ...task, folder: { ...task.folder, name: folderName.trim() } }
+                : task
+            ),
             isLoading: false
           }))
         } catch (err) {
@@ -251,6 +259,33 @@ export const useTodoStore = create<TodoState>()(
           console.error('Error deleting folder:', err)
           set({ 
             error: err instanceof Error ? err.message : 'Failed to delete folder',
+            isLoading: false
+          })
+        }
+      },
+
+      updateFolderColor: async (folderId: string, color: string) => {
+        try {
+          set({ isLoading: true })
+          const normalizedColor = normalizeHexColor(color)
+          await foldersApi.updateFolderColor(folderId, normalizedColor)
+
+          set(state => ({
+            folders: state.folders.map(folder =>
+              folder.id === folderId ? { ...folder, color: normalizedColor || folder.color } : folder
+            ),
+            // Update tasks that reference this folder so their displayed badge color updates immediately
+            tasks: state.tasks.map(task =>
+              task.folderId === folderId && task.folder
+                ? { ...task, folder: { ...task.folder, color: normalizedColor || task.folder.color } }
+                : task
+            ),
+            isLoading: false
+          }))
+        } catch (err) {
+          console.error('Error updating folder color:', err)
+          set({ 
+            error: err instanceof Error ? err.message : 'Failed to update folder color',
             isLoading: false
           })
         }

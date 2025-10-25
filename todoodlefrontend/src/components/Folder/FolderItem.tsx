@@ -1,6 +1,6 @@
 import './FolderItem.css';
 import type { Folder } from "../../types/types";
-import React from "react";
+import React, { useRef } from "react";
 import { useTodoStore } from "../../stores/toDoStore";
 import { useUIStore } from "../../stores/uiStore";
 import { useFiltersStore } from "../../stores/filtersStore";
@@ -11,15 +11,18 @@ type FolderItemProps = {
 
 const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
     // Get what we need from stores
-    const { updateFolder, deleteFolder, getFolderCount } = useTodoStore();
-    const { 
-        editingFolder, 
-        editFolderName, 
-        startEditingFolder, 
-        updateEditFolderName, 
-        cancelEditingFolder 
-    } = useUIStore();
+    const { updateFolder, updateFolderColor, deleteFolder, getFolderCount } = useTodoStore();
+    // Select only the pieces of UI state we need. Split into selectors so
+    // most FolderItem instances don't re-render on edit color changes.
+    const editingFolder = useUIStore(state => state.editingFolder)
+    const editFolderName = useUIStore(state => state.editFolderName)
+    const editFolderColor = useUIStore(state => state.editingFolder?.id === folder.id ? state.editFolderColor : '')
+    const startEditingFolder = useUIStore(state => state.startEditingFolder)
+    const updateEditFolderName = useUIStore(state => state.updateEditFolderName)
+    const updateEditFolderColor = useUIStore(state => state.updateEditFolderColor)
+    const cancelEditingFolder = useUIStore(state => state.cancelEditingFolder)
     const { filterFolder, setFilterFolder } = useFiltersStore();
+    const colorInputRef = useRef<HTMLInputElement | null>(null)
 
     const handleUpdateFolder = async () => {
         if (!editingFolder || !editFolderName.trim()) return;
@@ -30,6 +33,9 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
             return
         }
         await updateFolder(editingFolder.id, editFolderName.trim());
+        if ((editingFolder.color || '') !== (editFolderColor || '')) {
+            await updateFolderColor(editingFolder.id, editFolderColor || '')
+        }
         cancelEditingFolder();
     };
 
@@ -64,11 +70,56 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
             key={folder.id}
             className={`folder-card ${filterFolder === folder.id ? 'selected' : ''}`}
         >
-            <div
-                className="folder-color"
-                style={{ backgroundColor: folder.color || '#A8BBA0' }}
-                onClick={() => setFilterFolder(folder.id)}
-            ></div>
+            {/* Wrapper to position the color input so the native picker opens beneath the square */}
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+                <div
+                    className="folder-color"
+                    style={{ backgroundColor: (editingFolder?.id === folder.id) ? (editFolderColor || folder.color || '#A8BBA0') : (folder.color || '#A8BBA0') }}
+                    onClick={(e) => {
+                        // Only allow editing the color when this folder is in edit mode.
+                        e.stopPropagation()
+                        if (editingFolder?.id === folder.id) {
+                            colorInputRef.current?.click()
+                        } else {
+                            // behave like before: set filter when not editing
+                            setFilterFolder(folder.id)
+                        }
+                    }}
+                ></div>
+
+                {/* Single invisible but positioned color input. Not display:none so the browser can anchor the
+                    native color picker near this element; we position it beneath the color square. */}
+                <input
+                    ref={colorInputRef}
+                    key={`edit-${folder.id}`}
+                    type="color"
+                    value={
+                        (editingFolder?.id === folder.id)
+                            ? (editFolderColor || folder.color || '#A8BBA0')
+                            : (folder.color || '#A8BBA0')
+                    }
+                    onChange={(e) => {
+                        e.stopPropagation()
+                        const val = e.target.value
+                        // Only update the edit color state — saving persists it
+                        updateEditFolderColor(val)
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: '100%',
+                        marginTop: 6,
+                        width: 28,
+                        height: 28,
+                        padding: 0,
+                        border: 'none',
+                        background: 'transparent',
+                        opacity: 0,
+                        cursor: 'pointer'
+                    }}
+                />
+            </div>
             <div className="folder-info" onClick={() => setFilterFolder(folder.id)}>
                 {editingFolder?.id === folder.id ? (
                     <div className="folder-edit-form">

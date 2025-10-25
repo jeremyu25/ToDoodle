@@ -127,14 +127,18 @@ export const foldersApi = {
   },
 
   // Create a new folder
-  createFolder: async (name: string, description?: string) => {
+  createFolder: async (name: string, description?: string, color?: string) => {
+    const body: any = { name };
+    if (description !== undefined) body.description = description;
+    if (color !== undefined) body.color = color;
+
     const response = await fetch(`${API_BASE_URL}/folder`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ name, description }),
+      body: JSON.stringify(body),
     });
     return handleResponse(response);
   },
@@ -161,6 +165,19 @@ export const foldersApi = {
       },
       credentials: 'include',
       body: JSON.stringify({ description }),
+    });
+    return handleResponse(response);
+  },
+
+  // Update folder color
+  updateFolderColor: async (folderId: string, color: string | null) => {
+    const response = await fetch(`${API_BASE_URL}/folder/${folderId}/color`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ color }),
     });
     return handleResponse(response);
   },
