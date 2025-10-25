@@ -4,9 +4,9 @@
     gap: 10px;
     margin-bottom: 20px;
     padding: 15px;
-    background-color: #f8f9fa;
+    background-color: var(--color-bg-alt);
     border-radius: 8px;
-    border: 1px solid #e9ecef;
+    border: 2px solid var(--color-primary);
 }
 
 .folder-form form {
@@ -16,21 +16,58 @@
 }
 
 .folder-input {
-    flex: 1;
+    flex: 0 0 30%;
+    max-width: 380px;
     padding: 8px 12px;
-    border: 1px solid #ced4da;
+    background-color: var(--color-bg-main);
+    border: 1px solid var(--color-text-muted);
     border-radius: 4px;
     font-size: 0.9rem;
 }
 
 .folder-input:focus {
     outline: none;
+    background-color: white;
     border-color: var(--color-primary);
     box-shadow: 0 0 0 2px rgba(168, 187, 160, 0.2);
 }
 
+.folder-form-content {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex: 1 1 auto;
+}
+
+.folder-desc-input {
+    flex: 1 1 70%;
+    min-height: 72px;
+    max-height: 360px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-text-muted);
+    border-radius: 6px;
+    background: var(--color-bg-main);
+    color: var(--color-text-primary);
+    resize: vertical;
+}
+
+.folder-desc-input:focus {
+    outline: none;
+    background-color: white;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(168, 187, 160, 0.12);
+}
+
+.folder-color-input {
+    border-color: var(--color-bg-primary);
+    cursor: pointer;
+}
+
 .folder-form-buttons {
     display: flex;
+    align-items: center;
     gap: 8px;
 }
 
@@ -68,4 +105,49 @@
 
 .cancel-folder-btn:hover {
     background-color: #5a6268;
+}
+
+
+@media (max-width: 640px) {
+    .folder-form-content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .folder-input {
+        flex: 0 0 auto;
+        max-width: none;
+        width: 100%;
+    }
+
+    .folder-desc-input {
+        flex: 1 1 auto;
+        width: 100%;
+        min-height: 120px;
+        max-height: 480px;
+    }
+
+    .folder-form-buttons {
+        width: 100%;
+        justify-content: flex-start;
+        gap: 8px;
+        margin-top: 4px;
+    }
+
+    .folder-color-input {
+        order: 0;
+        align-self: center;
+    }
+
+    .create-folder-btn {
+        flex: 0 0 auto;
+        order: 1;
+        margin-left: auto;
+    }
+
+    .cancel-folder-btn {
+        flex: 0 0 auto;
+        order: 2;
+    }
 }

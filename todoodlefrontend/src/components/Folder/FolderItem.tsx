@@ -11,15 +11,17 @@ type FolderItemProps = {
 
 const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
     // Get what we need from stores
-    const { updateFolder, updateFolderColor, deleteFolder, getFolderCount } = useTodoStore();
+    const { updateFolder, updateFolderColor, updateFolderDescription, deleteFolder, getFolderCount } = useTodoStore();
     // Select only the pieces of UI state we need. Split into selectors so
     // most FolderItem instances don't re-render on edit color changes.
     const editingFolder = useUIStore(state => state.editingFolder)
     const editFolderName = useUIStore(state => state.editFolderName)
     const editFolderColor = useUIStore(state => state.editingFolder?.id === folder.id ? state.editFolderColor : '')
+    const editFolderDescription = useUIStore(state => state.editingFolder?.id === folder.id ? state.editFolderDescription : '')
     const startEditingFolder = useUIStore(state => state.startEditingFolder)
     const updateEditFolderName = useUIStore(state => state.updateEditFolderName)
     const updateEditFolderColor = useUIStore(state => state.updateEditFolderColor)
+    const updateEditFolderDescription = useUIStore(state => state.updateEditFolderDescription)
     const cancelEditingFolder = useUIStore(state => state.cancelEditingFolder)
     const { filterFolder, setFilterFolder } = useFiltersStore();
     const colorInputRef = useRef<HTMLInputElement | null>(null)
@@ -35,6 +37,9 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
         await updateFolder(editingFolder.id, editFolderName.trim());
         if ((editingFolder.color || '') !== (editFolderColor || '')) {
             await updateFolderColor(editingFolder.id, editFolderColor || '')
+        }
+        if ((editingFolder.description || '') !== (editFolderDescription || '')) {
+            await updateFolderDescription(editingFolder.id, editFolderDescription || '')
         }
         cancelEditingFolder();
     };
@@ -65,11 +70,22 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
     };
     const isDefault = Boolean(folder.is_default || (folder.name || '').toString().trim().toLowerCase() === 'default')
 
+    // Tooltip text: prefer the live edit description when editing, otherwise use folder.description
+    const tooltip = (editingFolder?.id === folder.id)
+        ? (editFolderDescription || folder.description || '')
+        : (folder.description || '')
+
     return (
         <div
             key={folder.id}
             className={`folder-card ${filterFolder === folder.id ? 'selected' : ''}`}
+            title={editingFolder?.id === folder.id ? undefined : tooltip}
         >
+            {/* Only show the styled tooltip when not actively editing this folder to avoid
+                obstructing the edit form. */}
+            {editingFolder?.id !== folder.id && tooltip && tooltip.trim() !== '' && (
+                <div className="folder-tooltip" role="tooltip">{tooltip}</div>
+            )}
             {/* Wrapper to position the color input so the native picker opens beneath the square */}
             <div style={{ position: 'relative', display: 'inline-block' }}>
                 <div
@@ -128,6 +144,13 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
                             value={editFolderName}
                             onChange={(e) => updateEditFolderName(e.target.value)}
                             className="folder-edit-input"
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                        <textarea
+                            className="folder-edit-description"
+                            placeholder="Optional description"
+                            value={editFolderDescription}
+                            onChange={(e) => updateEditFolderDescription(e.target.value)}
                             onClick={(e) => e.stopPropagation()}
                         />
                         <div className="folder-edit-buttons">

@@ -16,6 +16,7 @@ interface UIState {
   editingFolder: Folder | null
   editFolderName: string
   editFolderColor: string
+  editFolderDescription: string
   
   // Actions
   // Modal actions
@@ -33,6 +34,7 @@ interface UIState {
   startEditingFolder: (folder: Folder) => void
   updateEditFolderName: (name: string) => void
   updateEditFolderColor: (color: string) => void
+  updateEditFolderDescription: (description: string) => void
   cancelEditingFolder: () => void
   
   // Reset all UI state
@@ -98,7 +100,8 @@ export const useUIStore = create<UIState>()(
         set({ 
           editingFolder: folder,
           editFolderName: folder.name,
-          editFolderColor: normalizeHexColor(folder.color) || '#A8BBA0'
+          editFolderColor: normalizeHexColor(folder.color) || '#A8BBA0',
+          editFolderDescription: folder.description || ''
         })
       },
 
@@ -110,11 +113,16 @@ export const useUIStore = create<UIState>()(
         set({ editFolderColor: color })
       },
 
+      updateEditFolderDescription: (description: string) => {
+        set({ editFolderDescription: description })
+      },
+
       cancelEditingFolder: () => {
         set({ 
           editingFolder: null,
           editFolderName: "",
-          editFolderColor: ""
+          editFolderColor: "",
+          editFolderDescription: ""
         })
       },
 

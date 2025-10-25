@@ -22,9 +22,10 @@ interface TodoState {
   deleteTask: (id: string) => Promise<void>
   
   // Folder actions
-  createFolder: (folderName: string, color?: string) => Promise<void>
+  createFolder: (folderName: string, description?: string, color?: string) => Promise<void>
   updateFolder: (folderId: string, folderName: string) => Promise<void>
   updateFolderColor: (folderId: string, color: string) => Promise<void>
+  updateFolderDescription: (folderId: string, description: string) => Promise<void>
   deleteFolder: (folderId: string) => Promise<void>
   
   // Utility functions
@@ -193,13 +194,13 @@ export const useTodoStore = create<TodoState>()(
       },
 
       // Folder actions
-      createFolder: async (folderName: string, color?: string) => {
+      createFolder: async (folderName: string, description?: string, color?: string) => {
         if (!folderName.trim()) return
 
         try {
           set({ isLoading: true })
           const normalizedColor = normalizeHexColor(color) // Will be null if invalid/empty
-          const response = await foldersApi.createFolder(folderName.trim(), undefined, normalizedColor || undefined)
+          const response = await foldersApi.createFolder(folderName.trim(), description, normalizedColor || undefined)
           const createdFolder = response.data
           const folderWithColor = addDefaultColors([createdFolder])[0]
 
@@ -286,6 +287,32 @@ export const useTodoStore = create<TodoState>()(
           console.error('Error updating folder color:', err)
           set({ 
             error: err instanceof Error ? err.message : 'Failed to update folder color',
+            isLoading: false
+          })
+        }
+      },
+
+      updateFolderDescription: async (folderId: string, description: string) => {
+        try {
+          set({ isLoading: true })
+          await foldersApi.updateFolderDescription(folderId, description)
+
+          set(state => ({
+            folders: state.folders.map(folder =>
+              folder.id === folderId ? { ...folder, description } : folder
+            ),
+            // Keep task.folder description in sync
+            tasks: state.tasks.map(task =>
+              task.folderId === folderId && task.folder
+                ? { ...task, folder: { ...task.folder, description } }
+                : task
+            ),
+            isLoading: false
+          }))
+        } catch (err) {
+          console.error('Error updating folder description:', err)
+          set({ 
+            error: err instanceof Error ? err.message : 'Failed to update folder description',
             isLoading: false
           })
         }
