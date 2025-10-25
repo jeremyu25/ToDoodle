@@ -4,6 +4,8 @@ import { createOAuthUsername } from "../utils/usernameUtils.js"
 import folderModel from "./folder.model.js"
 
 const TIMEOUT_DURATION = 9 * 60 * 1000 // 9 mins
+const RESEND_WINDOW_MS = process.env.RESEND_WINDOW_MS ? parseInt(process.env.RESEND_WINDOW_MS) : 60 * 60 * 1000 // 1 hour
+const MAX_RESENDS_PER_WINDOW = process.env.MAX_RESENDS_PER_WINDOW ? parseInt(process.env.MAX_RESENDS_PER_WINDOW) : 3
 
 // Create staging user (unverified)
 const createStagingUser = async (username, passwordhash, email) => {
@@ -108,15 +110,44 @@ const getStagingUserByEmail = async (email) => {
 // Resend verification email (generate new token)
 const regenerateVerificationToken = async (email) => {
   try {
+    const select = await query(
+      `SELECT id, username, email, verification_token, verification_expires, resend_count, resend_window_start 
+       FROM staging_users WHERE email = $1`,
+      [email]
+    )
+
+    if (select.rows.length === 0) {
+      throw new Error("Staging user not found.")
+    }
+
+    const row = select.rows[0]
+    const now = new Date()
+
+    let windowStart = row.resend_window_start ? new Date(row.resend_window_start) : null
+    let resendCount = row.resend_count || 0
+
+    // Reset window if expired or not set
+    if (!windowStart || (now - windowStart) > RESEND_WINDOW_MS) {
+      windowStart = now
+      resendCount = 0
+    }
+
+    const nextCount = resendCount + 1
+    if (nextCount > MAX_RESENDS_PER_WINDOW) {
+      const err = new Error("Resend throttled")
+      err.code = 'THROTTLED'
+      throw err
+    }
+
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const verificationExpires = new Date(Date.now() + TIMEOUT_DURATION)
 
     const result = await query(
       `UPDATE staging_users 
-       SET verification_token = $1, verification_expires = $2 
-       WHERE email = $3 
+       SET verification_token = $1, verification_expires = $2, resend_count = $3, resend_window_start = $4
+       WHERE email = $5 
        RETURNING id, username, email, verification_token`,
-      [verificationToken, verificationExpires, email]
+      [verificationToken, verificationExpires, nextCount, windowStart, email]
     )
 
     if (result.rows.length === 0) {
@@ -535,18 +566,19 @@ const createPendingEmailChange = async (userId, oldEmail, newEmail) => {
   try {
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const verificationExpires = new Date(Date.now() + TIMEOUT_DURATION)
-
     const results = await query(
-      `INSERT INTO pending_email_changes(user_id, old_email, new_email, verification_token, verification_expires) 
-       VALUES($1, $2, $3, $4, $5) 
+      `INSERT INTO pending_email_changes(user_id, old_email, new_email, verification_token, verification_expires, resend_count, resend_window_start) 
+       VALUES($1, $2, $3, $4, $5, 1, $6) 
        ON CONFLICT (user_id) DO UPDATE SET 
          old_email = EXCLUDED.old_email,
          new_email = EXCLUDED.new_email,
          verification_token = EXCLUDED.verification_token,
          verification_expires = EXCLUDED.verification_expires,
-         created_at = NOW()
+         created_at = NOW(),
+         resend_count = 1,
+         resend_window_start = EXCLUDED.resend_window_start
        RETURNING id, user_id, old_email, new_email, verification_token`,
-      [userId, oldEmail, newEmail, verificationToken, verificationExpires]
+      [userId, oldEmail, newEmail, verificationToken, verificationExpires, new Date()]
     )
 
     if (results.rows.length === 0) {
