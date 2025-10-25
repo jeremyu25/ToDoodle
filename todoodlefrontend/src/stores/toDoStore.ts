@@ -23,7 +23,7 @@ interface TodoState {
   
   // Folder actions
   createFolder: (folderName: string, description?: string, color?: string) => Promise<void>
-  updateFolder: (folderId: string, folderName: string) => Promise<void>
+  updateFolderName: (folderId: string, folderName: string) => Promise<void>
   updateFolderColor: (folderId: string, color: string) => Promise<void>
   updateFolderDescription: (folderId: string, description: string) => Promise<void>
   deleteFolder: (folderId: string) => Promise<void>
@@ -217,7 +217,7 @@ export const useTodoStore = create<TodoState>()(
         }
       },
 
-      updateFolder: async (folderId: string, folderName: string) => {
+      updateFolderName: async (folderId: string, folderName: string) => {
         if (!folderName.trim()) return
 
         try {

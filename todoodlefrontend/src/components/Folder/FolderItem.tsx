@@ -11,7 +11,7 @@ type FolderItemProps = {
 
 const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
     // Get what we need from stores
-    const { updateFolder, updateFolderColor, updateFolderDescription, deleteFolder, getFolderCount } = useTodoStore();
+    const { updateFolderName, updateFolderColor, updateFolderDescription, deleteFolder, getFolderCount } = useTodoStore();
     // Select only the pieces of UI state we need. Split into selectors so
     // most FolderItem instances don't re-render on edit color changes.
     const editingFolder = useUIStore(state => state.editingFolder)
@@ -34,7 +34,7 @@ const FolderItem: React.FC<FolderItemProps> = ({ folder }) => {
             alert('You cannot rename a folder to "Default".')
             return
         }
-        await updateFolder(editingFolder.id, editFolderName.trim());
+        await updateFolderName(editingFolder.id, editFolderName.trim());
         if ((editingFolder.color || '') !== (editFolderColor || '')) {
             await updateFolderColor(editingFolder.id, editFolderColor || '')
         }
