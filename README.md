@@ -29,8 +29,8 @@ Download the full demo here, [WIP_demo](./docs/assets/WIP_demo.mp4).
 - [x]  User can log out of their account.
 - [x]  User can access the website via a url link.
 - [ ]  User can upload profile pictures.
-- [ ]  User can edit their profile names, email and password.
-- [ ]  Debouncing and throttling.
+- [x]  User can edit their profile names, email and password.
+- [x]  ~~Debouncing and~~ throttling.
 - [x]  Google oauth.
 - [x]  2FA authentication.
 
