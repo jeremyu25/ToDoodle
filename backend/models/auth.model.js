@@ -67,9 +67,9 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
 
     // Create local auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
-       VALUES($1, 'local', $2, $3)`,
-      [user.id, stagingUser.email, stagingUser.password_hash]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash, provider_account_email) 
+       VALUES($1, 'local', $2, $3, $4)`,
+      [user.id, stagingUser.email, stagingUser.password_hash, stagingUser.email]
     )
 
     // Create default folder for new user (mark as default)
@@ -196,9 +196,9 @@ const signUp = async (username, passwordhash, email) => {
 
     // Create local auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
-       VALUES($1, 'local', $2, $3)`,
-      [user.id, email, passwordhash]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash, provider_account_email) 
+       VALUES($1, 'local', $2, $3, $4)`,
+      [user.id, email, passwordhash, email]
     )
 
     await query('COMMIT')
@@ -298,9 +298,9 @@ const createGoogleUser = async (userData) => {
 
     // Create Google auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id) 
-       VALUES($1, 'google', $2)`,
-      [user.id, googleId]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, provider_account_email) 
+       VALUES($1, 'google', $2, $3)`,
+      [user.id, googleId, email]
     )
 
     // Create default folder for new user (mark as default)
@@ -361,9 +361,9 @@ const createOAuthUser = async (userData) => {
 
     // Create OAuth auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id) 
-       VALUES($1, $2, $3)`,
-      [user.id, provider, providerUserId]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, provider_account_email) 
+       VALUES($1, $2, $3, $4)`,
+      [user.id, provider, providerUserId, email]
     )
 
     // Create default folder for new user (mark as default)
@@ -380,12 +380,12 @@ const createOAuthUser = async (userData) => {
 }
 
 // Function to link new auth provider to existing user
-const linkAuthProvider = async (userId, provider, providerUserId, passwordHash = null) => {
+const linkAuthProvider = async (userId, provider, providerUserId, passwordHash = null, providerAccountEmail = null) => {
   try {
     const results = await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
-       VALUES($1, $2, $3, $4) RETURNING id`,
-      [userId, provider, providerUserId, passwordHash]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash, provider_account_email) 
+       VALUES($1, $2, $3, $4, $5) RETURNING id`,
+      [userId, provider, providerUserId, passwordHash, providerAccountEmail]
     )
 
     if (results.rows.length === 0) {
@@ -404,11 +404,11 @@ const linkAuthProvider = async (userId, provider, providerUserId, passwordHash =
 const getUserAuthMethods = async (userId) => {
   try {
     const results = await query(
-      `SELECT provider, provider_user_id 
-       FROM auth_identities 
-       WHERE user_id = $1`,
-      [userId]
-    )
+        `SELECT ai.provider, ai.provider_user_id, ai.provider_account_email
+         FROM auth_identities ai
+         WHERE ai.user_id = $1`,
+        [userId]
+      )
     return results.rows
   }
   catch (error) {
@@ -417,14 +417,13 @@ const getUserAuthMethods = async (userId) => {
   }
 }
 
-// Function to remove a specific auth method
-const removeAuthMethod = async (userId, provider) => {
+const removeAuthMethod = async (userId, provider, providerUserId = null) => {
   try {
     const results = await query(
       `DELETE FROM auth_identities 
-       WHERE user_id = $1 AND provider = $2 
-       RETURNING provider`,
-      [userId, provider]
+      WHERE user_id = $1 AND provider = $2 AND provider_user_id = $3
+      RETURNING provider, provider_user_id`,
+      [userId, provider, providerUserId]
     )
     return results.rows[0]
   }

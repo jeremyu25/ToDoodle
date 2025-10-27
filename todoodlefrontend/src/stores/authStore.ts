@@ -12,6 +12,7 @@ interface User {
 interface AuthMethod {
   provider: string;
   provider_user_id: string;
+  provider_account_email?: string;
 }
 
 interface AuthState {

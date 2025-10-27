@@ -396,7 +396,7 @@ const UserProfilePage = () => {
     }
   }
 
-  const removeOAuthMethod = async (provider: string) => {
+  const removeOAuthMethod = async (provider: string, providerUserId?: string) => {
     if (!user) {
       showError('User not found')
       return
@@ -415,17 +415,17 @@ const UserProfilePage = () => {
 
     // Confirm the action
     const confirmed = window.confirm(
-      `Are you sure you want to remove ${provider} authentication? You will no longer be able to sign in using ${provider}.`
+      `Are you sure you want to remove this authentication?`
     )
     
     if (!confirmed) return
 
     setLoading(prev => ({ ...prev, [provider]: true }))
     try {
-      await authApi.removeOAuthMethod(provider)
-      
-      showSuccess(`${provider} authentication removed successfully`)
-      
+      await authApi.removeOAuthMethod(provider, providerUserId)
+
+      showSuccess(`Authentication removed successfully`)
+
       // Refresh user data to update auth methods
       await refreshUserData()
       
@@ -1021,22 +1021,31 @@ const UserProfilePage = () => {
               <div className="section-content">
                 <div className="auth-methods-list">
                   {authMethods?.map((method) => (
-                    <div key={method.provider} className="auth-method-item">
-                      <div className="auth-method-info">
-                        <span className="auth-method-provider">
-                          {method.provider === 'local' ? 'Password' : method.provider.charAt(0).toUpperCase() + method.provider.slice(1)}
-                        </span>
-                        <span className="auth-method-description">
-                          {method.provider === 'local' 
-                            ? 'Username/Email and password'
-                            : `OAuth via ${method.provider}`
-                          }
-                        </span>
-                      </div>
+                    <div key={`${method.provider}-${method.provider_user_id}`} className="auth-method-item">
+                          <div className="auth-method-info">
+                            <span className="auth-method-provider">
+                              {method.provider === 'local' ? 'Password' : method.provider.charAt(0).toUpperCase() + method.provider.slice(1)}
+                            </span>
+                            <span className="auth-method-description">
+                              {method.provider === 'local'
+                                ? 'Username/Email and password'
+                                : `OAuth via ${method.provider}`
+                              }
+                            </span>
+                            {method.provider !== 'local' && (
+                              <div className="auth-method-linked-email">
+                                {method.provider_account_email ? (
+                                      <span>{method.provider_account_email}</span>
+                                    ) : (
+                                      <span className="small-muted">ID: {method.provider_user_id}</span>
+                                    )}
+                              </div>
+                            )}
+                          </div>
                       {authMethods && authMethods.length > 1 && method.provider !== 'local' && (
                         <button
                           className="remove-auth-button"
-                          onClick={() => removeOAuthMethod(method.provider)}
+                          onClick={() => removeOAuthMethod(method.provider, method.provider_user_id)}
                           disabled={loading[method.provider as keyof typeof loading]}
                         >
                           {loading[method.provider as keyof typeof loading] ? 'Removing...' : 'Remove'}

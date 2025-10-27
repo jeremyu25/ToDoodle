@@ -380,15 +380,17 @@ export const authApi = {
     return handleResponse(response);
   },
 
-  // Remove OAuth authentication method
-  removeOAuthMethod: async (provider: string) => {
+  removeOAuthMethod: async (provider: string, providerUserId?: string) => {
+    const body: any = { provider }
+    if (providerUserId) body.provider_user_id = providerUserId
+
     const response = await fetch(`${API_BASE_URL}/auth/remove-oauth-method`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
       credentials: 'include',
-      body: JSON.stringify({ provider }),
+      body: JSON.stringify(body),
     });
     return handleResponse(response);
   },
