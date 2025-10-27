@@ -5,7 +5,7 @@ import { sendEmail } from '../services/emailService.js'
 
 const signUp = async (req, res) => {
     try {
-        const { username, password, email } = req.body
+        const { username, password, email } = req.body || {}
         if (!username || !password || !email) {
             return res.status(400).json({ 
                 status: "fail",
@@ -104,7 +104,7 @@ const signUp = async (req, res) => {
 
 const signIn = async (req, res) => {
     try {
-        const { username, password, email } = req.body
+        const { username, password, email } = req.body || {}
         
         if ((!username && !email) || !password) {
             return res.status(400).json({
@@ -200,7 +200,6 @@ const verifyUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
     const { id } = req.params;
-    
     if (req.user.id !== id) {
         return res.status(403).json({
             status: "fail",
@@ -342,7 +341,6 @@ const googleCallback = async (req, res) => {
 const verifyEmail = async (req, res) => {
     try {
         const { token } = req.query
-        
         if (!token) {
             return res.status(400).json({ 
                 status: "fail",
@@ -383,7 +381,7 @@ const verifyEmail = async (req, res) => {
 
 const resendVerification = async (req, res) => {
     try {
-        const { email } = req.body
+        const { email } = req.body || {}
         
         if (!email) {
             return res.status(400).json({ message: "Email is required" })
@@ -400,7 +398,7 @@ const resendVerification = async (req, res) => {
         
         // Send new verification email
         const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${stagingUser.verification_token}`
-        
+
         await sendEmail(
             email,
             'Verify Your Email - ToDoodle',
@@ -441,8 +439,7 @@ const resendVerification = async (req, res) => {
 
 const updateUsername = async (req, res) => {
     try {
-        const { userId, username } = req.body
-        
+        const { userId, username } = req.body || {}
         if (!userId || !username) {
             return res.status(400).json({ message: "User ID and username are required" })
         }
@@ -482,7 +479,7 @@ const updateUsername = async (req, res) => {
 
 const updateEmail = async (req, res) => {
     try {
-        const { userId, email } = req.body
+        const { userId, email } = req.body || {}
         
         if (!userId || !email) {
             return res.status(400).json({ 
@@ -606,7 +603,7 @@ const updateEmail = async (req, res) => {
 
 const updatePassword = async (req, res) => {
     try {
-        const { userId, currentPassword, newPassword } = req.body
+        const { userId, currentPassword, newPassword } = req.body || {}
         
         if (!userId || !currentPassword || !newPassword) {
             return res.status(400).json({ message: "User ID, current password, and new password are required" })
@@ -648,7 +645,6 @@ const updatePassword = async (req, res) => {
         if (!validPassword) {
             return res.status(401).json({ message: "Current password is incorrect" })
         }
-
         // Hash new password and update
         const hashedPassword = bcryptjs.hashSync(newPassword, 10)
         await AuthModel.updatePassword(userId, hashedPassword)
@@ -799,7 +795,7 @@ const getUserAuthMethods = async (req, res) => {
 
 const addLocalPassword = async (req, res) => {
     try {
-        const { password } = req.body
+        const { password } = req.body || {}
         const userId = req.user.id
         
         if (!password) {
@@ -856,7 +852,7 @@ const addLocalPassword = async (req, res) => {
 
 const removeOAuthMethod = async (req, res) => {
     try {
-        const { provider } = req.body
+        const { provider } = req.body || {}
         const userId = req.user.id
         
         if (!provider) {
@@ -882,6 +878,8 @@ const removeOAuthMethod = async (req, res) => {
 
         // Remove the auth method
         const removedMethod = await AuthModel.removeAuthMethod(userId, provider)
+
+        console.log(removedMethod)
         
         if (!removedMethod) {
             return res.status(404).json({ message: "Authentication method not found" })

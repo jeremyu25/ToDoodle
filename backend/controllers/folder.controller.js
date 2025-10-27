@@ -2,7 +2,7 @@ import FolderModel from "../models/folder.model.js"
 
 const getFolder = async(req, res) => {
     try{
-        const { id } = req.params; // Use path parameter
+        const { id } = req.params || {}; // Use path parameter
         if (!id) {
             return res.status(400).json({
                 status: "fail",
@@ -97,7 +97,7 @@ const createFolder = async(req, res) => {
 const updateFolderName = async(req, res) => {
     try{
         const { id } = req.params; // Use path parameter
-        const { name } = req.body; // Use request body
+        const { name } = req.body || {}; // Use request body
         
         if (!id || !name) {
             return res.status(400).json({
@@ -136,7 +136,7 @@ const updateFolderName = async(req, res) => {
 const updateFolderDescription = async(req, res) => {
     try{
         const { id } = req.params;
-        const { description } = req.body;
+        const { description } = req.body || {};
         
         if (!id || description === undefined) {
             return res.status(400).json({
