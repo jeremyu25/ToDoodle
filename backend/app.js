@@ -41,16 +41,4 @@ app.use("/api/v1/note", noteRoutes);
 app.use("/api/v1/auth", userRoutes);
 app.use("/api/v1/feedback", feedbackRoutes);
 
-const file = fs.readFileSync("../docs/openapi.yaml", "utf-8");
-const swaggerDocument = YAML.parse(file);
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
-
-app.use((err, req, res, next) => {
-  if (process.env.NODE_ENV !== "test") {
-    console.error(err.stack || err);
-  }
-
-  res.status(500).json({ message: "Internal server error" });
-});
-
 export default app;
