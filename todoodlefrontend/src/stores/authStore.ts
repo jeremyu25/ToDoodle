@@ -66,38 +66,29 @@ export const useAuthStore = create<AuthState>()(
       checkAuthStatus: async () => {
         try {
           set({ isLoading: true });
-          
           const currentState = get();
 
-          if (currentState.user && currentState.isAuthenticated) {
-            try {
-              const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/verify`, {
-                method: 'GET',
-                credentials: 'include', // This will send the HttpOnly cookie
-                headers: {
-                  'Content-Type': 'application/json',
-                }
-              });
-              
-              if (response.ok) {
-                set({ 
-                  isAuthenticated: true, 
-                  isLoading: false 
-                });
-                return;
-              } else {
-                console.log('User is not authenticated with the server');
+          try {
+            const verifyData = await authApi.verifyUser();
+            const verifiedUser = verifyData?.data?.user;
+
+            if (verifiedUser) {
+              if (currentState.user) {
+                set({ isAuthenticated: true, isLoading: false });
               }
-            } catch (error) {
-              console.log('Error in checking auth with server');
+              else {
+                await get().refreshUserData();
+              }
+              return;
             }
+          } catch (err) {
+            console.log('Error verifying auth with server:', err);
           }
-          // No user data or server verification failed
-          console.log('No valid authentication, clearing auth state');
-          set({ user: null, isAuthenticated: false, isLoading: false });
+
+          set({ user: null, authMethods: null, isAuthenticated: false, isLoading: false });
         } catch (error) {
           console.error('Auth check failed:', error);
-          set({ user: null, isAuthenticated: false, isLoading: false });
+          set({ user: null, authMethods: null, isAuthenticated: false, isLoading: false });
         }
       },
 
