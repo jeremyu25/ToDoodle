@@ -7,6 +7,7 @@ import NavBar from '../../components/NavBar/NavBar'
 import '../../styles/globals.css'
 import '../../styles/utilities.css'
 import './UserProfilePage.css'
+import type { PendingEmailChange } from '../../types/types'
 
 // Custom hook for managing temporary messages
 const useMessages = () => {
@@ -82,7 +83,7 @@ const UserProfilePage = () => {
   
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
-  const [pendingEmailChange, setPendingEmailChange] = useState<any>(null)
+  const [pendingEmailChange, setPendingEmailChange] = useState<PendingEmailChange | null>(null)
 
   // Check if user has local authentication (password)
   const userHasLocalAuth = hasLocalAuth()
