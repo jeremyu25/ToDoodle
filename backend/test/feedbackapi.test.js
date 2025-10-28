@@ -1,9 +1,16 @@
 // feedback.test.js
 import request from "supertest"
+jest.mock("../utils/verify.js", () => ({
+  verifyToken: (req, res, next) => {
+    req.user = { id: 1, name: "Mock User" }
+    next()
+  },
+}))
 import app from "../app.js"
 import FeedbackModel from "../models/feedback.model.js"
 
 jest.mock("../models/feedback.model.js")
+
 
 describe("Feedback API", () => {
   describe("GET /api/v1/feedback", () => {
