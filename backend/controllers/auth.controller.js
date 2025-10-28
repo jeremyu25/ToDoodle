@@ -709,7 +709,7 @@ const verifyEmailChange = async (req, res) => {
 const getPendingEmailChange = async (req, res) => {
     try {
         const userId = req.user.id
-        
+
         const pendingChange = await AuthModel.getPendingEmailChange(userId)
         
         if (!pendingChange) {
@@ -878,8 +878,6 @@ const removeOAuthMethod = async (req, res) => {
 
         // Remove the auth method
         const removedMethod = await AuthModel.removeAuthMethod(userId, provider)
-
-        console.log(removedMethod)
         
         if (!removedMethod) {
             return res.status(404).json({ message: "Authentication method not found" })
