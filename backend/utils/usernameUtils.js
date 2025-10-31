@@ -3,12 +3,13 @@ import crypto from "crypto"
 /**
  * Generates a 5-digit hash to append to usernames for OAuth users
  * @param {string} baseString - The string to generate hash from (email or unique identifier)
+ * @param {string} salt - An optional salt to add randomness
  * @returns {string} - A 5-digit numeric string
  */
-const generateUsernameHash = (baseString) => {
+const generateUsernameHash = (baseString, salt="") => {
     // Create a hash of the base string
-    const hash = crypto.createHash('sha256').update(baseString).digest('hex')
-    
+    const hash = crypto.createHash('sha256').update(baseString + salt).digest('hex')
+
     // Convert first 8 characters of hex to integer and take modulo to get 5 digits
     const hashInt = parseInt(hash.substring(0, 8), 16)
     const fiveDigitHash = (hashInt % 100000).toString().padStart(5, '0')
@@ -25,10 +26,10 @@ const generateUsernameHash = (baseString) => {
 const createOAuthUsername = (baseUsername, uniqueIdentifier) => {
     // Clean the base username (remove spaces, special characters, etc.)
     const cleanUsername = baseUsername.replace(/\s+/g, '').replace(/[^a-zA-Z0-9_]/g, '')
-    
+    const salt = crypto.randomBytes(2).toString('hex') // small random salt
     // Generate 5-digit hash
-    const hash = generateUsernameHash(uniqueIdentifier)
-    
+    const hash = generateUsernameHash(uniqueIdentifier, salt)
+
     // Combine username with hash
     return `${cleanUsername}${hash}`
 }

@@ -12,6 +12,7 @@ interface User {
 interface AuthMethod {
   provider: string;
   provider_user_id: string;
+  provider_account_email?: string;
 }
 
 interface AuthState {
@@ -66,38 +67,29 @@ export const useAuthStore = create<AuthState>()(
       checkAuthStatus: async () => {
         try {
           set({ isLoading: true });
-          
           const currentState = get();
 
-          if (currentState.user && currentState.isAuthenticated) {
-            try {
-              const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/verify`, {
-                method: 'GET',
-                credentials: 'include', // This will send the HttpOnly cookie
-                headers: {
-                  'Content-Type': 'application/json',
-                }
-              });
-              
-              if (response.ok) {
-                set({ 
-                  isAuthenticated: true, 
-                  isLoading: false 
-                });
-                return;
-              } else {
-                console.log('User is not authenticated with the server');
+          try {
+            const verifyData = await authApi.verifyUser();
+            const verifiedUser = verifyData?.data?.user;
+
+            if (verifiedUser) {
+              if (currentState.user) {
+                set({ isAuthenticated: true, isLoading: false });
               }
-            } catch (error) {
-              console.log('Error in checking auth with server');
+              else {
+                await get().refreshUserData();
+              }
+              return;
             }
+          } catch (err) {
+            console.log('Error verifying auth with server:', err);
           }
-          // No user data or server verification failed
-          console.log('No valid authentication, clearing auth state');
-          set({ user: null, isAuthenticated: false, isLoading: false });
+
+          set({ user: null, authMethods: null, isAuthenticated: false, isLoading: false });
         } catch (error) {
           console.error('Auth check failed:', error);
-          set({ user: null, isAuthenticated: false, isLoading: false });
+          set({ user: null, authMethods: null, isAuthenticated: false, isLoading: false });
         }
       },
 
@@ -128,43 +120,7 @@ export const useAuthStore = create<AuthState>()(
           }
         } catch (error) {
           console.error('Error refreshing user data:', error);
-          // Try fallback to verify endpoint if getCurrentUser fails
-          try {
-            const verifyResponse = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/auth/verify`, {
-              method: 'GET',
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json',
-              }
-            });
-            
-            if (verifyResponse.ok) {
-              const verifyData = await verifyResponse.json();
-              console.log('Verify endpoint data:', verifyData);
-              if (verifyData.data?.user) {
-                // Try to get auth methods for fallback too
-                try {
-                  const authMethodsData = await authApi.getUserAuthMethods();
-                  set({ 
-                    user: verifyData.data.user,
-                    authMethods: authMethodsData.authMethods || [],
-                    isAuthenticated: true, 
-                    isLoading: false 
-                  });
-                } catch (authError) {
-                  // If auth methods fail, at least set user data
-                  set({ 
-                    user: verifyData.user,
-                    authMethods: [],
-                    isAuthenticated: true, 
-                    isLoading: false 
-                  });
-                }
-              }
-            }
-          } catch (fallbackError) {
-            console.error('Fallback verify endpoint also failed:', fallbackError);
-          }
+          set({ user: null, authMethods: null, isAuthenticated: false, isLoading: false });
         }
       },
     }),
