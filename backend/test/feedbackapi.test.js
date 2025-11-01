@@ -44,7 +44,7 @@ describe("Feedback API", () => {
       expect(res.status).toBe(200)
       expect(res.body.status).toEqual("success")
       expect(res.body.results_length).toBe(2)
-      expect(res.body.data.data).toEqual(mockFeedbacks)
+      expect(res.body.data).toEqual(mockFeedbacks)
     })
 
     it("Should return 500 if model throws", async () => {

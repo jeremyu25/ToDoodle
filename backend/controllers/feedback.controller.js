@@ -21,9 +21,7 @@ const getAllFeedback = async(req, res) => {
         res.status(200).json({
         status: "success",
         results_length: feedbacks.length,
-        data: {
-            data: feedbacks
-        }
+        data:  feedbacks
     })
     }
     catch(err){
