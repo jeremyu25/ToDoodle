@@ -21,7 +21,7 @@ describe("Feedback API", () => {
       const res = await request(app).get("/api/v1/feedback").query({ id: "fb1" })
       expect(res.status).toBe(200)
       expect(res.body.status).toEqual("success")
-      expect(res.body.feedbackdata).toEqual(mockFeedback)
+      expect(res.body.data).toEqual(mockFeedback)
     })
 
     it("Should return 500 if model throws", async () => {
@@ -44,7 +44,7 @@ describe("Feedback API", () => {
       expect(res.status).toBe(200)
       expect(res.body.status).toEqual("success")
       expect(res.body.results_length).toBe(2)
-      expect(res.body.data.feedbackdata).toEqual(mockFeedbacks)
+      expect(res.body.data.data).toEqual(mockFeedbacks)
     })
 
     it("Should return 500 if model throws", async () => {
@@ -64,7 +64,7 @@ describe("Feedback API", () => {
         .post("/api/v1/feedback")
         .query({ user_id: "user1", title: "Bug", description: "Fix this" })
       expect(res.status).toBe(200)
-      expect(res.body.feedbackdata).toEqual(mockFeedback)
+      expect(res.body.data).toEqual(mockFeedback)
     })
 
     it("Should return 500 if model throws", async () => {
@@ -90,7 +90,7 @@ describe("Feedback API", () => {
       FeedbackModel.updateFeedbackTitle.mockResolvedValueOnce(mockUpdated)
       const res = await request(app).patch("/api/v1/feedback/title").query({ id: "fb1", title: "Updated" })
       expect(res.status).toBe(200)
-      expect(res.body.feedbackdata).toEqual(mockUpdated)
+      expect(res.body.data).toEqual(mockUpdated)
     })
   })
 
@@ -107,7 +107,7 @@ describe("Feedback API", () => {
       FeedbackModel.updateFeedbackDescription.mockResolvedValueOnce(mockUpdated)
       const res = await request(app).patch("/api/v1/feedback/description").query({ id: "fb1", description: "Updated desc" })
       expect(res.status).toBe(200)
-      expect(res.body.feedbackdata).toEqual(mockUpdated)
+      expect(res.body.data).toEqual(mockUpdated)
     })
   })
 
@@ -125,7 +125,7 @@ describe("Feedback API", () => {
       const res = await request(app).delete("/api/v1/feedback").query({ id: "fb1" })
       expect(res.status).toBe(200)
       expect(res.body.status).toBe("success")
-      expect(res.body.feedbackdata).toEqual(mockDeleted)
+      expect(res.body.data).toEqual(mockDeleted)
     })
   })
 
@@ -146,7 +146,7 @@ describe("Feedback API", () => {
       const res = await request(app).delete("/api/v1/feedback/all").query({ user_id: "user1" })
       expect(res.status).toBe(200)
       expect(res.body.results_length).toBe(2)
-      expect(res.body.data.feedbackdata).toEqual(mockDeleted)
+      expect(res.body.data).toEqual(mockDeleted)
     })
   })
 })

@@ -6,7 +6,7 @@ const getFeedback = async(req, res) => {
         
         res.status(200).json({
         status: "success",
-        feedbackdata: feedback
+        data: feedback
         })
     }
     catch(err){
@@ -22,7 +22,7 @@ const getAllFeedback = async(req, res) => {
         status: "success",
         results_length: feedbacks.length,
         data: {
-            feedbackdata: feedbacks
+            data: feedbacks
         }
     })
     }
@@ -36,7 +36,7 @@ const createFeedback = async(req, res) => {
         const feedback = await FeedbackModel.createFeedback(req.query.user_id, req.query.title  , req.query.description)
         res.status(200).json({
             status: "success",
-            feedbackdata: feedback
+            data: feedback
         })
     }
     catch(err){
@@ -54,7 +54,7 @@ const updateFeedbackTitle = async(req, res) => {
         }
         res.status(200).json({
             results_length: feedback.length,
-            feedbackdata: feedback
+            data: feedback
             
         })
     }
@@ -73,7 +73,7 @@ const updateFeedbackDescription = async(req, res) => {
         }
         res.status(200).json({
             results_length: feedback.length,
-            feedbackdata: feedback
+            data: feedback
             
         })
     }
@@ -92,7 +92,7 @@ const deleteFeedback = async(req, res) => {
         }
         res.status(200).json({
             status: "success",
-            feedbackdata: feedback
+            data: feedback
         })
     }
     catch(err){
@@ -110,9 +110,7 @@ const deleteAllFeedback = async(req, res) => {
         }
         res.status(200).json({
             results_length: feedback.length,
-            data: {
-                feedbackdata: feedback
-            }
+            data: feedback
         })
     }
     catch(err){
