@@ -22,7 +22,7 @@ export type Note = {
     folder_id?: string;
     title?: string;
     content: string;
-    status: Status;
+    status: 'not_started' | 'in_progress' | 'completed';
     created_at: string;
     updated_at: string;
 };
