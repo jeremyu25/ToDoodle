@@ -146,7 +146,13 @@ const signIn = async (req, res) => {
         const {password_hash, ...rest} = validUser
         const expiryDate = new Date(Date.now() + 10800000)
         return res
-            .cookie("access_token", token, {httpOnly: true, expires: expiryDate})
+            .cookie("access_token", token, {
+                httpOnly: true, 
+                expires: expiryDate,
+                secure: true,
+                sameSite: 'none',
+                path: '/'
+            })
             .status(200)
             .json({
                 status: "success",
@@ -165,7 +171,12 @@ const signIn = async (req, res) => {
 
 const signOut = async (req, res) => {
     try {
-        res.clearCookie("access_token")
+        res.clearCookie("access_token", {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            path: '/'
+        })
         res.status(200).json({ 
             status: "success",
             message: "User signed out successfully" 
@@ -270,7 +281,13 @@ const googleCallback = async (req, res) => {
         const token = jwt.sign({id: user.id}, process.env.JWT_SECRET)
         const expiryDate = new Date(Date.now() + 10800000)
         
-        res.cookie("access_token", token, {httpOnly: true, expires: expiryDate})
+        res.cookie("access_token", token, {
+            httpOnly: true, 
+            expires: expiryDate,
+            secure: true,
+            sameSite: 'none',
+            path: '/'
+        })
         
         // Send HTML page that communicates with parent window
         const {password_hash, ...userWithoutPassword} = user
@@ -354,7 +371,13 @@ const verifyEmail = async (req, res) => {
         const authToken = jwt.sign({id: user.id}, process.env.JWT_SECRET)
         const expiryDate = new Date(Date.now() + 10800000) // 3 hours
         
-        res.cookie("access_token", authToken, {httpOnly: true, expires: expiryDate})
+        res.cookie("access_token", authToken, {
+            httpOnly: true, 
+            expires: expiryDate,
+            secure: true,
+            sameSite: 'none',
+            path: '/'
+        })
         
         res.status(200).json({ 
             status: "success",

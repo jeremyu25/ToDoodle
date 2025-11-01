@@ -34,19 +34,6 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 
-app.use((req, res, next) => {
-    if (req.user && !req.cookies.accessToken) {
-        res.cookie('accessToken', req.user.accessToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'none',
-            maxAge: 24 * 60 * 60 * 1000,
-            path: '/'
-        })
-    }
-    next()
-})
-
 app.use("/api/v1/folder", folderRoutes)
 app.use("/api/v1/note", noteRoutes)
 app.use("/api/v1/auth", userRoutes)
