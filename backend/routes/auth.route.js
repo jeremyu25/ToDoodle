@@ -1,9 +1,7 @@
-import crypto from "crypto"
 import express from "express"
 import authController from "../controllers/auth.controller.js"
 import { verifyToken } from "../utils/verify.js"
 import passport from "passport"
-import { sendEmail } from '../services/emailService.js'
 
 const router = express.Router()
 
