@@ -23,7 +23,7 @@ describe("Folder API", () => {
     })
 
     it("Should return 200 with folder data if found", async () => {
-      const mockFolder = { id: "folder1", name: "Work", description: "Work projects" }
+      const mockFolder = { id: "folder1", name: "Work", description: "Work projects", color:"#RRGGBB" }
       FolderModel.getFolderById.mockResolvedValueOnce(mockFolder)
       const res = await request(app).get("/api/v1/folder/folder1")
       expect(res.status).toBe(200)
@@ -44,8 +44,8 @@ describe("Folder API", () => {
 
     it("Should return 200 with folders if found", async () => {
       const mockFolders = [
-        { id: "folder1", name: "Work", description: "Work projects" },
-        { id: "folder2", name: "Personal", description: "Personal tasks" }
+        { id: "folder1", name: "Work", description: "Work projects", color: "#RRGGBB"},
+        { id: "folder2", name: "Personal", description: "Personal tasks", color: "#RRGGBB" }
       ]
       FolderModel.getAllFolders.mockResolvedValueOnce(mockFolders)
       const res = await request(app).get("/api/v1/folder").query({ user_id: "user123" })
@@ -58,7 +58,7 @@ describe("Folder API", () => {
 
   describe("POST /api/v1/folder", () => {
     it("Should return 201 when folder is created", async () => {
-      const mockFolder = { id: "folder1", user_id: "user123", name: "New Folder", description: "Desc" }
+      const mockFolder = { id: "folder1", user_id: "user123", name: "New Folder", description: "Desc", color: "#RRGGBB"}
       FolderModel.createFolder.mockResolvedValueOnce(mockFolder)
       const res = await request(app)
         .post("/api/v1/folder")
@@ -84,7 +84,7 @@ describe("Folder API", () => {
     })
 
     it("Should return 200 when folder name is updated", async () => {
-      const mockUpdated = { id: "folder1", name: "Renamed Folder", description: "Desc" }
+      const mockUpdated = { id: "folder1", name: "Renamed Folder", description: "Desc", color: "#RRGGBB"}
       FolderModel.updateFolderName.mockResolvedValueOnce(mockUpdated)
       const res = await request(app).patch("/api/v1/folder/folder123/name").send({name: "Renamed Folder" })
       expect(res.status).toBe(200)
@@ -108,7 +108,7 @@ describe("Folder API", () => {
     })
 
     it("Should return 200 when folder description is updated", async () => {
-      const mockUpdated = { id: "folder1", name: "Work", description: "Updated Desc" }
+      const mockUpdated = { id: "folder1", name: "Work", description: "Updated Desc", color: "#RRGGBB" }
       FolderModel.updateFolderDescription.mockResolvedValueOnce(mockUpdated)
       const res = await request(app).patch("/api/v1/folder/folder123/description").send({ description: "Updated Desc" })
       expect(res.status).toBe(200)
@@ -126,7 +126,7 @@ describe("Folder API", () => {
     })
 
     it("Should return 200 when folder is deleted", async () => {
-      const mockDeleted = { id: "folder1", name: "Old Folder" }
+      const mockDeleted = { id: "folder1", name: "Old Folder", description: "Updated Desc", color: "#RRGGBB" }
       FolderModel.deleteFolder.mockResolvedValueOnce(mockDeleted)
       const res = await request(app).delete("/api/v1/folder/folder1")
       expect(res.status).toBe(200)
@@ -144,8 +144,8 @@ describe("Folder API", () => {
 
     it("Should return 200 when all folders are deleted", async () => {
       const mockDeleted = [
-        { id: "folder1", name: "Work" },
-        { id: "folder2", name: "Personal" }
+        { id: "folder1", name: "work", description: "Updated Desc", color: "#RRGGBB" },
+        { id: "folder2", name: "personal", description: "Updated Desc", color: "#RRGGBB" }
       ]
       FolderModel.deleteAllFolders.mockResolvedValueOnce(mockDeleted)
       const res = await request(app).delete("/api/v1/folder")
