@@ -1,8 +1,5 @@
-import "dotenv/config.js";
 import express from "express";
-import cors from "cors";
 import cookies from "cookie-parser";
-import session from "express-session";
 
 import folderRoutes from "./routes/folder.route.js";
 import noteRoutes from "./routes/note.route.js";
@@ -11,23 +8,9 @@ import feedbackRoutes from "./routes/feedback.route.js";
 
 const app = express();
 
-app.use(cors({
-  credentials: true,
-  origin: [process.env.CLIENT_URL],
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
-}));
 app.use(express.json());
 app.use(cookies());
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || "your-secret-key",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: true,
-    maxAge: 24 * 60 * 60 * 1000
-  }
-}));
 
 app.use("/api/v1/folder", folderRoutes);
 app.use("/api/v1/note", noteRoutes);
