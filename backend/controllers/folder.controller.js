@@ -7,7 +7,7 @@ const isValidHexColor = (value) => {
 
 const getFolder = async (req, res) => {
     try {
-        const { id } = req.params
+        const { id } = req.params || {}
         if (!id) {
             return res.status(400).json({
                 status: "fail",
@@ -105,7 +105,7 @@ const createFolder = async (req, res) => {
 const updateFolderName = async (req, res) => {
     try {
         const { id } = req.params
-        const { name } = req.body
+        const { name } = req.body || {}
         if (!id || !name) {
             return res.status(400).json({
                 status: "fail",
@@ -141,7 +141,7 @@ const updateFolderName = async (req, res) => {
 const updateFolderDescription = async (req, res) => {
     try {
         const { id } = req.params
-        const { description } = req.body
+        const { description } = req.body || {}
         if (!id || description === undefined) {
             return res.status(400).json({
                 status: "fail",

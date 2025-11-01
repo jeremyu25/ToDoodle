@@ -63,7 +63,7 @@ const getAllNotes = async (req, res) => {
 
 const createNote = async (req, res) => {
     try {
-        const { folder_id, title, content, status } = req.body
+        const { folder_id, title, content, status } = req.body || {}
         const user_id = req.user.id; // From authenticated JTW token
 
         if (!folder_id || !title) {
@@ -92,7 +92,7 @@ const createNote = async (req, res) => {
 const updateNoteContent = async (req, res) => {
     try {
         const { id } = req.params; // Use path parameter for note ID
-        const { content } = req.body; // Use request body for data
+        const { content } = req.body || {}; // Use request body for data
 
         if (!id || content === undefined) {
             return res.status(400).json({
@@ -122,7 +122,7 @@ const updateNoteContent = async (req, res) => {
 const updateNoteTitle = async (req, res) => {
     try {
         const { id } = req.params;
-        const { title } = req.body;
+        const { title } = req.body || {};
 
         if (!id || !title) {
             return res.status(400).json({
@@ -153,7 +153,7 @@ const updateNoteTitle = async (req, res) => {
 const updateNoteStatus = async (req, res) => {
     try {
         const { id } = req.params;
-        const { status } = req.body;
+        const { status } = req.body || {};
 
         const allowedStatuses = ["not_started", "in_progress", "completed"]
 
@@ -220,12 +220,10 @@ const deleteNote = async (req, res) => {
     }
 }
 
-const deleteAllNotes = async (req, res) => {
-    try {
-        const user_id = req.user.id; // From authenticated JTW token
-
-        const note = await NoteModel.deleteAllNotes(user_id)
-        if (note.length === 0) {
+ const deleteAllNotes = async(req, res) => {
+    try{
+        const note = await NoteModel.deleteAllNotes(req.user.id)
+        if (!note || note.length === 0) {
             return res.status(404).json({
                 status: "fail",
                 message: "User doesn't exist, or has no notes."
@@ -239,6 +237,7 @@ const deleteAllNotes = async (req, res) => {
             }
         })
     } catch (err) {
+        console.error(err)
         return res.status(500).json({
             status: "error",
             message: err.message
