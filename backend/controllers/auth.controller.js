@@ -245,12 +245,9 @@ const googleCallback = async (req, res) => {
             if (existingUser) {
                 const existingGoogleAuth = await AuthModel.getUserAuthMethods(existingUser.id)
                 const hasGoogleAuth = existingGoogleAuth.some(auth => auth.provider === 'google')
+            
                 
-                if (hasGoogleAuth) {
-                    throw new Error("Google account is already linked to this user")
-                }
-                
-                await AuthModel.linkAuthProvider(existingUser.id, 'google', googleUser.id)
+                await AuthModel.linkAuthProvider(existingUser.id, 'google', googleUser.id, null, email)
                 user = existingUser
             }
             else {
@@ -430,6 +427,9 @@ const resendVerification = async (req, res) => {
         })
     } catch (error) {
         console.error("Resend verification error:", error.message)
+        if (error.code === 'THROTTLED' || error.message.includes('throttled')) {
+            return res.status(429).json({ message: "Too many resend requests. Please try again after 15 minutes." })
+        }
         if (error.message.includes("not found")) {
             return res.status(404).json({ message: "No pending registration found for this email" })
         }
@@ -852,32 +852,35 @@ const addLocalPassword = async (req, res) => {
 
 const removeOAuthMethod = async (req, res) => {
     try {
-        const { provider } = req.body || {}
+        const { provider, provider_user_id } = req.body || {}
         const userId = req.user.id
         
         if (!provider) {
             return res.status(400).json({ message: "Provider is required" })
         }
 
-        // Don't allow removing local auth if it's the only auth method
         const authMethods = await AuthModel.getUserAuthMethods(userId)
-        const hasLocal = authMethods.some(method => method.provider === 'local')
         const oauthMethods = authMethods.filter(method => method.provider !== 'local')
-        
+
         if (provider === 'local') {
             if (oauthMethods.length === 0) {
                 return res.status(400).json({ message: "Cannot remove local authentication - it's your only login method" })
             }
-        } else {
-            // Removing OAuth method - make sure it exists
-            const hasThisOAuth = authMethods.some(method => method.provider === provider)
+        } 
+        else {
+            if (!provider_user_id) {
+                return res.status(400).json({ message: "provider_user_id is required to remove a specific OAuth identity" })
+            }
+
+            // Ensure the specified identity exists for this user
+            const hasThisOAuth = authMethods.some(method => method.provider === provider && method.provider_user_id === provider_user_id)
             if (!hasThisOAuth) {
-                return res.status(404).json({ message: "OAuth method not found" })
+                return res.status(404).json({ message: "OAuth identity not found for this user" })
             }
         }
 
         // Remove the auth method
-        const removedMethod = await AuthModel.removeAuthMethod(userId, provider)
+        const removedMethod = await AuthModel.removeAuthMethod(userId, provider, provider_user_id)
         
         if (!removedMethod) {
             return res.status(404).json({ message: "Authentication method not found" })

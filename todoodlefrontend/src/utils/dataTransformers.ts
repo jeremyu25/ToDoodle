@@ -2,7 +2,7 @@ import type { Note, Task, Folder, Status } from '../types/types';
 
 // Convert backend Note to frontend Task
 export const noteToTask = (note: Note, folders: Folder[]): Task => {
-  const folder = folders.find(f => f.id === note.folder_id);
+  const folder = folders.find(f => f.id === (note.folder_id ? note.folder_id : note.folder_id));
   
   // Map backend status values to frontend Status type
   let status: Status = 'NOT_STARTED';
@@ -15,11 +15,11 @@ export const noteToTask = (note: Note, folders: Folder[]): Task => {
   }
 
   return {
-    id: note.id,
+    id: note.id.toString(),
     title: note.title || 'Untitled Note',
     description: note.content,
     status,
-    folderId: note.folder_id,
+    folderId: note.folder_id ? note.folder_id.toString() : undefined,
     folder,
     createdAt: new Date(note.created_at),
   };
@@ -46,11 +46,22 @@ export const taskToNote = (task: Task, userId: string): Omit<Note, 'id' | 'creat
 
 // Add default colors to folders if they don't have them
 export const addDefaultColors = (folders: Folder[]): Folder[] => {
-  const defaultColors = ['#A8BBA0', '#C2B6A6', '#e2b64f', '#D98A7B', '#9B59B6', '#3498DB', '#E74C3C', '#F39C12'];
-  
+  const defaultColors = ['#A8BBA0', '#C2B6A6', '#E2B64F', '#D98A7B', '#9B59B6', '#3498DB', '#E74C3C', '#F39C12'];
+
   return folders.map((folder, index) => ({
     ...folder,
-    color: folder.color || defaultColors[index % defaultColors.length],
+    id: folder.id.toString(),
+    color: normalizeHexColor(folder.color) || defaultColors[index % defaultColors.length],
     description: folder.description || `${folder.name} folder`,
   }));
 };
+
+export const normalizeHexColor = (value?: string | null): string | null => {
+  if (value === null || value === undefined) return null
+  const str = value.toString().trim()
+  if (str === '') return null
+  // Accept formats like #rrggbb or #RRGGBB
+  const match = /^#([0-9A-Fa-f]{6})$/.exec(str)
+  if (!match) return null
+  return `#${match[1].toUpperCase()}`
+}

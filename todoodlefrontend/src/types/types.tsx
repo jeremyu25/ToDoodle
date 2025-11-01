@@ -36,3 +36,12 @@ export type Task = {
     folder?: Folder;
     createdAt: Date;
 };
+
+export type PendingEmailChange = {
+    id?: string;
+    user_id?: string;
+    old_email?: string;
+    new_email: string;
+    verification_expires: string;
+    created_at?: string;
+};

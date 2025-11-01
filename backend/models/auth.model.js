@@ -4,6 +4,8 @@ import { createOAuthUsername } from "../utils/usernameUtils.js"
 import folderModel from "./folder.model.js"
 
 const TIMEOUT_DURATION = 9 * 60 * 1000 // 9 mins
+const RESEND_WINDOW_MS = process.env.RESEND_WINDOW_MS ? parseInt(process.env.RESEND_WINDOW_MS) : 60 * 60 * 1000 // 1 hour
+const MAX_RESENDS_PER_WINDOW = process.env.MAX_RESENDS_PER_WINDOW ? parseInt(process.env.MAX_RESENDS_PER_WINDOW) : 3
 
 // Create staging user (unverified)
 const createStagingUser = async (username, passwordhash, email) => {
@@ -24,7 +26,8 @@ const createStagingUser = async (username, passwordhash, email) => {
     }
 
     return result.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     throw error
   }
 }
@@ -33,7 +36,7 @@ const createStagingUser = async (username, passwordhash, email) => {
 const verifyEmailAndCreateUser = async (verificationToken) => {
   try {
     await query('BEGIN')
-    
+
     // Find staging user by verification token
     const stagingUserResult = await query(
       `SELECT * FROM staging_users 
@@ -47,7 +50,7 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
     }
 
     const stagingUser = stagingUserResult.rows[0]
-    
+
     // Create verified user
     const userResult = await query(
       `INSERT INTO users(id, username, email) 
@@ -61,16 +64,16 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
     }
 
     const user = userResult.rows[0]
-    
+
     // Create local auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
-       VALUES($1, 'local', $2, $3)`,
-      [user.id, stagingUser.email, stagingUser.password_hash]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash, provider_account_email) 
+       VALUES($1, 'local', $2, $3, $4)`,
+      [user.id, stagingUser.email, stagingUser.password_hash, stagingUser.email]
     )
 
-  // Create default folder for new user (mark as default)
-  await folderModel.createFolder(user.id, "Default", null, true)
+    // Create default folder for new user (mark as default)
+    await folderModel.createFolder(user.id, "Default", null, true)
 
     // Remove from staging users
     await query(
@@ -79,8 +82,10 @@ const verifyEmailAndCreateUser = async (verificationToken) => {
     )
 
     await query('COMMIT')
+
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     throw error
   }
@@ -95,7 +100,8 @@ const getStagingUserByEmail = async (email) => {
       [email]
     )
     return result.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching staging user by email:", error.message)
     throw new Error("DB error while fetching staging user.")
   }
@@ -104,15 +110,44 @@ const getStagingUserByEmail = async (email) => {
 // Resend verification email (generate new token)
 const regenerateVerificationToken = async (email) => {
   try {
+    const select = await query(
+      `SELECT id, username, email, verification_token, verification_expires, resend_count, resend_window_start 
+       FROM staging_users WHERE email = $1`,
+      [email]
+    )
+
+    if (select.rows.length === 0) {
+      throw new Error("Staging user not found.")
+    }
+
+    const row = select.rows[0]
+    const now = new Date()
+
+    let windowStart = row.resend_window_start ? new Date(row.resend_window_start) : null
+    let resendCount = row.resend_count || 0
+
+    // Reset window if expired or not set
+    if (!windowStart || (now - windowStart) > RESEND_WINDOW_MS) {
+      windowStart = now
+      resendCount = 0
+    }
+
+    const nextCount = resendCount + 1
+    if (nextCount > MAX_RESENDS_PER_WINDOW) {
+      const err = new Error("Resend throttled")
+      err.code = 'THROTTLED'
+      throw err
+    }
+
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const verificationExpires = new Date(Date.now() + TIMEOUT_DURATION)
 
     const result = await query(
       `UPDATE staging_users 
-       SET verification_token = $1, verification_expires = $2 
-       WHERE email = $3 
+       SET verification_token = $1, verification_expires = $2, resend_count = $3, resend_window_start = $4
+       WHERE email = $5 
        RETURNING id, username, email, verification_token`,
-      [verificationToken, verificationExpires, email]
+      [verificationToken, verificationExpires, nextCount, windowStart, email]
     )
 
     if (result.rows.length === 0) {
@@ -120,7 +155,8 @@ const regenerateVerificationToken = async (email) => {
     }
 
     return result.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     throw error
   }
 }
@@ -132,7 +168,8 @@ const cleanupExpiredStagingUsers = async () => {
       `DELETE FROM staging_users WHERE verification_expires < NOW() RETURNING id`
     )
     return result.rows.length
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error cleaning up expired staging users:", error.message)
     throw error
   }
@@ -142,7 +179,7 @@ const signUp = async (username, passwordhash, email) => {
   try {
     // Start a transaction
     await query('BEGIN')
-    
+
     // Create user first
     const userResults = await query(
       `INSERT INTO users(username, email) 
@@ -156,17 +193,18 @@ const signUp = async (username, passwordhash, email) => {
     }
 
     const user = userResults.rows[0]
-    
+
     // Create local auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
-       VALUES($1, 'local', $2, $3)`,
-      [user.id, email, passwordhash]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash, provider_account_email) 
+       VALUES($1, 'local', $2, $3, $4)`,
+      [user.id, email, passwordhash, email]
     )
 
     await query('COMMIT')
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     throw error
   }
@@ -175,7 +213,7 @@ const signUp = async (username, passwordhash, email) => {
 const getUser = async (identifier, secondaryIdentifier = null) => {
   try {
     let query_text, params;
-    
+
     if (secondaryIdentifier) {
       // Both email and username provided - verify they belong to the same user
       query_text = `SELECT u.id, u.username, u.email, ai.password_hash 
@@ -190,10 +228,11 @@ const getUser = async (identifier, secondaryIdentifier = null) => {
                     WHERE u.username = $1 OR u.email = $1`;
       params = [identifier];
     }
-    
+
     const results = await query(query_text, params);
     return results.rows[0];
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user from database:", error.message)
     throw new Error("DB error while fetching user.")
   }
@@ -211,7 +250,8 @@ const deleteUser = async (id) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error deleting user from database:", error.message)
     throw new Error("DB error while deleting user.")
   }
@@ -225,7 +265,8 @@ const getUserByEmail = async (email) => {
       [email]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by email:", error.message)
     throw new Error("DB error while fetching user by email.")
   }
@@ -234,13 +275,13 @@ const getUserByEmail = async (email) => {
 const createGoogleUser = async (userData) => {
   try {
     const { username, email, googleId } = userData
-    
+
     // Generate username with 5-digit hash for OAuth users
     const finalUsername = createOAuthUsername(username, email)
-    
+
     // Start a transaction
     await query('BEGIN')
-    
+
     // Create user first
     const userResults = await query(
       `INSERT INTO users(username, email) 
@@ -254,20 +295,21 @@ const createGoogleUser = async (userData) => {
     }
 
     const user = userResults.rows[0]
-    
+
     // Create Google auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id) 
-       VALUES($1, 'google', $2)`,
-      [user.id, googleId]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, provider_account_email) 
+       VALUES($1, 'google', $2, $3)`,
+      [user.id, googleId, email]
     )
 
-  // Create default folder for new user (mark as default)
-  await folderModel.createFolder(user.id, "Default", null, true)
+    // Create default folder for new user (mark as default)
+    await folderModel.createFolder(user.id, "Default", null, true)
 
     await query('COMMIT')
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error creating Google user:", error.message)
     throw error
@@ -285,7 +327,8 @@ const getUserByProvider = async (provider, providerUserId) => {
       [provider, providerUserId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by provider:", error.message)
     throw new Error("DB error while fetching user by provider.")
   }
@@ -295,13 +338,13 @@ const getUserByProvider = async (provider, providerUserId) => {
 const createOAuthUser = async (userData) => {
   try {
     const { username, email, provider, providerUserId } = userData
-    
+
     // Generate username with 5-digit hash for OAuth users
     const finalUsername = createOAuthUsername(username, email)
-    
+
     // Start a transaction
     await query('BEGIN')
-    
+
     // Create user first
     const userResults = await query(
       `INSERT INTO users(username, email) 
@@ -315,20 +358,21 @@ const createOAuthUser = async (userData) => {
     }
 
     const user = userResults.rows[0]
-    
+
     // Create OAuth auth identity
     await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id) 
-       VALUES($1, $2, $3)`,
-      [user.id, provider, providerUserId]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, provider_account_email) 
+       VALUES($1, $2, $3, $4)`,
+      [user.id, provider, providerUserId, email]
     )
 
-  // Create default folder for new user (mark as default)
-  await folderModel.createFolder(user.id, "Default", null, true)
+    // Create default folder for new user (mark as default)
+    await folderModel.createFolder(user.id, "Default", null, true)
 
     await query('COMMIT')
     return user
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error creating OAuth user:", error.message)
     throw error
@@ -336,12 +380,12 @@ const createOAuthUser = async (userData) => {
 }
 
 // Function to link new auth provider to existing user
-const linkAuthProvider = async (userId, provider, providerUserId, passwordHash = null) => {
+const linkAuthProvider = async (userId, provider, providerUserId, passwordHash = null, providerAccountEmail = null) => {
   try {
     const results = await query(
-      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash) 
-       VALUES($1, $2, $3, $4) RETURNING id`,
-      [userId, provider, providerUserId, passwordHash]
+      `INSERT INTO auth_identities(user_id, provider, provider_user_id, password_hash, provider_account_email) 
+       VALUES($1, $2, $3, $4, $5) RETURNING id`,
+      [userId, provider, providerUserId, passwordHash, providerAccountEmail]
     )
 
     if (results.rows.length === 0) {
@@ -349,7 +393,8 @@ const linkAuthProvider = async (userId, provider, providerUserId, passwordHash =
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error linking auth provider:", error.message)
     throw error
   }
@@ -359,29 +404,30 @@ const linkAuthProvider = async (userId, provider, providerUserId, passwordHash =
 const getUserAuthMethods = async (userId) => {
   try {
     const results = await query(
-      `SELECT provider, provider_user_id 
-       FROM auth_identities 
-       WHERE user_id = $1`,
-      [userId]
-    )
+        `SELECT ai.provider, ai.provider_user_id, ai.provider_account_email
+         FROM auth_identities ai
+         WHERE ai.user_id = $1`,
+        [userId]
+      )
     return results.rows
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user auth methods:", error.message)
     throw new Error("DB error while fetching user auth methods.")
   }
 }
 
-// Function to remove a specific auth method
-const removeAuthMethod = async (userId, provider) => {
+const removeAuthMethod = async (userId, provider, providerUserId = null) => {
   try {
     const results = await query(
       `DELETE FROM auth_identities 
-       WHERE user_id = $1 AND provider = $2 
-       RETURNING provider`,
-      [userId, provider]
+      WHERE user_id = $1 AND provider = $2 AND provider_user_id = $3
+      RETURNING provider, provider_user_id`,
+      [userId, provider, providerUserId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error removing auth method:", error.message)
     throw new Error("DB error while removing auth method.")
   }
@@ -396,7 +442,8 @@ const getUserByUsername = async (username) => {
       [username]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by username:", error.message)
     throw new Error("DB error while fetching user by username.")
   }
@@ -411,7 +458,8 @@ const getUserById = async (userId) => {
       [userId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user by ID:", error.message)
     throw new Error("DB error while fetching user by ID.")
   }
@@ -428,7 +476,8 @@ const getUserWithPassword = async (userId) => {
       [userId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching user with password:", error.message)
     throw new Error("DB error while fetching user with password.")
   }
@@ -448,7 +497,8 @@ const updateUsername = async (userId, username) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error updating username:", error.message)
     throw new Error("DB error while updating username.")
   }
@@ -458,7 +508,7 @@ const updateUsername = async (userId, username) => {
 const updateEmail = async (userId, email) => {
   try {
     await query('BEGIN')
-    
+
     // Update user email
     const userResults = await query(
       `UPDATE users SET email = $1 WHERE id = $2 
@@ -480,7 +530,8 @@ const updateEmail = async (userId, email) => {
 
     await query('COMMIT')
     return userResults.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error updating email:", error.message)
     throw new Error("DB error while updating email.")
@@ -502,7 +553,8 @@ const updatePassword = async (userId, hashedPassword) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error updating password:", error.message)
     throw new Error("DB error while updating password.")
   }
@@ -513,18 +565,19 @@ const createPendingEmailChange = async (userId, oldEmail, newEmail) => {
   try {
     const verificationToken = crypto.randomBytes(32).toString('hex')
     const verificationExpires = new Date(Date.now() + TIMEOUT_DURATION)
-
     const results = await query(
-      `INSERT INTO pending_email_changes(user_id, old_email, new_email, verification_token, verification_expires) 
-       VALUES($1, $2, $3, $4, $5) 
+      `INSERT INTO pending_email_changes(user_id, old_email, new_email, verification_token, verification_expires, resend_count, resend_window_start) 
+       VALUES($1, $2, $3, $4, $5, 1, $6) 
        ON CONFLICT (user_id) DO UPDATE SET 
          old_email = EXCLUDED.old_email,
          new_email = EXCLUDED.new_email,
          verification_token = EXCLUDED.verification_token,
          verification_expires = EXCLUDED.verification_expires,
-         created_at = NOW()
+         created_at = NOW(),
+         resend_count = 1,
+         resend_window_start = EXCLUDED.resend_window_start
        RETURNING id, user_id, old_email, new_email, verification_token`,
-      [userId, oldEmail, newEmail, verificationToken, verificationExpires]
+      [userId, oldEmail, newEmail, verificationToken, verificationExpires, new Date()]
     )
 
     if (results.rows.length === 0) {
@@ -532,7 +585,8 @@ const createPendingEmailChange = async (userId, oldEmail, newEmail) => {
     }
 
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error creating pending email change:", error.message)
     throw new Error("DB error while creating pending email change.")
   }
@@ -542,7 +596,7 @@ const createPendingEmailChange = async (userId, oldEmail, newEmail) => {
 const verifyEmailChange = async (verificationToken) => {
   try {
     await query('BEGIN')
-    
+
     // Find pending email change by verification token
     const pendingResult = await query(
       `SELECT * FROM pending_email_changes 
@@ -556,7 +610,7 @@ const verifyEmailChange = async (verificationToken) => {
     }
 
     const pendingChange = pendingResult.rows[0]
-    
+
     // Update user email
     const userResults = await query(
       `UPDATE users SET email = $1 WHERE id = $2 
@@ -588,7 +642,8 @@ const verifyEmailChange = async (verificationToken) => {
       oldEmail: pendingChange.old_email,
       newEmail: pendingChange.new_email
     }
-  } catch (error) {
+  }
+  catch (error) {
     await query('ROLLBACK')
     console.error("Error verifying email change:", error.message)
     throw error
@@ -604,7 +659,8 @@ const getPendingEmailChange = async (userId) => {
       [userId]
     )
     return results.rows[0]
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error fetching pending email change:", error.message)
     throw new Error("DB error while fetching pending email change.")
   }
@@ -620,7 +676,8 @@ const cancelPendingEmailChange = async (userId) => {
     )
 
     return results.rows[0] // Will be undefined if no pending change found
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error canceling pending email change:", error.message)
     throw new Error("DB error while canceling pending email change.")
   }
@@ -633,7 +690,8 @@ const cleanupExpiredEmailChanges = async () => {
       `DELETE FROM pending_email_changes WHERE verification_expires < NOW() RETURNING id`
     )
     return result.rows.length
-  } catch (error) {
+  }
+  catch (error) {
     console.error("Error cleaning up expired email changes:", error.message)
     throw error
   }

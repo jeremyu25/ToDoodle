@@ -18,12 +18,18 @@ const EmailChangeVerificationPage = () => {
   useEffect(() => {
     const verifyEmailChange = async () => {
       const token = searchParams.get('token')
-      
+
       if (!token) {
         setError('Invalid verification link. No token provided.')
         setLoading(false)
         return
       }
+
+      // Remove token from address bar so it isn't exposed in browser history
+      try {
+        window.history.replaceState(null, '', window.location.pathname)
+      } 
+      catch (e) {}
 
       try {
         await authApi.verifyEmailChange(token)
@@ -50,8 +56,8 @@ const EmailChangeVerificationPage = () => {
   return (
     <div className="email-change-verification-page">
       <NavBar />
-      <div className="verification-container">
-        <div className="verification-content">
+      <div className="verification-content">
+        <div className="verification-container">
           {loading && (
             <div className="verification-status loading">
               <div className="spinner large"></div>

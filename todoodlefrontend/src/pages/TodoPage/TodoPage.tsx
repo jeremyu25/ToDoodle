@@ -19,18 +19,18 @@ import { useFiltersStore } from "../../stores/filtersStore"
 
 const TodoPage = () => {
 	const { user, isAuthenticated } = useAuthStore()
-	
+
 	// Zustand stores
-	const { 
-		tasks, 
-		folders, 
-		isLoading, 
+	const {
+		tasks,
+		folders,
+		isLoading,
 		error,
 		loadData,
 		updateTaskStatus,
 		getStatusCount
 	} = useTodoStore()
-	
+
 	const {
 		showForm,
 		showFolderForm,
@@ -38,7 +38,7 @@ const TodoPage = () => {
 		toggleTaskForm,
 		toggleFolderForm
 	} = useUIStore()
-	
+
 	const {
 		filterStatus,
 		filterFolder,
@@ -99,7 +99,7 @@ const TodoPage = () => {
 			<div className="page-container">
 				<div className="todo-header">
 					<h1>Welcome back, {user?.username || "User"}! 👋</h1>
-					<p>Let's get things done today</p>
+					<p className="disclaimer"><strong>Disclaimer:</strong><br /> This is a hobby project, we do not guarantee data security or reliability and are not responsible for any data loss or misuse.</p>
 				</div>
 				{
 					error ? (
@@ -127,8 +127,8 @@ const TodoPage = () => {
 								<div className="folders-grid">
 									{
 										folders.map((folder) => (
-											<FolderItem 
-												folder={folder} 
+											<FolderItem
+												folder={folder}
 												key={folder.id}
 											/>
 										))
@@ -137,7 +137,7 @@ const TodoPage = () => {
 										className={`folder-card ${filterFolder === "ALL" ? 'selected' : ''}`}
 										onClick={() => setFilterFolder("ALL")}
 									>
-									<div className="folder-color" style={{ backgroundColor: '#6D6D6D' }}></div>
+										<div className="folder-color" style={{ backgroundColor: '#6D6D6D' }}></div>
 										<div className="folder-info">
 											<span className="folder-name">All Folders</span>
 											<span className="folder-count">{tasks.length} tasks</span>
@@ -258,13 +258,13 @@ const TodoPage = () => {
 															className="quick-status-select"
 															onClick={(e) => e.stopPropagation()}
 														>
-														{
-															Statuses.map((status) => (
-																<option key={status} value={status}>
-																	{StatusLabels[status]}
-																</option>
-															))
-														}
+															{
+																Statuses.map((status) => (
+																	<option key={status} value={status}>
+																		{StatusLabels[status]}
+																	</option>
+																))
+															}
 														</select>
 													</div>
 												</div>

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { Task, Folder } from '../types/types'
+import { normalizeHexColor } from '../utils/dataTransformers'
 
 interface UIState {
   // Modal states
@@ -14,6 +15,8 @@ interface UIState {
   // Folder editing states
   editingFolder: Folder | null
   editFolderName: string
+  editFolderColor: string
+  editFolderDescription: string
   
   // Actions
   // Modal actions
@@ -30,6 +33,8 @@ interface UIState {
   // Folder editing actions
   startEditingFolder: (folder: Folder) => void
   updateEditFolderName: (name: string) => void
+  updateEditFolderColor: (color: string) => void
+  updateEditFolderDescription: (description: string) => void
   cancelEditingFolder: () => void
   
   // Reset all UI state
@@ -46,6 +51,7 @@ export const useUIStore = create<UIState>()(
       showFolderForm: false,
       editingFolder: null,
       editFolderName: "",
+      editFolderColor: "",
 
       // Modal actions
       openTaskModal: (task: Task) => {
@@ -93,7 +99,9 @@ export const useUIStore = create<UIState>()(
       startEditingFolder: (folder: Folder) => {
         set({ 
           editingFolder: folder,
-          editFolderName: folder.name
+          editFolderName: folder.name,
+          editFolderColor: normalizeHexColor(folder.color) || '#A8BBA0',
+          editFolderDescription: folder.description || ''
         })
       },
 
@@ -101,10 +109,20 @@ export const useUIStore = create<UIState>()(
         set({ editFolderName: name })
       },
 
+      updateEditFolderColor: (color: string) => {
+        set({ editFolderColor: color })
+      },
+
+      updateEditFolderDescription: (description: string) => {
+        set({ editFolderDescription: description })
+      },
+
       cancelEditingFolder: () => {
         set({ 
           editingFolder: null,
-          editFolderName: ""
+          editFolderName: "",
+          editFolderColor: "",
+          editFolderDescription: ""
         })
       },
 
@@ -116,7 +134,8 @@ export const useUIStore = create<UIState>()(
           showForm: false,
           showFolderForm: false,
           editingFolder: null,
-          editFolderName: ""
+          editFolderName: "",
+          editFolderColor: ""
         })
       }
     }),
