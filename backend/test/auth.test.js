@@ -391,7 +391,7 @@ describe("Auth API", () => {
             }
         ]
             AuthModel.getUserAuthMethods.mockResolvedValueOnce(mockResponse)
-            const res = await request(app).delete("/api/v1/auth/remove-oauth-method").send({provider: "notexists"})
+            const res = await request(app).delete("/api/v1/auth/remove-oauth-method").send({provider: "notexists", provider_user_id: "mockid"})
             expect(res.status).toBe(404)
         })
         it("Should return 200 if authentication method was deleted successfully", async () => {
