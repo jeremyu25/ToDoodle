@@ -1,6 +1,6 @@
 import request, { Test } from "supertest"
 
-const mockUser = { id: "1", name: "MockUser" }
+const mockUser = { id: "a2a84b7a-f95a-4e37-a362-5bc78440281a", name: "MockUser" }
 
 jest.mock("../utils/verify.js", () => ({
   verifyToken: (req, res, next) => {
@@ -182,12 +182,12 @@ describe("Auth API", () => {
         })
         it("Should return 200 and the deleted user if user is deleted successfully", async () => {
             const mockResponse = {
-                id: "1",
+                id: "a2a84b7a-f95a-4e37-a362-5bc78440281a",
                 username: "user",
                 email: "testuser"
             }
             AuthModel.deleteUser.mockResolvedValueOnce(mockResponse)
-            const res = await request(app).delete("/api/v1/auth/delete/1")
+            const res = await request(app).delete("/api/v1/auth/delete/a2a84b7a-f95a-4e37-a362-5bc78440281a")
             expect(res.status).toBe(200)
             expect(res.body.status).toBe("success")
             expect(res.body.data).toEqual(mockResponse)

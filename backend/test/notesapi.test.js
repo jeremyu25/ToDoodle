@@ -5,7 +5,7 @@ import NoteModel from "../models/note.model.js"
 jest.mock("../models/note.model.js")
 jest.mock("../utils/verify.js", () => ({
   verifyToken: (req, res, next) => {
-    req.user = { id: 1, name: "Mock User" }
+    req.user = { id: "a2a84b7a-f95a-4e37-a362-5bc78440281a", name: "Mock User" }
     next()
   },
 }))
