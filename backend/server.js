@@ -2,8 +2,6 @@ import "dotenv/config.js" // automatically loads .env
 import express from "express"
 import cors from "cors"
 import cookies from "cookie-parser"
-import swaggerUI from "swagger-ui-express"
-import YAML from "yaml"
 import fs from "fs"
 
 import folderRoutes from "./routes/folder.route.js"
@@ -25,7 +23,7 @@ app.use(express.json())
 app.use(cookies())
 
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -42,9 +40,15 @@ app.use("/api/v1/note", noteRoutes)
 app.use("/api/v1/auth", userRoutes)
 app.use("/api/v1/feedback", feedbackRoutes)
 
-const file = fs.readFileSync("../docs/openapi.yaml", "utf-8")
-const swaggerDocument = YAML.parse(file)
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument))
+if (process.env.NODE_ENV !== "production") {
+	const swaggerUI = await import("swagger-ui-express")
+	const YAML = await import("yaml")
+	
+	const file = fs.readFileSync("../docs/openapi.yaml", "utf-8")
+	const swaggerDocument = YAML.parse(file)
+	app.use("/api-docs", swaggerUI.default.serve, swaggerUI.default.setup(swaggerDocument))
+	console.log("Swagger documentation available at /api-docs")
+}
 
 try {
 	const port = process.env.PORT
